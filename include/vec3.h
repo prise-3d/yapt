@@ -99,4 +99,12 @@ inline vec3 normalized(const vec3& v) {
     return v / v.length();
 }
 
+inline bool is_null(const vec3& v) {
+    return v.e[0] == 0 && v.e[1] == 0 && v.e[2] == 0;
+}
+
+inline bool are_equal(const vec3& v, const vec3& w) {
+    return is_null(v - w);
+}
+
 #endif //YAPT_VEC3_H
