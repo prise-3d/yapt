@@ -21,6 +21,8 @@ public:
 
     bool surrounds(double x) const;
 
+    double clamp(double x) const;
+
     static const interval empty, universe, future;
 };
 
