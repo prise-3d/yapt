@@ -10,8 +10,8 @@
 
 
 int main() {
-    // World
     hittable_list world;
+
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<dielectric>(1.50);
@@ -26,10 +26,17 @@ int main() {
 
     camera cam;
 
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 600;
+    cam.aspect_ratio      = 16.0 / 9.0;
+    cam.image_width       = 900;
     cam.samples_per_pixel = 100;
-    cam.max_depth = 20;
+    cam.max_depth         = 40;
+
+
+    cam.vfov     = 20;
+    cam.lookfrom = point3(-2,2,1);
+    cam.lookat   = point3(0,0,-1);
+    cam.vup      = vec3(0,1,0);
 
     cam.render(world);
+    return 0;
 }
