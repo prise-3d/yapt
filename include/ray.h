@@ -13,24 +13,21 @@
  */
 class ray {
 public:
-    ray() {}
-    ray(const point3& o, const vec3& dir): orig(o), dir(dir) {}
+    ray();
 
-    point3 at(double t) const {
-        return orig + t * dir;
-    }
+    ray(const point3 &o, const vec3 &dir);
 
-    const point3& origin() {
-        return orig;
-    }
+    [[nodiscard]] point3 at(double t) const;
 
-    const vec3& direction() {
-        return dir;
-    }
+    [[nodiscard]] const point3 &origin() const;
 
-    private:
+    [[nodiscard]] const vec3 &direction() const;
+
+private:
     point3 orig;
     vec3 dir;
 };
+
+ray shoot_ray(point3 &from, point3 &aiming);
 
 #endif //YAPT_RAY_H

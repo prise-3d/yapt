@@ -109,9 +109,16 @@ TEST_CASE("vec3 dot product") {
     CHECK(l == 20.0);
 }
 
+TEST_CASE("vec3 unit vector") {
+    vec3 v1 (2., 1.5, 7.);
+    vec3 v2 = unit_vector(v1);
+
+    CHECK(v2.length2() == 1.);
+}
+
 TEST_CASE("vec3 normalization") {
     vec3 v1(3.0, 2.0, 6.0);
-    vec3 v2 = normalized(v1);
+    vec3 v2 = unit_vector(v1);
     CHECK(v2.x() == 3./7.);
     CHECK(v2.y() == 2./7.);
     CHECK(v2.z() == 6./7.);
