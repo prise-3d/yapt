@@ -8,6 +8,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "hittable.h"
+#include "yapt.h"
 
 class sphere : public hittable {
 public:
@@ -45,7 +46,7 @@ public:
         auto dx = point.x() - center.x();
         auto dy = point.y() - center.y();
         auto dz = point.z() - center.z();
-        return fabs(dx * dx + dy * dy + dz * dz - radius * radius) < vec3::EPSILON;
+        return fabs(dx * dx + dy * dy + dz * dz - radius * radius) < EPSILON;
     }
 
 private:

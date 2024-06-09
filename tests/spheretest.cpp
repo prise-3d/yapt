@@ -6,7 +6,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "sphere.h"
-#include <iostream>
+#include "yapt.h"
 
 TEST_CASE("SPHERE1") {
     point3 o(0, 0, 0);
@@ -39,7 +39,7 @@ TEST_CASE("sphere surface normal") {
 
     CHECK(are_epsilon_equal(p1, p2));
     CHECK(dot(record1.normal, (r1.direction())) < 0);
-    CHECK(cross(record1.normal, (r1.direction())).length2() < vec3::EPSILON);
+    CHECK(cross(record1.normal, (r1.direction())).length2() < EPSILON);
     CHECK(dot(record2.normal, (r2.direction())) < 0);
-    CHECK(cross(record2.normal, (r2.direction())).length2() < vec3::EPSILON);
+    CHECK(cross(record2.normal, (r2.direction())).length2() < EPSILON);
 }
