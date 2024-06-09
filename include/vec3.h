@@ -12,6 +12,8 @@ using std::sqrt;
 
 class vec3 {
 public:
+    constexpr static const double EPSILON = 1e-8;
+
     double e[3];
 
     vec3();
@@ -91,6 +93,10 @@ inline bool is_null(const vec3 &v) {
 
 inline bool are_equal(const vec3 &v, const vec3 &w) {
     return is_null(v - w);
+}
+
+inline bool are_epsilon_equal(const vec3 &v, const vec3 &w) {
+    return (v - w).length2() < vec3::EPSILON;
 }
 
 #endif //YAPT_VEC3_H

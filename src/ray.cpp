@@ -20,6 +20,6 @@ ray::ray(const point3 &o, const vec3 &dir) : orig(o), dir(dir) {}
     return dir;
 }
 
-ray shoot_ray(point3 &from, point3 &aiming) {
+ray ray::shoot(point3 &from, point3 &aiming) {
     return {from, aiming - from};
 }

@@ -32,7 +32,7 @@ TEST_CASE("ray evaluation") {
 TEST_CASE("shoot ray") {
     point3 o = point3(1, 2, 3);
     point3 p = point3(-6, 1, 4);
-    auto r = shoot_ray(o, p);
+    auto r = ray::shoot(o, p);
     CHECK(are_equal(o, r.origin()));
     CHECK(are_equal(vec3(-7, -1, 1), r.direction()));
 }

@@ -17,6 +17,8 @@ public:
 
     ray(const point3 &o, const vec3 &dir);
 
+    static ray shoot(point3 &from, point3 &aiming);
+
     [[nodiscard]] point3 at(double t) const;
 
     [[nodiscard]] const point3 &origin() const;
@@ -27,7 +29,5 @@ private:
     point3 orig;
     vec3 dir;
 };
-
-ray shoot_ray(point3 &from, point3 &aiming);
 
 #endif //YAPT_RAY_H
