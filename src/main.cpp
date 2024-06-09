@@ -2,11 +2,13 @@
 // Created by franck on 07/06/24.
 //
 
+#include "bvh.h"
 #include "yapt.h"
 #include "hittable_list.h"
 #include "sphere.h"
 #include "camera.h"
 #include "material.h"
+#include <chrono>
 
 
 int main() {
@@ -52,6 +54,8 @@ int main() {
     auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
     world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
+    world = hittable_list(make_shared<bvh_node>(world));
+
     camera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0;
@@ -67,5 +71,10 @@ int main() {
     cam.defocus_angle = 0.6;
     cam.focus_dist    = 10.0;
 
+    auto start = std::chrono::high_resolution_clock::now();
     cam.render(world);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
+
+    std::clog << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
 }

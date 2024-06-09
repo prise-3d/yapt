@@ -9,10 +9,13 @@
 
 #include "hittable.h"
 #include "yapt.h"
+#include "aabb.h"
 
 class sphere : public hittable {
 public:
     sphere(const point3 &center, double radius, shared_ptr<material> mat) : center(center), radius(fmax(0, radius)), mat(std::move(mat)) {
+        auto rvec = vec3(radius, radius, radius);
+        bbox = aabb(center - rvec, center + rvec);
     }
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
@@ -51,10 +54,15 @@ public:
         return fabs(dx * dx + dy * dy + dz * dz - radius * radius) < EPSILON;
     }
 
+    aabb bounding_box() const override {
+        return bbox;
+    }
+
 private:
     point3 center;
     double radius;
     shared_ptr<material> mat;
+    aabb bbox;
 };
 
 #endif //YAPT_SPHERE_H

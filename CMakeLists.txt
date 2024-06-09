@@ -43,6 +43,8 @@ add_executable(yapt ${SOURCES}
         include/utils.h
         include/material.h
         src/material.cpp
+        include/aabb.h
+        include/bvh.h
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -87,6 +89,8 @@ add_executable(tests ${TEST_SOURCES}
         include/utils.h
         include/material.h
         src/material.cpp
+        include/aabb.h
+        include/bvh.h
 )
 
 # Link external libraries to tests executable if needed

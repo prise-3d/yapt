@@ -6,6 +6,7 @@
 #define YAPT_HITTABLE_H
 
 #include "yapt.h"
+#include "aabb.h"
 
 class material;
 
@@ -34,6 +35,8 @@ public:
     virtual ~hittable() = default;
 
     virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const = 0;
+
+    virtual aabb bounding_box() const = 0;
 };
 
 #endif //YAPT_HITTABLE_H

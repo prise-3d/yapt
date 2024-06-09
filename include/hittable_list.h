@@ -22,6 +22,11 @@ public:
     void add(const shared_ptr<hittable>& object);
 
     bool hit(const ray &r, interval ray_t, hit_record &record) const override;
+
+    aabb bounding_box() const override;
+
+private:
+    aabb bbox;
 };
 
 #endif //YAPT_HITTABLE_LIST_H
