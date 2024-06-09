@@ -2,9 +2,7 @@
 // Created by franck on 07/06/24.
 //
 
-#include <iostream>
 #include "yapt.h"
-#include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"
 #include "camera.h"
@@ -20,7 +18,8 @@ int main() {
 
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width  = 600;
-    cam.samples_per_pixel = 50;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 20;
 
     cam.render(world);
 }
