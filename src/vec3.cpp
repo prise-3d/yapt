@@ -52,3 +52,7 @@ vec3 &vec3::operator/=(double t) {
 [[nodiscard]] double vec3::length() const {
     return sqrt(length2());
 }
+
+[[nodiscard]] bool vec3::near_zero() const {
+    return (fabs(e[0]) < EPSILON) && (fabs(e[1]) < EPSILON) && (fabs(e[2]) < EPSILON);
+}

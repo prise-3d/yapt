@@ -41,6 +41,8 @@ add_executable(yapt ${SOURCES}
         include/camera.h
         src/camera.cpp
         include/utils.h
+        include/material.h
+        src/material.cpp
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -83,6 +85,8 @@ add_executable(tests ${TEST_SOURCES}
         include/camera.h
         src/camera.cpp
         include/utils.h
+        include/material.h
+        src/material.cpp
 )
 
 # Link external libraries to tests executable if needed
