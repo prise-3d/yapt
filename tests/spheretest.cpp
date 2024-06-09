@@ -15,7 +15,7 @@ TEST_CASE("SPHERE1") {
     ray r = ray::shoot(p, o);
     hit_record record;
 
-    CHECK(s.hit(r, 0, 9999, record));
+    CHECK(s.hit(r, interval::future, record));
 }
 
 TEST_CASE("sphere surface normal") {
@@ -29,8 +29,8 @@ TEST_CASE("sphere surface normal") {
 
     hit_record record1;
     hit_record record2;
-    auto result1 = s.hit(r1, 0, 9999, record1);
-    auto result2 = s.hit(r2, 0, 9999, record2);
+    auto result1 = s.hit(r1, interval::future, record1);
+    auto result2 = s.hit(r2, interval::future, record2);
     CHECK(result1);
     CHECK(result2);
 

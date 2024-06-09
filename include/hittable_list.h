@@ -21,7 +21,7 @@ public:
 
     void add(const shared_ptr<hittable>& object);
 
-    bool hit(const ray &r, double tmin, double tmax, hit_record &record) const override;
+    bool hit(const ray &r, interval ray_t, hit_record &record) const override;
 };
 
 #endif //YAPT_HITTABLE_LIST_H
