@@ -3,7 +3,7 @@
 //
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "vec3.h"
+#include "yapt.h"
 
 TEST_CASE("vec3 initialization") {
     vec3 v(1.0, 2.0, 3.0);

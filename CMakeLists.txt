@@ -34,6 +34,8 @@ add_executable(yapt ${SOURCES}
         include/hittable_list.h
         src/hittable_list.cpp
         include/yapt.h
+        include/constants.h
+        src/color.cpp
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -67,6 +69,8 @@ add_executable(tests ${TEST_SOURCES}
         src/hittable_list.cpp
         tests/hittabletest.cpp
         include/yapt.h
+        include/constants.h
+        src/color.cpp
 )
 
 # Link external libraries to tests executable if needed

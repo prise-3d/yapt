@@ -5,7 +5,7 @@
 #ifndef YAPT_HITTABLE_H
 #define YAPT_HITTABLE_H
 
-#include "ray.h"
+#include "yapt.h"
 
 class hit_record {
 public:

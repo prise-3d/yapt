@@ -5,8 +5,8 @@
 #ifndef YAPT_HITTABLE_LIST_H
 #define YAPT_HITTABLE_LIST_H
 
-#include "hittable.h"
 #include "yapt.h"
+#include "hittable.h"
 #include <vector>
 
 class hittable_list: public hittable {

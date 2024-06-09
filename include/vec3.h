@@ -5,7 +5,8 @@
 #ifndef YAPT_VEC3_H
 #define YAPT_VEC3_H
 
-#include "yapt.h"
+#include "constants.h"
+#include <iostream>
 
 class vec3 {
 public:

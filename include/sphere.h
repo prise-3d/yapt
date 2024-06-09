@@ -5,8 +5,6 @@
 #ifndef YAPT_SPHERE_H
 #define YAPT_SPHERE_H
 
-#include "vec3.h"
-#include "ray.h"
 #include "hittable.h"
 #include "yapt.h"
 
