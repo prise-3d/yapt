@@ -41,6 +41,13 @@ public:
         return true;
     }
 
+    bool has(point3 point) {
+        auto dx = point.x() - center.x();
+        auto dy = point.y() - center.y();
+        auto dz = point.z() - center.z();
+        return fabs(dx * dx + dy * dy + dz * dz - radius * radius) < vec3::EPSILON;
+    }
+
 private:
     point3 center;
     double radius;
