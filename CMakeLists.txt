@@ -38,6 +38,8 @@ add_executable(yapt ${SOURCES}
         src/color.cpp
         include/interval.h
         src/interval.cpp
+        include/camera.h
+        src/camera.cpp
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -77,6 +79,8 @@ add_executable(tests ${TEST_SOURCES}
         include/interval.h
         src/interval.cpp
         tests/intervaltest.cpp
+        include/camera.h
+        src/camera.cpp
 )
 
 # Link external libraries to tests executable if needed
