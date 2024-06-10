@@ -12,6 +12,33 @@
 #include "texture.h"
 #include "rtw_stb_image.h"
 
+void perlin_spheres() {
+    hittable_list world;
+
+    auto pertext = make_shared<noise_texture>(4, color(.5,.3,.1));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    world.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
+
+    camera cam;
+
+    cam.aspect_ratio      = 16.0 / 9.0;
+    cam.image_width       = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth         = 50;
+
+    cam.vfov     = 20;
+    cam.lookfrom = point3(13,2,3);
+    cam.lookat   = point3(0,0,0);
+    cam.vup      = vec3(0,1,0);
+
+    cam.defocus_angle = 0;
+
+    auto a = .7;
+    cam.background = (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+
+    cam.render(world);
+}
+
 void two_metal_spheres() {
     hittable_list world;
 
@@ -174,11 +201,12 @@ auto im = image_texture("earthmap.jpg");
 }
 
 int main() {
-    switch(2) {
+    switch(6) {
         case 1: spheres(); break;
         case 2: earth(); break;
         case 3: img(); break;
         case 4: two_spheres(); break;
         case 5: two_metal_spheres(); break;
+        case 6: perlin_spheres(); break;
     }
 }

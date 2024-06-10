@@ -6,6 +6,7 @@
 #define YAPT_TEXTURE_H
 
 #include "yapt.h"
+#include "perlin.h"
 #include "rtw_stb_image.h"
 
 class texture {
@@ -77,6 +78,22 @@ public:
 
 private:
     rtw_image image;
+};
+
+class noise_texture : public texture {
+public:
+    noise_texture(): albedo(color(.5, .5, .5)) {}
+    noise_texture(double scale) : scale(scale), albedo(color(.5, .5, .5)) {}
+    noise_texture(double scale, color albedo) : scale(scale), albedo(albedo) {}
+
+    color value(double u, double v, const point3& p) const override {
+        return albedo * (1 + sin(scale * p.z() + 10 * noise.turb(p, 7)));
+    }
+
+private:
+    perlin noise;
+    double scale;
+    color albedo;
 };
 
 #endif //YAPT_TEXTURE_H
