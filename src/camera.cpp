@@ -54,7 +54,6 @@ void camera::initialize() {
     pixel_delta_v = viewport_v / image_height;
 
     // Calculate the location of the upper left pixel.
-    // Calculate the location of the upper left pixel.
     auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
     pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
@@ -67,21 +66,24 @@ void camera::initialize() {
 color camera::ray_color(const ray &r, int depth, const hittable &world) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
-        return color(0, 0, 0);
+        return color(0,0,0);
 
     hit_record rec;
 
-    if (world.hit(r, interval(0.001, infinity), rec)) {
-        ray scattered;
-        color attenuation;
-        if (rec.mat->scatter(r, rec, attenuation, scattered))
-            return attenuation * ray_color(scattered, depth - 1, world);
-        return color(0, 0, 0);
-    }
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, interval(0.001, infinity), rec))
+        return background;
 
-    vec3 unit_direction = unit_vector(r.direction());
-    auto a = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+    ray scattered;
+    color attenuation;
+    color color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(r, rec, attenuation, scattered))
+        return color_from_emission;
+
+    color color_from_scatter = attenuation * ray_color(scattered, depth-1, world);
+
+    return color_from_emission + color_from_scatter;
 }
 
 ray camera::get_ray(int i, int j) const {
@@ -96,13 +98,17 @@ ray camera::get_ray(int i, int j) const {
     auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
     auto ray_direction = pixel_sample - ray_origin;
 
-
-    return {ray_origin, ray_direction};
+    return ray(ray_origin, ray_direction);
 }
 
 vec3 camera::sample_square() const {
     // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-    return {random_double() - 0.5, random_double() - 0.5, 0};
+    return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+}
+
+vec3 camera::sample_disk(double radius) const {
+    // Returns a random point in the unit (radius 0.5) disk centered at the origin.
+    return radius * random_in_unit_disk();
 }
 
 point3 camera::defocus_disk_sample() const {

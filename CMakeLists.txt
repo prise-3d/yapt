@@ -15,8 +15,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 include_directories(include)
 
 # Add source files
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB HEADERS "include/*.h")
+#file(GLOB SOURCES "src/*.cpp")
+#file(GLOB HEADERS "include/*.h")
 
 #external dependencies
 find_package(PNG REQUIRED)
@@ -25,7 +25,8 @@ include_directories(${PNG_INCLUDE_DIRS})
 # Add executable
 add_executable(yapt ${SOURCES}
         src/main.cpp
-        include/vec3.h
+        src/stb_image.cpp
+                include/vec3.h
         include/ray.h
         include/hittable.h
         include/sphere.h
@@ -45,6 +46,10 @@ add_executable(yapt ${SOURCES}
         src/material.cpp
         include/aabb.h
         include/bvh.h
+        include/texture.h
+        include/external/stb_image.h
+        include/rtw_stb_image.h
+        src/aabb.cpp
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -66,7 +71,8 @@ file(GLOB TEST_SOURCES "tests/*.cpp")
 # Add executable for tests
 add_executable(tests ${TEST_SOURCES}
         tests/vec3test.cpp
-        include/color.h
+        src/stb_image.cpp
+                include/color.h
         include/hittable.h
         include/sphere.h
         include/ray.h
@@ -91,6 +97,10 @@ add_executable(tests ${TEST_SOURCES}
         src/material.cpp
         include/aabb.h
         include/bvh.h
+        include/texture.h
+        include/external/stb_image.h
+        include/rtw_stb_image.h
+        src/aabb.cpp
 )
 
 # Link external libraries to tests executable if needed

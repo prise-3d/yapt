@@ -15,13 +15,13 @@ const {
         scatter_direction = rec.normal;
 
     scattered = ray(rec.p, scatter_direction);
-    attenuation = albedo;
+    attenuation = tex->value(rec.u, rec.v, rec.p);
     return true;
 }
 
 bool metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const {
     vec3 reflected = reflect(r_in.direction(), rec.normal);
-    reflected = unit_vector(reflected + (fuzz * random_unit_vector()));
+    reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
     scattered = ray(rec.p, reflected);
     attenuation = albedo;
     return (dot(scattered.direction(), rec.normal) > 0);
@@ -50,6 +50,12 @@ bool dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuat
 double dielectric::reflectance(double cosine, double refraction_index) {
     // Use Schlick's approximation for reflectance.
     auto r0 = (1 - refraction_index) / (1 + refraction_index);
-    r0 = r0 * r0;
-    return r0 + (1 - r0) * pow((1 - cosine), 5);
+    r0 = r0*r0;
+    return r0 + (1-r0)*pow((1 - cosine),5);
+}
+
+bool isotropic::scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const {
+    scattered = ray(rec.p, random_unit_vector());
+    attenuation = tex->value(rec.u, rec.v, rec.p);
+    return true;
 }

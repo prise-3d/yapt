@@ -65,6 +65,12 @@ TEST_CASE("vec3 addition") {
     CHECK(v3.z() == 9.0);
 }
 
+TEST_CASE("vec3 opposite") {
+    vec3 v1(1.0, 2.0, 3.0);
+    vec3 v2 = -v1;
+    CHECK((v1 + v2).near_zero());
+}
+
 TEST_CASE("vec3 subtraction") {
     vec3 v1(1.0, 2.0, 3.0);
     vec3 v2(2.0, 3.0, 4.0);
