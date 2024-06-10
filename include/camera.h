@@ -30,6 +30,8 @@ public:
 private:
     int    image_height;         // Rendered image height
     double pixel_samples_scale;  // Color scale factor for a sum of pixel samples
+    int    sqrt_spp;             // Square root of number of samples per pixel
+    double recip_sqrt_spp;       // 1 / sqrt_spp
     point3 center;               // Camera center
     point3 pixel00_loc;          // Location of pixel 0, 0
     vec3   pixel_delta_u;        // Offset to pixel to the right
@@ -42,7 +44,9 @@ private:
 
     color ray_color(const ray& r, int depth, const hittable& world) const;
 
-    ray get_ray(int i, int j) const;
+    ray get_ray(int i, int j, int s_i, int s_j) const;
+
+    vec3 sample_square_stratified(int s_i, int s_j) const;
 
     vec3 sample_square() const;
 
