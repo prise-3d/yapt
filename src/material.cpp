@@ -7,35 +7,35 @@
 #include "hittable.h"
 #include "onb.h"
 
-bool lambertian::scatter(
-        const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf
-) const {
-    onb uvw;
-    uvw.build_from_w(rec.normal);
-    auto scatter_direction = uvw.local(random_cosine_direction());
-
-    scattered = ray(rec.p, unit_vector(scatter_direction));
-    attenuation = tex->value(rec.u, rec.v, rec.p);
-    pdf = dot(uvw.w(), scattered.direction()) / pi;
+bool lambertian::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec) const {
+    srec.attenuation = tex->value(rec.u, rec.v, rec.p);
+    srec.pdf_ptr = make_shared<cosine_pdf>(rec.normal);
+    srec.skip_pdf = false;
     return true;
 }
 
 
-double lambertian::scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const {
+double lambertian::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const {
     auto cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
-    return cos_theta < 0 ? 0 : cos_theta/pi;
+    return cos_theta < 0 ? 0 : cos_theta / pi;
 }
 
-bool metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const {
+bool metal::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec) const {
     vec3 reflected = reflect(r_in.direction(), rec.normal);
     reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
-    scattered = ray(rec.p, reflected);
-    attenuation = albedo;
-    return (dot(scattered.direction(), rec.normal) > 0);
+
+    srec.attenuation = albedo;
+    srec.pdf_ptr = nullptr;
+    srec.skip_pdf = true;
+    srec.skip_pdf_ray = ray(rec.p, reflected);
+
+    return true;
 }
 
-bool dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const {
-    attenuation = color(1.0, 1.0, 1.0);
+bool dielectric::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec) const {
+    srec.attenuation = color(1.0, 1.0, 1.0);
+    srec.pdf_ptr = nullptr;
+    srec.skip_pdf = true;
     double ri = rec.front_face ? (1.0 / refraction_index) : refraction_index;
 
     vec3 unit_direction = unit_vector(r_in.direction());
@@ -50,27 +50,24 @@ bool dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuat
     else
         direction = refract(unit_direction, rec.normal, ri);
 
-    scattered = ray(rec.p, direction);
+    srec.skip_pdf_ray = ray(rec.p, direction);
     return true;
 }
 
 double dielectric::reflectance(double cosine, double refraction_index) {
     // Use Schlick's approximation for reflectance.
     auto r0 = (1 - refraction_index) / (1 + refraction_index);
-    r0 = r0*r0;
-    return r0 + (1-r0)*pow((1 - cosine),5);
+    r0 = r0 * r0;
+    return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
 
-bool isotropic::scatter(
-        const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf
-) const {
-    attenuation = tex->value(rec.u, rec.v, rec.p);
-    scattered = ray(rec.p, random_unit_vector());
-    pdf = 1 / (4 * pi);
-    return true;
+bool isotropic::scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const {
+    srec.attenuation = tex->value(rec.u, rec.v, rec.p);
+    srec.pdf_ptr = make_shared<sphere_pdf>();
+    srec.skip_pdf = false;
+return true;
 }
 
-double isotropic::scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered)
-const {
+double isotropic::scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const {
     return 1 / (4 * pi);
 }

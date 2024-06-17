@@ -54,6 +54,7 @@ add_executable(yapt ${SOURCES}
         include/quad.h
         include/constant_medium.h
         include/onb.h
+        include/pdf.h
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -109,6 +110,7 @@ add_executable(tests ${TEST_SOURCES}
         include/quad.h
         include/constant_medium.h
         include/onb.h
+        include/pdf.h
 )
 
 # Link external libraries to tests executable if needed

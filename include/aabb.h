@@ -18,7 +18,7 @@ public:
         pad_to_minimums();
     }
 
-    aabb(const point3 &a, const point3 &b) {
+    aabb(const point3& a, const point3& b) {
         // Treat the two points a and b as extrema for the bounding box, so we don't require a
         // particular minimum/maximum coordinate order.
 
@@ -29,24 +29,24 @@ public:
         pad_to_minimums();
     }
 
-    aabb(const aabb &box0, const aabb &box1) {
+    aabb(const aabb& box0, const aabb& box1) {
         x = interval(box0.x, box1.x);
         y = interval(box0.y, box1.y);
         z = interval(box0.z, box1.z);
     }
 
-    const interval &axis_interval(int n) const {
+    const interval& axis_interval(int n) const {
         if (n == 1) return y;
         if (n == 2) return z;
         return x;
     }
 
-    bool hit(const ray &r, interval ray_t) const {
-        const point3 &ray_orig = r.origin();
-        const vec3 &ray_dir = r.direction();
+    bool hit(const ray& r, interval ray_t) const {
+        const point3& ray_orig = r.origin();
+        const vec3&   ray_dir  = r.direction();
 
         for (int axis = 0; axis < 3; axis++) {
-            const interval &ax = axis_interval(axis);
+            const interval& ax = axis_interval(axis);
             const double adinv = 1.0 / ray_dir[axis];
 
             auto t0 = (ax.min - ray_orig[axis]) * adinv;

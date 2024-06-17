@@ -25,7 +25,7 @@ public:
     double defocus_angle = 0;  // Variation angle of rays through each pixel
     double focus_dist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
-    void render(const hittable& world);
+    void render(const hittable& world, const hittable& lights);
 
 private:
     int    image_height;         // Rendered image height
@@ -42,7 +42,7 @@ private:
 
     void initialize();
 
-    color ray_color(const ray& r, int depth, const hittable& world) const;
+    color ray_color(const ray& r, int depth, const hittable& world, const hittable& lights) const;
 
     ray get_ray(int i, int j, int s_i, int s_j) const;
 

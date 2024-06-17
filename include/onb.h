@@ -4,6 +4,7 @@
 
 #ifndef YAPT_ONB_H
 #define YAPT_ONB_H
+
 #include "yapt.h"
 
 class onb {
@@ -35,7 +36,8 @@ public:
         axis[2] = unit_w;
     }
 
-public:
+private:
     vec3 axis[3];
 };
+
 #endif //YAPT_ONB_H
