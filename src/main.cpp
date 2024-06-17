@@ -13,6 +13,7 @@
 #include "rtw_stb_image.h"
 #include "quad.h"
 #include "constant_medium.h"
+#include "image_exporter.h"
 #include <iomanip>
 
 void simple_light() {
@@ -83,8 +84,8 @@ void final () {
 
     cam.aspect_ratio      = 1.0;
     cam.image_width       = 600;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
+    cam.samples_per_pixel = 25;
+    cam.max_depth         = 25;
     cam.background        = Color(0, 0, 0);
 
     cam.vfov     = 40;
@@ -95,6 +96,9 @@ void final () {
     cam.defocus_angle = 0;
 
     cam.render(world, lights);
+
+    PNGImageExporter exporter(cam.data());
+    exporter.write("/home/franck/out.png");
 }
 
 int main() {

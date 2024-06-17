@@ -55,6 +55,9 @@ add_executable(yapt ${SOURCES}
         include/constant_medium.h
         include/onb.h
         include/pdf.h
+        include/image_exporter.h
+        src/image_exporter.cpp
+        include/image_data.h
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -77,7 +80,7 @@ file(GLOB TEST_SOURCES "tests/*.cpp")
 add_executable(tests ${TEST_SOURCES}
         tests/vec3test.cpp
         src/stb_image.cpp
-                include/color.h
+        include/color.h
         include/hittable.h
         include/sphere.h
         include/ray.h
@@ -111,6 +114,9 @@ add_executable(tests ${TEST_SOURCES}
         include/constant_medium.h
         include/onb.h
         include/pdf.h
+        include/image_exporter.h
+        src/image_exporter.cpp
+        include/image_data.h
 )
 
 # Link external libraries to tests executable if needed

@@ -5,11 +5,11 @@
 #include "yapt.h"
 #include "camera.h"
 #include "material.h"
+#include <vector>
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
     initialize();
-
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    int idx = 0;
 
     for (int j = 0; j < image_height; j++) {
         std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
@@ -18,14 +18,31 @@ void Camera::render(const Hittable& world, const Hittable& lights) {
             for (int s_j = 0; s_j < sqrt_spp; s_j++) {
                 for (int s_i = 0; s_i < sqrt_spp; s_i++) {
                     Ray r = get_ray(i, j, s_i, s_j);
-                    pixel_color += ray_color(r, max_depth, world, lights);
+                    pixel_color += rayColor(r, max_depth, world, lights);
                 }
             }
-            writeColor(std::cout, pixel_samples_scale * pixel_color);
+            pixel_color *= pixel_samples_scale;
+
+            auto r = pixel_color.x();
+            auto g = pixel_color.y();
+            auto b = pixel_color.z();
+
+            // Apply a linear to gamma transform for gamma 2
+            r = linearToGamma(r);
+            g = linearToGamma(g);
+            b = linearToGamma(b);
+
+            // Translate the [0,1] component values to the byte range [0,255].
+            static const Interval intensity(0.000, 0.999);
+            int rbyte = int(256 * intensity.clamp(r));
+            int gbyte = int(256 * intensity.clamp(g));
+            int bbyte = int(256 * intensity.clamp(b));
+
+            imageData.data[idx++] = rbyte;  // R
+            imageData.data[idx++] = gbyte;  // G
+            imageData.data[idx++] = bbyte;  // B
         }
     }
-
-    std::clog << "\rDone.                 \n";
 }
 
 void Camera::initialize() {
@@ -65,6 +82,10 @@ void Camera::initialize() {
     auto defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2));
     defocus_disk_u = u * defocus_radius;
     defocus_disk_v = v * defocus_radius;
+
+    imageData.data = std::vector<uint8_t>(image_width * image_height * 3);
+    imageData.width = image_width;
+    imageData.height = image_height;
 }
 
 Ray Camera::get_ray(int i, int j, int s_i, int s_j) const {
@@ -89,15 +110,15 @@ Vec3 Camera::sampleSquareStratified(int s_i, int s_j) const {
     auto px = ((s_i + randomDouble()) * recip_sqrt_spp) - 0.5;
     auto py = ((s_j + randomDouble()) * recip_sqrt_spp) - 0.5;
 
-    return Vec3(px, py, 0);
+    return {px, py, 0};
 }
 
 Vec3 Camera::sample_square() const {
     // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-    return Vec3(randomDouble() - 0.5, randomDouble() - 0.5, 0);
+    return {randomDouble() - 0.5, randomDouble() - 0.5, 0};
 }
 
-Vec3 Camera::sample_disk(double radius) const {
+Vec3 Camera::sampleDisk(double radius) const {
     // Returns a random point in the unit (radius 0.5) disk centered at the origin.
     return radius * random_in_unit_disk();
 }
@@ -108,7 +129,7 @@ Point3 Camera::defocusDiskSample() const {
     return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
 }
 
-Color Camera::ray_color(const Ray& r, int depth, const Hittable& world, const Hittable& lights)
+Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hittable& lights)
 const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
@@ -127,7 +148,7 @@ const {
         return color_from_emission;
 
     if (srec.skip_pdf) {
-        return srec.attenuation * ray_color(srec.skip_pdf_ray, depth-1, world, lights);
+        return srec.attenuation * rayColor(srec.skip_pdf_ray, depth - 1, world, lights);
     }
 
     auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
@@ -138,7 +159,7 @@ const {
 
     double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
 
-    Color sample_color = ray_color(scattered, depth - 1, world, lights);
+    Color sample_color = rayColor(scattered, depth - 1, world, lights);
     Color color_from_scatter = (srec.attenuation * scattering_pdf * sample_color) / pdf_val;
 
     return color_from_emission + color_from_scatter;
