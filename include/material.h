@@ -23,6 +23,11 @@ public:
     ) const {
         return false;
     }
+
+    virtual double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered)
+    const {
+        return 0;
+    }
 };
 
 class lambertian : public material {
@@ -33,6 +38,8 @@ public:
 
     bool scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const override;
+
+    double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const;
 
 private:
     shared_ptr<texture> tex;

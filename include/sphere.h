@@ -13,9 +13,15 @@
 
 class sphere : public hittable {
 public:
-    // Stationary Sphere
+    sphere(const point3& center, double radius)
+            : center(center), radius(fmax(0,radius))
+    {
+        auto rvec = vec3(radius, radius, radius);
+        bbox = aabb(center - rvec, center + rvec);
+    }
+
     sphere(const point3& center, double radius, shared_ptr<material> mat)
-            : center(center), radius(fmax(0,radius)), mat(mat), is_moving(false)
+            : center(center), radius(fmax(0,radius)), mat(mat)
     {
         auto rvec = vec3(radius, radius, radius);
         bbox = aabb(center - rvec, center + rvec);
@@ -51,13 +57,12 @@ public:
         return true;
     }
 
-    aabb bounding_box() const override { return bbox; }
+    [[nodiscard]] aabb bounding_box() const override { return bbox; }
 
 private:
     point3 center;
     double radius;
     shared_ptr<material> mat;
-    bool is_moving;
     vec3 center_vec;
     aabb bbox;
 

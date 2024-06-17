@@ -53,6 +53,7 @@ add_executable(yapt ${SOURCES}
         include/perlin.h
         include/quad.h
         include/constant_medium.h
+        include/onb.h
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -107,6 +108,7 @@ add_executable(tests ${TEST_SOURCES}
         include/perlin.h
         include/quad.h
         include/constant_medium.h
+        include/onb.h
 )
 
 # Link external libraries to tests executable if needed

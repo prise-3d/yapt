@@ -3,7 +3,6 @@
 //
 
 #include <cmath>
-#include <iostream>
 #include "vec3.h"
 
 using std::sqrt;
@@ -18,7 +17,7 @@ vec3::vec3(double x, double y, double z) : e{x, y, z} {}
 
 [[nodiscard]] double vec3::z() const { return e[2]; }
 
-vec3 vec3::operator-() const { return vec3(-e[0], -e[1], -e[2]); }
+vec3 vec3::operator-() const { return {-e[0], -e[1], -e[2]}; }
 
 double vec3::operator[](int i) const { return e[i]; }
 
