@@ -3,34 +3,34 @@
 //
 
 #include "doctest.h"
-#include "vec3.h"
+#include "Vec3.h"
 #include "ray.h"
 #include "sphere.h"
 #include "yapt.h"
 
 TEST_CASE("SPHERE1") {
-    point3 o(0, 0, 0);
-    point3 p(4, 1, 0.1);
-    sphere s(o, .001);
-    ray r = ray::shoot(p, o);
-    hit_record record;
+    Point3 o(0, 0, 0);
+    Point3 p(4, 1, 0.1);
+    Sphere s(o, .001);
+    Ray r = Ray::shoot(p, o);
+    HitRecord record;
 
-    CHECK(s.hit(r, interval::future, record));
+    CHECK(s.hit(r, Interval::future, record));
 }
 
 TEST_CASE("sphere surface normal") {
-    point3 o(1, 1, 1);
+    Point3 o(1, 1, 1);
     double radius = 1.2;
-    sphere s(o, radius);
+    Sphere s(o, radius);
 
-    point3 a(7,4,6);
-    auto r1 = ray::shoot(o, a);
-    auto r2 = ray::shoot(a, o);
+    Point3 a(7, 4, 6);
+    auto r1 = Ray::shoot(o, a);
+    auto r2 = Ray::shoot(a, o);
 
-    hit_record record1;
-    hit_record record2;
-    auto result1 = s.hit(r1, interval::future, record1);
-    auto result2 = s.hit(r2, interval::future, record2);
+    HitRecord record1;
+    HitRecord record2;
+    auto result1 = s.hit(r1, Interval::future, record1);
+    auto result2 = s.hit(r2, Interval::future, record2);
     CHECK(result1);
     CHECK(result2);
 

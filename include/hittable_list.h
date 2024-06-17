@@ -9,28 +9,28 @@
 #include "hittable.h"
 #include <vector>
 
-class hittable_list: public hittable {
+class HittableList : public Hittable {
 public:
-    std::vector<shared_ptr<hittable>> objects;
+    std::vector<shared_ptr<Hittable>> objects;
 
-    hittable_list();
+    HittableList();
 
-    hittable_list(const shared_ptr<hittable>& object);
+    HittableList(const shared_ptr<Hittable> &object);
 
     void clear();
 
-    void add(const shared_ptr<hittable>& object);
+    void add(const shared_ptr<Hittable> &object);
 
-    bool hit(const ray &r, interval ray_t, hit_record &record) const override;
+    bool hit(const Ray &r, Interval ray_t, HitRecord &record) const override;
 
-    aabb bounding_box() const override;
+    [[nodiscard]] AABB boundingBox() const override;
 
-    double pdf_value(const point3& origin, const vec3& direction) const override;
+    double pdfValue(const Point3 &origin, const Vec3 &direction) const override;
 
-    vec3 random(const point3& origin) const override;
+    Vec3 random(const Point3 &origin) const override;
 
 private:
-    aabb bbox;
+    AABB bbox;
 };
 
 #endif //YAPT_HITTABLE_LIST_H

@@ -11,32 +11,27 @@
 #include "material.h"
 #include "texture.h"
 
-class constant_medium : public hittable {
+class ConstantMedium : public Hittable {
 public:
-    constant_medium(shared_ptr<hittable> boundary, double density, shared_ptr<texture> tex)
+    ConstantMedium(shared_ptr<Hittable> boundary, double density, shared_ptr<Texture> tex)
             : boundary(boundary), neg_inv_density(-1/density),
-              phase_function(make_shared<isotropic>(tex))
+              phase_function(make_shared<Isotropic>(tex))
     {}
 
-    constant_medium(shared_ptr<hittable> boundary, double density, const color& albedo)
+    ConstantMedium(shared_ptr<Hittable> boundary, double density, const Color& albedo)
             : boundary(boundary), neg_inv_density(-1/density),
-              phase_function(make_shared<isotropic>(albedo))
+              phase_function(make_shared<Isotropic>(albedo))
     {}
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-        // Print occasional samples when debugging. To enable, set enableDebug true.
-        const bool enableDebug = false;
-//        const bool debugging = enableDebug && random_double() < 0.00001;
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
 
-        hit_record rec1, rec2;
+        HitRecord rec1, rec2;
 
-        if (!boundary->hit(r, interval::universe, rec1))
+        if (!boundary->hit(r, Interval::universe, rec1))
             return false;
 
-        if (!boundary->hit(r, interval(rec1.t+0.0001, infinity), rec2))
+        if (!boundary->hit(r, Interval(rec1.t + 0.0001, infinity), rec2))
             return false;
-
-//        if (debugging) std::clog << "\nt_min=" << rec1.t << ", t_max=" << rec2.t << '\n';
 
         if (rec1.t < ray_t.min) rec1.t = ray_t.min;
         if (rec2.t > ray_t.max) rec2.t = ray_t.max;
@@ -49,7 +44,7 @@ public:
 
         auto ray_length = r.direction().length();
         auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-        auto hit_distance = neg_inv_density * log(random_double());
+        auto hit_distance = neg_inv_density * log(randomDouble());
 
         if (hit_distance > distance_inside_boundary)
             return false;
@@ -57,25 +52,19 @@ public:
         rec.t = rec1.t + hit_distance / ray_length;
         rec.p = r.at(rec.t);
 
-//        if (debugging) {
-//            std::clog << "hit_distance = " <<  hit_distance << '\n'
-//                      << "rec.t = " <<  rec.t << '\n'
-//                      << "rec.p = " <<  rec.p << '\n';
-//        }
-
-        rec.normal = vec3(1,0,0);  // arbitrary
+        rec.normal = Vec3(1, 0, 0);  // arbitrary
         rec.front_face = true;     // also arbitrary
         rec.mat = phase_function;
 
         return true;
     }
 
-    aabb bounding_box() const override { return boundary->bounding_box(); }
+    [[nodiscard]] AABB boundingBox() const override { return boundary->boundingBox(); }
 
 private:
-    shared_ptr<hittable> boundary;
+    shared_ptr<Hittable> boundary;
     double neg_inv_density;
-    shared_ptr<material> phase_function;
+    shared_ptr<Material> phase_function;
 };
 
 #endif //YAPT_CONSTANT_MEDIUM_H

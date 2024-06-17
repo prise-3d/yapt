@@ -5,29 +5,29 @@
 #ifndef YAPT_RAY_H
 #define YAPT_RAY_H
 
-#include "vec3.h"
+#include "Vec3.h"
 
 /**
- * A ray, defined by an point3 origin and a vec3 direction
+ * A ray, defined by an point3 origin and a Vec3 direction
  * Note that a ray's direction is not necessarily a unit vector
  */
-class ray {
+class Ray {
 public:
-    ray();
+    Ray();
 
-    ray(const point3 &o, const vec3 &dir);
+    Ray(const Point3 &o, const Vec3 &dir);
 
-    static ray shoot(point3 &from, point3 &aiming);
+    static Ray shoot(Point3 &from, Point3 &aiming);
 
-    [[nodiscard]] point3 at(double t) const;
+    [[nodiscard]] Point3 at(double t) const;
 
-    [[nodiscard]] const point3 &origin() const;
+    [[nodiscard]] const Point3 &origin() const;
 
-    [[nodiscard]] const vec3 &direction() const;
+    [[nodiscard]] const Vec3 &direction() const;
 
 private:
-    point3 orig;
-    vec3 dir;
+    Point3 orig;
+    Vec3 dir;
 };
 
 #endif //YAPT_RAY_H

@@ -9,66 +9,67 @@
 #include "pdf.h"
 #include "texture.h"
 
-class hit_record;
+class HitRecord;
 
-class scatter_record {
+class ScatterRecord {
 public:
-    color attenuation;
-    shared_ptr<pdf> pdf_ptr;
+    Color attenuation;
+    shared_ptr<PDF> pdf_ptr;
     bool skip_pdf;
-    ray skip_pdf_ray;
+    Ray skip_pdf_ray;
 };
 
-class material {
+class Material {
 public:
-    virtual ~material() = default;
+    virtual ~Material() = default;
 
-    virtual color emitted(
-            const ray& r_in, const hit_record& rec, double u, double v, const point3& p
+    virtual Color emitted(
+            const Ray &r_in, const HitRecord &rec, double u, double v, const Point3 &p
     ) const {
-        return color(0,0,0);
+        return Color(0, 0, 0);
     }
 
-    virtual bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const {
+    virtual bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const {
         return false;
     }
 
-    virtual double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered)
+    virtual double scattering_pdf(const Ray &r_in, const HitRecord &rec, const Ray &scattered)
     const {
         return 0;
     }
 };
 
-class lambertian : public material {
+class Lambertian : public Material {
 public:
-    lambertian(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
-    lambertian(shared_ptr<texture> tex) : tex(tex) {}
+    Lambertian(const Color &albedo) : tex(make_shared<SolidColor>(albedo)) {}
 
-    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override;
+    Lambertian(shared_ptr<Texture> tex) : tex(tex) {}
+
+    bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const override;
 
 
-    double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const override;
+    double scattering_pdf(const Ray &r_in, const HitRecord &rec, const Ray &scattered) const override;
 
 private:
-    shared_ptr<texture> tex;
+    shared_ptr<Texture> tex;
 };
 
-class metal : public material {
+class metal : public Material {
 public:
-    metal(const color& albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
+    metal(const Color &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
-    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override;
+    bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const override;
 
 private:
-    color albedo;
+    Color albedo;
     double fuzz;
 };
 
-class dielectric : public material {
+class Dielectric : public Material {
 public:
-    dielectric(double refraction_index) : refraction_index(refraction_index) {}
+    Dielectric(double refraction_index) : refraction_index(refraction_index) {}
 
-    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override;
+    bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const override;
 
 private:
     static double reflectance(double cosine, double refraction_index);
@@ -78,32 +79,34 @@ private:
     double refraction_index;
 };
 
-class diffuse_light : public material {
+class DiffuseLight : public Material {
 public:
-    diffuse_light(shared_ptr<texture> tex) : tex(tex) {}
+    DiffuseLight(shared_ptr<Texture> tex) : tex(tex) {}
 
-    diffuse_light(const color &emit) : tex(make_shared<solid_color>(emit)) {}
+    DiffuseLight(const Color &emit) : tex(make_shared<SolidColor>(emit)) {}
 
-    color emitted(const ray& r_in, const hit_record& rec, double u, double v, const point3& p) const override {
+    Color emitted(const Ray &r_in, const HitRecord &rec, double u, double v, const Point3 &p) const override {
         if (!rec.front_face)
-            return color(0,0,0);
+            return Color(0, 0, 0);
         return tex->value(u, v, p);
     }
 
 private:
-    shared_ptr<texture> tex;
+    shared_ptr<Texture> tex;
 };
 
-class isotropic : public material {
+class Isotropic : public Material {
 public:
-    isotropic(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
-    isotropic(shared_ptr<texture> tex) : tex(tex) {}
+    Isotropic(const Color &albedo) : tex(make_shared<SolidColor>(albedo)) {}
 
-    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override;
-    double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const override;
+    Isotropic(shared_ptr<Texture> tex) : tex(tex) {}
+
+    bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const override;
+
+    double scattering_pdf(const Ray &r_in, const HitRecord &rec, const Ray &scattered) const override;
 
 private:
-    shared_ptr<texture> tex;
+    shared_ptr<Texture> tex;
 };
 
 

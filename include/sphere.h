@@ -13,22 +13,22 @@
 #include "onb.h"
 
 
-class sphere : public hittable {
+class Sphere : public Hittable {
 public:
-    sphere(const point3 &center, double radius)
+    Sphere(const Point3 &center, double radius)
             : center(center), radius(fmax(0, radius)) {
-        auto rvec = vec3(radius, radius, radius);
-        bbox = aabb(center - rvec, center + rvec);
+        auto rvec = Vec3(radius, radius, radius);
+        bbox = AABB(center - rvec, center + rvec);
     }
 
-    sphere(const point3 &center, double radius, shared_ptr<material> mat)
+    Sphere(const Point3 &center, double radius, shared_ptr<Material> mat)
             : center(center), radius(fmax(0, radius)), mat(mat) {
-        auto rvec = vec3(radius, radius, radius);
-        bbox = aabb(center - rvec, center + rvec);
+        auto rvec = Vec3(radius, radius, radius);
+        bbox = AABB(center - rvec, center + rvec);
     }
 
-    bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
-        vec3 oc = center - r.origin();
+    bool hit(const Ray &r, Interval ray_t, HitRecord &rec) const override {
+        Vec3 oc = center - r.origin();
         auto a = r.direction().length2();
         auto h = dot(r.direction(), oc);
         auto c = oc.length2() - radius * radius;
@@ -49,7 +49,7 @@ public:
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        vec3 outward_normal = (rec.p - center) / radius;
+        Vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
         get_sphere_uv(outward_normal, rec.u, rec.v);
         rec.mat = mat;
@@ -57,13 +57,13 @@ public:
         return true;
     }
 
-    [[nodiscard]] aabb bounding_box() const override { return bbox; }
+    [[nodiscard]] AABB boundingBox() const override { return bbox; }
 
-    double pdf_value(const point3 &origin, const vec3 &direction) const override {
+    [[nodiscard]] double pdfValue(const Point3 &origin, const Vec3 &direction) const override {
         // This method only works for stationary spheres.
 
-        hit_record rec;
-        if (!this->hit(ray(origin, direction), interval(0.001, infinity), rec))
+        HitRecord rec;
+        if (!this->hit(Ray(origin, direction), Interval(0.001, infinity), rec))
             return 0;
 
         auto cos_theta_max = sqrt(1 - radius * radius / (center - origin).length2());
@@ -72,23 +72,23 @@ public:
         return 1 / solid_angle;
     }
 
-    vec3 random(const point3 &origin) const override {
-        vec3 direction = center - origin;
+    [[nodiscard]] Vec3 random(const Point3 &origin) const override {
+        Vec3 direction = center - origin;
         auto distance_squared = direction.length2();
-        onb uvw;
+        ONB uvw;
         uvw.build_from_w(direction);
         return uvw.local(random_to_sphere(radius, distance_squared));
     }
 
 
 private:
-    point3 center;
+    Point3 center;
     double radius;
-    shared_ptr<material> mat;
-    vec3 center_vec;
-    aabb bbox;
+    shared_ptr<Material> mat;
+    Vec3 center_vec;
+    AABB bbox;
 
-    static void get_sphere_uv(const point3 &p, double &u, double &v) {
+    static void get_sphere_uv(const Point3 &p, double &u, double &v) {
         // p: a given point on the sphere of radius one, centered at the origin.
         // u: returned value [0,1] of angle around the Y axis from X=-1.
         // v: returned value [0,1] of angle from Y=-1 to Y=+1.
@@ -103,16 +103,16 @@ private:
         v = theta / pi;
     }
 
-    static vec3 random_to_sphere(double radius, double distance_squared) {
-        auto r1 = random_double();
-        auto r2 = random_double();
+    static Vec3 random_to_sphere(double radius, double distance_squared) {
+        auto r1 = randomDouble();
+        auto r2 = randomDouble();
         auto z = 1 + r2 * (sqrt(1 - radius * radius / distance_squared) - 1);
 
         auto phi = 2 * pi * r1;
         auto x = cos(phi) * sqrt(1 - z * z);
         auto y = sin(phi) * sqrt(1 - z * z);
 
-        return vec3(x, y, z);
+        return {x, y, z};
     }
 };
 

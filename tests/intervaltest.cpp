@@ -8,7 +8,7 @@
 TEST_CASE("interval") {
     auto minbound = 0.;
     auto maxbound = 5.;
-    auto i = interval(minbound, maxbound);
+    auto i = Interval(minbound, maxbound);
     CHECK(i.min == minbound);
     CHECK(i.max == maxbound);
     CHECK(i.size() == maxbound - minbound);
@@ -24,7 +24,7 @@ TEST_CASE("interval clamp") {
     auto minbound = 0.;
     auto maxbound = 5.;
     auto midpoint = (minbound + maxbound) / 2;
-    auto i = interval(minbound, maxbound);
+    auto i = Interval(minbound, maxbound);
 
     CHECK(i.clamp(midpoint) == midpoint);
     CHECK(i.clamp(minbound) == minbound);

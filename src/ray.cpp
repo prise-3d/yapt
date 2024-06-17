@@ -1,25 +1,25 @@
 //
 // Created by franck on 08/06/24.
 //
-#include "vec3.h"
+#include "Vec3.h"
 #include "ray.h"
 
-ray::ray() = default;
+Ray::Ray() = default;
 
-ray::ray(const point3 &o, const vec3 &dir) : orig(o), dir(dir) {}
+Ray::Ray(const Point3 &o, const Vec3 &dir) : orig(o), dir(dir) {}
 
-[[nodiscard]] point3 ray::at(double t) const {
+[[nodiscard]] Point3 Ray::at(double t) const {
     return orig + t * dir;
 }
 
-[[nodiscard]] const point3 &ray::origin() const {
+[[nodiscard]] const Point3 &Ray::origin() const {
     return orig;
 }
 
-[[nodiscard]] const vec3 &ray::direction() const {
+[[nodiscard]] const Vec3 &Ray::direction() const {
     return dir;
 }
 
-ray ray::shoot(point3 &from, point3 &aiming) {
+Ray Ray::shoot(Point3 &from, Point3 &aiming) {
     return {from, aiming - from};
 }

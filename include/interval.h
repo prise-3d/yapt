@@ -7,15 +7,15 @@
 
 #include "constants.h"
 
-class interval {
+class Interval {
 public:
     double min, max;
 
-    interval();
+    Interval();
 
-    interval(double min, double max);
+    Interval(double min, double max);
 
-    interval(const interval& a, const interval& b);
+    Interval(const Interval &a, const Interval &b);
 
     double size() const;
 
@@ -25,13 +25,13 @@ public:
 
     double clamp(double x) const;
 
-    interval expand(double delta) const;
+    Interval expand(double delta) const;
 
-    static const interval empty, universe, future;
+    static const Interval empty, universe, future;
 };
 
-interval operator+(const interval& ival, double displacement);
+Interval operator+(const Interval &ival, double displacement);
 
-interval operator+(double displacement, const interval& ival);
+Interval operator+(double displacement, const Interval &ival);
 
 #endif //YAPT_INTERVAL_H

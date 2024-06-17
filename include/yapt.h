@@ -18,7 +18,7 @@ using std::sqrt;
 
 // common headers
 #include "utils.h"
-#include "vec3.h"
+#include "Vec3.h"
 #include "ray.h"
 #include "color.h"
 #include "interval.h"

@@ -4,47 +4,47 @@
 
 #include "yapt.h"
 
-const interval interval::empty    = interval(+infinity, -infinity);
-const interval interval::universe = interval(-infinity, +infinity);
-const interval interval::future   = interval(0, +infinity);
+const Interval Interval::empty    = Interval(+infinity, -infinity);
+const Interval Interval::universe = Interval(-infinity, +infinity);
+const Interval Interval::future   = Interval(0, +infinity);
 
-interval::interval() : min(+infinity), max(-infinity) {}
+Interval::Interval() : min(+infinity), max(-infinity) {}
 
-interval::interval(double min, double max) : min(min), max(max) {}
+Interval::Interval(double min, double max) : min(min), max(max) {}
 
-interval::interval(const interval &a, const interval &b) {
+Interval::Interval(const Interval &a, const Interval &b) {
     // Create the interval tightly enclosing the two input intervals.
     min = a.min <= b.min ? a.min : b.min;
     max = a.max >= b.max ? a.max : b.max;
 }
 
-double interval::size() const {
+double Interval::size() const {
     return max - min;
 }
 
-bool interval::contains(double x) const {
+bool Interval::contains(double x) const {
     return min <= x && x <= max;
 }
 
-bool interval::surrounds(double x) const {
+bool Interval::surrounds(double x) const {
     return min < x && x < max;
 }
 
-double interval::clamp(double x) const {
+double Interval::clamp(double x) const {
     if (x < min) return min;
     if (x > max) return max;
     return x;
 }
 
-interval interval::expand(double delta) const {
+Interval Interval::expand(double delta) const {
     auto padding = delta/2;
-    return interval(min - padding, max + padding);
+    return Interval(min - padding, max + padding);
 }
 
-interval operator+(const interval& ival, double displacement) {
-    return interval(ival.min + displacement, ival.max + displacement);
+Interval operator+(const Interval& ival, double displacement) {
+    return Interval(ival.min + displacement, ival.max + displacement);
 }
 
-interval operator+(double displacement, const interval& ival) {
+Interval operator+(double displacement, const Interval& ival) {
     return ival + displacement;
 }

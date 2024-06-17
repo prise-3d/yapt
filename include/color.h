@@ -5,14 +5,14 @@
 #ifndef YAPT_COLOR_H
 #define YAPT_COLOR_H
 
-#include "vec3.h"
+#include "Vec3.h"
 #include <iostream>
 
-using color = vec3;
+using Color = Vec3;
 
-void write_color(std::ostream &out, const color &pixel_color);
+void writeColor(std::ostream &out, const Color &pixel_color);
 
-inline double linear_to_gamma(double linear_component) {
+inline double linearToGamma(double linear_component) {
     if (linear_component > 0)
         return sqrt(linear_component);
 

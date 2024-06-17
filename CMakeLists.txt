@@ -26,11 +26,11 @@ include_directories(${PNG_INCLUDE_DIRS})
 add_executable(yapt ${SOURCES}
         src/main.cpp
         src/stb_image.cpp
-                include/vec3.h
+        include/Vec3.h
         include/ray.h
         include/hittable.h
         include/sphere.h
-        src/vec3.cpp
+        src/Vec3.cpp
         src/ray.cpp
         include/hittable_list.h
         src/hittable_list.cpp
@@ -83,7 +83,7 @@ add_executable(tests ${TEST_SOURCES}
         include/ray.h
         tests/raytest.cpp
         tests/spheretest.cpp
-        src/vec3.cpp
+        src/Vec3.cpp
         src/ray.cpp
         include/hittable_list.h
         src/hittable_list.cpp
