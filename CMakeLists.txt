@@ -58,6 +58,7 @@ add_executable(yapt ${SOURCES}
         include/image_exporter.h
         src/image_exporter.cpp
         include/image_data.h
+        include/sampler.h
 )
 
 target_link_libraries(yapt ${PNG_LIBRARIES})
@@ -117,6 +118,7 @@ add_executable(tests ${TEST_SOURCES}
         include/image_exporter.h
         src/image_exporter.cpp
         include/image_data.h
+        include/sampler.h
 )
 
 # Link external libraries to tests executable if needed

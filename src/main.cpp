@@ -12,7 +12,6 @@
 #include "texture.h"
 #include "rtw_stb_image.h"
 #include "quad.h"
-#include "constant_medium.h"
 #include "image_exporter.h"
 #include <iomanip>
 
@@ -32,19 +31,23 @@ void simple_light() {
     Camera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 400;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
+    cam.imageWidth       = 1600;
+    cam.maxDepth         = 30;
     cam.background        = Color(0, 0, 0);
 
     cam.vfov     = 20;
-    cam.lookfrom = Point3(26, 3, 6);
-    cam.lookat   = Point3(0, 2, 0);
+    cam.lookFrom = Point3(26, 3, 6);
+    cam.lookAt   = Point3(0, 2, 0);
     cam.vup      = Vec3(0, 1, 0);
 
-    cam.defocus_angle = 0;
+    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(10);
+
+    cam.defocusAngle = 0;
 
     cam.render(world, lights);
+
+    PNGImageExporter exporter(cam.data());
+    exporter.write("/home/franck/out.png");
 }
 void final () {
     HittableList world;
@@ -83,17 +86,19 @@ void final () {
     Camera cam;
 
     cam.aspect_ratio      = 1.0;
-    cam.image_width       = 600;
-    cam.samples_per_pixel = 25;
-    cam.max_depth         = 25;
+    cam.imageWidth       = 900;
+    cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
+//    cam.pixelSamplerFactory = make_shared<TrivialPixelSamplerFactory>(25);
+    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(7);
+
     cam.vfov     = 40;
-    cam.lookfrom = Point3(278, 278, -800);
-    cam.lookat   = Point3(278, 278, 0);
+    cam.lookFrom = Point3(278, 278, -800);
+    cam.lookAt   = Point3(278, 278, 0);
     cam.vup      = Vec3(0, 1, 0);
 
-    cam.defocus_angle = 0;
+    cam.defocusAngle = 0;
 
     cam.render(world, lights);
 
