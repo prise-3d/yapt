@@ -29,6 +29,9 @@ public:
     double focusDist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
     virtual void render(const Hittable &world, const Hittable &lights);
+    virtual void renderLine(const Hittable &world, const Hittable &lights, int j);
+    virtual void parallelRender(const Hittable &world, const Hittable &lights);
+
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
 
 protected:

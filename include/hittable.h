@@ -51,7 +51,7 @@ public:
 
 class Translate : public Hittable {
 public:
-    Translate(shared_ptr<Hittable> object, const Vec3 &offset)
+    Translate(const shared_ptr<Hittable>& object, const Vec3 &offset)
             : object(object), offset(offset) {
         bbox = object->boundingBox() + offset;
     }
@@ -80,7 +80,7 @@ private:
 
 class RotateY : public Hittable {
 public:
-    RotateY(shared_ptr<Hittable> object, double angle) : object(object) {
+    RotateY(const shared_ptr<Hittable>& object, double angle) : object(object) {
         auto radians = degrees_to_radians(angle);
         sin_theta = sin(radians);
         cos_theta = cos(radians);

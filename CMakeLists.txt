@@ -9,7 +9,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -pthread")
 
 # Add include directory
 include_directories(include)

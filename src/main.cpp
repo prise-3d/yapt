@@ -2,7 +2,6 @@
 // Created by franck on 07/06/24.
 //
 
-#include "bvh.h"
 #include "yapt.h"
 #include "hittable_list.h"
 #include "sphere.h"
@@ -10,10 +9,10 @@
 #include "material.h"
 #include <chrono>
 #include "texture.h"
-#include "rtw_stb_image.h"
 #include "quad.h"
 #include "image_exporter.h"
 #include <iomanip>
+
 
 void simple_light() {
     HittableList world;
@@ -49,6 +48,9 @@ void simple_light() {
     PNGImageExporter exporter(cam.data());
     exporter.write("/home/franck/out.png");
 }
+
+// single thread                     -> 99.157 s
+// 20 threads, concurrent rng access -> 30.8 s
 void final () {
     HittableList world;
 
@@ -90,7 +92,6 @@ void final () {
     cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
-//    cam.pixelSamplerFactory = make_shared<TrivialPixelSamplerFactory>(25);
     cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(7);
 
     cam.vfov     = 40;
@@ -100,11 +101,65 @@ void final () {
 
     cam.defocusAngle = 0;
 
-    cam.render(world, lights);
+    cam.parallelRender(world, lights);
 
     PNGImageExporter exporter(cam.data());
     exporter.write("/home/franck/out.png");
 }
+
+#define PI_N 1000000000
+#define PI_N_THREADS 20
+
+void compute_pi() {
+
+    int n_inside = 0;
+    for (int i = 0 ; i < PI_N ; i++) {
+        double x = randomDouble();
+        double y = randomDouble();
+        if (x * x + y * y < 1) n_inside++;
+    }
+    std::cout << 4 * double(n_inside) / double(PI_N) << std::endl;
+}
+
+#include <random>
+#include <thread>
+#include <vector>
+#include <atomic>
+
+struct alignas(64) AlignedInt {
+    std::atomic<int> value{0};
+};
+
+void compute_some_pi(AlignedInt* count) {
+    thread_local std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    for (int i = 0; i < PI_N / PI_N_THREADS; i++) {
+        double x = dist(rng);
+        double y = dist(rng);
+        if (x * x + y * y < 1) count->value++;
+    }
+}
+
+void compute_pi_several_threads() {
+    AlignedInt n_inside[PI_N_THREADS];
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < PI_N_THREADS; ++i) {
+        threads.emplace_back(compute_some_pi, &n_inside[i]);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    int inside = 0;
+    for (int i = 0; i < PI_N_THREADS; i++) {
+        inside += n_inside[i].value.load();
+    }
+
+    std::cout << 4 * double(inside) / double(PI_N) << std::endl;
+}
+
 
 int main() {
 
@@ -113,6 +168,8 @@ int main() {
     switch(1) {
         case 1: final(); break;
         case 2: simple_light(); break;
+        case 3: compute_pi(); break;
+        case 4: compute_pi_several_threads(); break;
     }
 
     auto end = std::chrono::high_resolution_clock::now();
