@@ -60,6 +60,7 @@ add_executable(yapt ${SOURCES}
         src/image_exporter.cpp
         include/image_data.h
         include/sampler.h
+        include/triangle.h
 )
 
 find_package(Threads REQUIRED)
@@ -122,6 +123,8 @@ add_executable(tests ${TEST_SOURCES}
         src/image_exporter.cpp
         include/image_data.h
         include/sampler.h
+        include/triangle.h
+        tests/triangletest.cpp
 )
 
 # Link external libraries to tests executable if needed

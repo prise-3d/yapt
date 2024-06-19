@@ -12,10 +12,11 @@
 #include "quad.h"
 #include "image_exporter.h"
 #include "bvh.h"
+#include "triangle.h"
 #include <iomanip>
 
 
-void simple_light() {
+void simple_light(std::string path) {
     HittableList world;
     HittableList lights;
 
@@ -47,10 +48,12 @@ void simple_light() {
     cam.render(world, lights);
 
     PNGImageExporter exporter(cam.data());
-    exporter.write("/home/franck/out.png");
+    exporter.write(path);
 }
 
-void final () {
+
+// 20 threads, 5x5 spp, perf -> 11.1s
+void final (std::string path) {
     HittableList world;
 
     auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
@@ -93,7 +96,7 @@ void final () {
     cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
-    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(10);
+    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(5);
 
     cam.vfov     = 40;
     cam.lookFrom = Point3(278, 278, -800);
@@ -105,7 +108,7 @@ void final () {
     cam.parallelRender(world, lights);
 
     PNGImageExporter exporter(cam.data());
-    exporter.write("/home/franck/out.png");
+    exporter.write(path);
 }
 
 #define PI_N 1000000000
@@ -161,16 +164,63 @@ void compute_pi_several_threads() {
     std::cout << 4 * double(inside) / double(PI_N) << std::endl;
 }
 
+void triangle(std::string path) {
+    HittableList world;
+    HittableList lights;
 
-int main() {
+    auto pertext = make_shared<NoiseTexture>(4);
+    world.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, make_shared<Lambertian>(pertext)));
+    world.add(make_shared<Sphere>(Point3(0, 2, 0), 2, make_shared<Lambertian>(pertext)));
+
+    auto difflight = make_shared<DiffuseLight>(Color(4, 4, 4));
+//    auto the_light = make_shared<Triangle>(Point3(4, 1, -1),  Point3(4,1,3), Point3(4,6,-1), difflight);
+    auto the_light = make_shared<Triangle>(Point3(4, 1, -1),  Point3(0,0,3), Point3(0,5,0), difflight);
+
+    world.add(the_light);
+    lights.add(the_light);
+
+    Camera cam;
+
+    cam.aspect_ratio      = 16.0 / 9.0;
+    cam.imageWidth       = 1600;
+    cam.maxDepth         = 30;
+    cam.background        = Color(0, 0, 0);
+
+    cam.vfov     = 20;
+    cam.lookFrom = Point3(-5, 3, 30);
+    cam.lookAt   = Point3(0, 2, 0);
+    cam.vup      = Vec3(0, 1, 0);
+
+    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(6);
+
+    cam.defocusAngle = 0;
+
+    cam.parallelRender(world, lights);
+
+    PNGImageExporter exporter(cam.data());
+    exporter.write(path);
+}
+
+
+int main(int argc, char* argv[]) {
+
+    std::string path;
+
+    if (argc > 1) {
+        path = argv[1];
+    } else {
+        std::clog << " usage: yapt /path/to/destination/png" << std::endl;
+        return 0;
+    }
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    switch(1) {
-        case 1: final(); break;
-        case 2: simple_light(); break;
+    switch(5) {
+        case 1: final(path); break;
+        case 2: simple_light(path); break;
         case 3: compute_pi(); break;
         case 4: compute_pi_several_threads(); break;
+        case 5: triangle(path); break;
     }
 
     auto end = std::chrono::high_resolution_clock::now();

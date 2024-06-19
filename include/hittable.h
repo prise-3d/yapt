@@ -40,10 +40,15 @@ public:
 
     [[nodiscard]] virtual AABB boundingBox() const = 0;
 
-    [[nodiscard]] virtual double pdfValue(const Point3 &origin, const Vec3 &direction) const {
+     [[nodiscard]] virtual double pdfValue(const Point3 &origin, const Vec3 &direction) const {
         return 0.0;
     }
 
+    /**
+     * Samples a direction to this hittable from an origin
+     * @param origin the origin to sample from
+     * @return a direction to the hittable
+     */
     [[nodiscard]] virtual Vec3 random(const Point3 &origin) const {
         return {1, 0, 0};
     }
