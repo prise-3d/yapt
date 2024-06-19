@@ -57,6 +57,12 @@ public:
         return true;
     }
 
+    bool has(Point3 point) {
+        auto r = point - center;
+        double radius2 = radius * radius;
+        return Interval(radius2 - EPSILON, radius2 + EPSILON).contains(r.length2());
+    }
+
     [[nodiscard]] AABB boundingBox() const override { return bbox; }
 
     [[nodiscard]] double pdfValue(const Point3 &origin, const Vec3 &direction) const override {
