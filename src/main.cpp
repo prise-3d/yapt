@@ -11,6 +11,7 @@
 #include "texture.h"
 #include "quad.h"
 #include "image_exporter.h"
+#include "bvh.h"
 #include <iomanip>
 
 
@@ -49,8 +50,6 @@ void simple_light() {
     exporter.write("/home/franck/out.png");
 }
 
-// single thread                     -> 99.157 s
-// 20 threads, concurrent rng access -> 30.8 s
 void final () {
     HittableList world;
 
@@ -79,6 +78,8 @@ void final () {
     auto glass = make_shared<Dielectric>(1.5);
     world.add(make_shared<Sphere>(Point3(190, 90, 190), 90, glass));
 
+    world = HittableList(make_shared<BVHNode>(world));
+
     // Light Sources
     HittableList lights;
     auto m = shared_ptr<Material>();
@@ -92,7 +93,7 @@ void final () {
     cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
-    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(7);
+    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(10);
 
     cam.vfov     = 40;
     cam.lookFrom = Point3(278, 278, -800);

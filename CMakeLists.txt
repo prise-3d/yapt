@@ -8,8 +8,9 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -pthread")
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 # Add include directory
 include_directories(include)
@@ -61,7 +62,9 @@ add_executable(yapt ${SOURCES}
         include/sampler.h
 )
 
-target_link_libraries(yapt ${PNG_LIBRARIES})
+find_package(Threads REQUIRED)
+target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads)
+
 
 add_custom_target(clean-all
         COMMAND ${CMAKE_BUILD_TOOL} clean

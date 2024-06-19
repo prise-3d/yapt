@@ -29,9 +29,8 @@ void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
 
     std::queue<std::pair<int, int>> taskQueue;
 
-    for (int start_j = imageHeight - 1; start_j >= 0; start_j -= N) {
-        //FIXME: we access the rng concurrently
-        taskQueue.emplace(start_j, std::max(0, start_j - N + 1));
+    for (int start_j = 0 ; start_j < imageHeight ; start_j += N) {
+        taskQueue.emplace(start_j, std::min(start_j + N - 1, imageHeight));
     }
     std::clog << std::endl;
 
@@ -55,7 +54,7 @@ void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
             int start_j = task.first;
             int end_j = task.second;
 
-            for (int j = start_j; j >= end_j; --j) {
+            for (int j = start_j; j <= end_j; ++j) {
                 renderLine(world, lights, j);
             }
         }
@@ -74,7 +73,7 @@ void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
 }
 
 void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
-    int idx = (imageHeight - 1 - j) * imageWidth * 3;
+    int idx = j * imageWidth * 3;
 
     for (int i = 0; i < imageWidth; i++) {
         Color pixel_color(0, 0, 0);

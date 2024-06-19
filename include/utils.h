@@ -12,14 +12,9 @@ inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.;
 }
 
-//inline double random_double() {
-//    // Returns a random real in [0,1).
-//    return rand() / (RAND_MAX + 1.0);
-//}
-
 inline double randomDouble() {
-    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-    static std::mt19937 generator;
+    thread_local static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    thread_local static std::mt19937 generator;
     return distribution(generator);
 }
 
