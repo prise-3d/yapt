@@ -21,6 +21,39 @@ public:
         v[0] = a;
         v[1] = a +i ;
         v[2] = a + j;
+
+        double minX, minY, minZ, maxX, maxY, maxZ;
+        minX = a.x();
+        minY = a.y();
+        minZ = a.z();
+        maxX = a.x();
+        maxY = a.y();
+        maxZ = a.z();
+
+        for (int i = 1 ; i < 3 ; i++) {
+            Point3 p = v[i];
+            minX = minX < p.x() ? minX: p.x();
+            minY = minY < p.y() ? minY: p.y();
+            minZ = minZ < p.z() ? minZ: p.z();
+            maxX = maxX < p.x() ? p.x(): maxX;
+            maxY = maxY < p.y() ? p.y(): maxY;
+            maxZ = maxZ < p.z() ? p.z(): maxZ;
+        }
+
+        if (minX == maxX) {
+            minX -= EPSILON;
+            maxX += EPSILON;
+        }
+        if (minY == maxY) {
+            minY -= EPSILON;
+            maxY += EPSILON;
+        }
+        if (minZ == maxZ) {
+            minZ -= EPSILON;
+            maxZ += EPSILON;
+        }
+
+        bbox = AABB(Point3(minX, minY, minZ), Point3(maxX, maxY, maxZ));
     }
 
     [[nodiscard]] AABB boundingBox() const override {
@@ -72,9 +105,8 @@ public:
 
         rec.normal = n;
         rec.mat = mat;
+        rec.p = r.at(rec.t);
         rec.set_face_normal(r, n);
-        rec.u = u;
-        rec.v = v;
         return true;
     }
 
