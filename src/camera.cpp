@@ -30,7 +30,7 @@ void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
     std::queue<std::pair<int, int>> taskQueue;
 
     for (int start_j = 0 ; start_j < imageHeight ; start_j += N) {
-        taskQueue.emplace(start_j, std::min(start_j + N - 1, imageHeight));
+        taskQueue.emplace(start_j, std::min(start_j + N - 1, imageHeight-1));
     }
     std::clog << std::endl;
 
