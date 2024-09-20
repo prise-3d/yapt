@@ -1,3 +1,4 @@
+
 //
 // Created by franck on 09/06/24.
 //
@@ -76,16 +77,27 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
     int idx = j * imageWidth * 3;
 
     for (int i = 0; i < imageWidth; i++) {
-        Color pixel_color(0, 0, 0);
 
         auto sampler = pixelSamplerFactory->create(i, j);
+
+        VoronoiAggregator aggregator(sampler->sampleSize());
+//        MCSampleAggregator aggregator(sampler->sampleSize());
+
         for (sampler->begin(); sampler->hasNext() ;) {
             Point3 p = sampler->get();
             Ray r = getRay(p.x(), p.y());
-            pixel_color += rayColor(r, maxDepth, world, lights);
+
+            Vec3 color = rayColor(r, maxDepth, world, lights);
+
+            Sample sample;
+            sample.color = color;
+            sample.x = sampler->dx();
+            sample.y = sampler->dy();
+            aggregator << sample;
         }
 
-        pixel_color /= sampler->sampleSize();
+        Color pixel_color = aggregator.aggregate();
+
         auto r = pixel_color.x();
         auto g = pixel_color.y();
         auto b = pixel_color.z();
@@ -105,7 +117,6 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
         imageData.data[idx++] = gbyte;  // G
         imageData.data[idx++] = bbyte;  // B
     }
-
 }
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
@@ -164,8 +175,8 @@ void Camera::initialize() {
  */
 Ray Camera::getRay(double x, double y) const {
     auto pixelSample = pixel00_loc +
-            x * pixel_delta_u +
-            y * pixel_delta_v;
+                       x * pixel_delta_u +
+                       y * pixel_delta_v;
 
     auto rayOrigin = (defocusAngle <= 0) ? center : defocusDiskSample();
     auto rayDirection = pixelSample - rayOrigin;
@@ -183,8 +194,7 @@ Point3 Camera::defocusDiskSample() const {
     return center + (p[0] * defocusDiskU) + (p[1] * defocusDiskV);
 }
 
-Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hittable& lights)
-const {
+Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hittable& lights) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};

@@ -19,7 +19,7 @@ double Lambertian::scattering_pdf(const Ray &r_in, const HitRecord &rec, const R
     return cos_theta < 0 ? 0 : cos_theta / pi;
 }
 
-bool metal::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const {
+bool Metal::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const {
     Vec3 reflected = reflect(r_in.direction(), rec.normal);
     reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
 

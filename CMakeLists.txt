@@ -23,6 +23,11 @@ include_directories(include)
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIRS})
 
+find_package(CGAL REQUIRED COMPONENTS Core)
+
+find_package(Threads REQUIRED)
+
+
 # Add executable
 add_executable(yapt ${SOURCES}
         src/main.cpp
@@ -61,10 +66,14 @@ add_executable(yapt ${SOURCES}
         include/image_data.h
         include/sampler.h
         include/triangle.h
+        src/demo.cpp
+        include/demo.h
+        include/importer.h
+        include/sample.h
 )
 
 find_package(Threads REQUIRED)
-target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads)
+target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads assimp CGAL::CGAL CGAL::CGAL_Core)
 
 
 add_custom_target(clean-all
@@ -125,10 +134,11 @@ add_executable(tests ${TEST_SOURCES}
         include/sampler.h
         include/triangle.h
         tests/triangletest.cpp
+        include/sample.h
 )
 
 # Link external libraries to tests executable if needed
-target_link_libraries(tests ${PNG_LIBRARIES})
+target_link_libraries(tests ${PNG_LIBRARIES} CGAL::CGAL CGAL::CGAL_Core Threads::Threads)
 
 # Enable testing
 enable_testing()

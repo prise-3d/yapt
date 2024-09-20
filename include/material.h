@@ -54,9 +54,9 @@ private:
     shared_ptr<Texture> tex;
 };
 
-class metal : public Material {
+class Metal : public Material {
 public:
-    metal(const Color &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
+    Metal(const Color &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
     bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const override;
 

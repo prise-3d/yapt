@@ -55,3 +55,7 @@ Vec3 &Vec3::operator/=(double t) {
 [[nodiscard]] bool Vec3::near_zero() const {
     return (fabs(e[0]) < EPSILON) && (fabs(e[1]) < EPSILON) && (fabs(e[2]) < EPSILON);
 }
+
+bool Vec3::operator==(const Vec3& other) const {
+    return are_epsilon_equal(*this, other);
+}

@@ -49,6 +49,8 @@ public:
     inline static Vec3 random(double min, double max) {
         return {randomDouble(min, max), randomDouble(min, max), randomDouble(min, max)};
     }
+
+    bool operator==(const Vec3& other) const;
 };
 
 using Point3 = Vec3;
@@ -157,5 +159,13 @@ inline Vec3 random_cosine_direction() {
 
     return {x, y, z};
 }
+
+struct Vec3Hash2D {
+    std::size_t operator()(const Vec3& p) const {
+        std::size_t h1 = std::hash<double>()(p.x());
+        std::size_t h2 = std::hash<double>()(p.y());
+        return h1 + 37 * h2;
+    }
+};
 
 #endif //YAPT_VEC3_H

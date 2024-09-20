@@ -10,6 +10,7 @@
 #include "image_data.h"
 #include <png.h>
 #include "sampler.h"
+#include "sample.h"
 
 class Camera {
 public:

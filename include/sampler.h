@@ -14,6 +14,8 @@ public:
     virtual bool hasNext() = 0;
     virtual Point3 get() = 0;
     virtual int sampleSize() = 0;
+    virtual double dx() = 0;
+    virtual double dy() = 0;
 
 protected:
     double x;
@@ -34,11 +36,21 @@ public:
 
     Point3 get() override {
         index++;
+        _dx = randomDouble() - .5;
+        _dy = randomDouble() - .5;
         return {
-            x + randomDouble() - .5,
-            y + randomDouble() - .5,
+            x + _dx,
+            y + _dy,
             0
         };
+    }
+
+    double dx() override {
+        return _dx;
+    }
+
+    double dy() override {
+        return _dy;
     }
 
     int sampleSize() override {
@@ -48,7 +60,8 @@ public:
 protected:
     int size = 10;
     int index = 0;
-
+    double _dx;
+    double _dy;
 };
 
 
@@ -57,27 +70,37 @@ public:
     StratifiedPixelSampler(double x, double y, int sqrtSpp): PixelSampler(x, y), sqrtSpp(sqrtSpp) {step = 1. / (sqrtSpp + 1);}
 
     void begin() override {
-        dx = 0;
-        dy = 0;
+        inernal_dx = 0;
+        internal_dy = 0;
         step = 1. / (sqrtSpp);
     }
 
     bool hasNext() override {
-        return dy < sqrtSpp;
+        return internal_dy < sqrtSpp;
     }
 
     Point3 get() override {
+        _dx = step * (inernal_dx + randomDouble());
+        _dy = step * (internal_dy + randomDouble());
         Point3 p(
-                x + step * (dx + randomDouble()),
-                y + step * (dy + randomDouble()),
+                x + _dx,
+                y + _dy,
                 0);
-        dx++;
-        if (dx >= sqrtSpp) {
-            dx = 0;
-            dy++;
+        inernal_dx++;
+        if (inernal_dx >= sqrtSpp) {
+            inernal_dx = 0;
+            internal_dy++;
         }
 
         return p;
+    }
+
+    double dx() override {
+        return _dx;
+    }
+
+    double dy() override {
+        return _dy;
     }
 
     int sampleSize() override {
@@ -87,8 +110,10 @@ public:
 protected:
     int sqrtSpp = 10;
     double step;
-    int dx = 0;
-    int dy = 0;
+    int inernal_dx = 0;
+    int internal_dy = 0;
+    double _dx;
+    double _dy;
 };
 
 class PixelSamplerFactory {
@@ -117,6 +142,35 @@ public:
     }
 protected:
     int sqrtSpp;
+};
+
+class PPPPixelSampler : public PixelSampler {
+public:
+    PPPPixelSampler(double x, double y, std::size_t intensity, double confidence) : PixelSampler(x, y), intensity(intensity), confidence(confidence) {}
+
+    void begin() override {}
+    bool hasNext() override { return false; }
+    Point3 get() override {return Point3(0, 0, 0); };
+    int sampleSize() override { return 0; }
+    double dx() override { return 0.; }
+    double dy() override { return 0.; }
+
+private:
+    std::size_t intensity;
+    double confidence;
+};
+
+class PPPPixelSamplerFactory: public PixelSamplerFactory {
+public:
+    PPPPixelSamplerFactory(std::size_t intensity, double confidence): intensity(intensity), confidence(confidence) {}
+
+    shared_ptr<PixelSampler> create(double x, double y) override {
+        return make_shared<PPPPixelSampler>(x, y, intensity, confidence);
+    }
+
+protected:
+    std::size_t intensity;
+    double confidence;
 };
 
 #endif //YAPT_SAMPLER_H
