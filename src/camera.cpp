@@ -13,72 +13,18 @@
 #include <condition_variable>
 #include <memory>
 
-void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
-    initialize();
-
-    std::mutex queue_mutex;
-    std::condition_variable queue_cv;
-
-    // Available threads
-    auto numThreads = std::thread::hardware_concurrency();
-
-    std::clog << "rendering using " << numThreads << " threads" << std::endl;
-    std::vector<std::thread> threads(numThreads);
-
-    // Number of lines per task
-    int N = imageHeight / 100;
-    if (N < 1) N = 1;
-
-    std::queue<std::pair<int, int>> taskQueue;
-
-    for (int start_j = 0 ; start_j < imageHeight ; start_j += N) {
-        taskQueue.emplace(start_j, std::min(start_j + N - 1, imageHeight-1));
-    }
-    std::clog << std::endl;
-
-    // Here we declare a function to process a task (render a few lines of the image)
-    auto processSegment = [&]() {
-        randomSeed();
-        while (true) {
-            std::pair<int, int> task;
-            unsigned long remainingTasks;
-            {
-                std::unique_lock<std::mutex> lock(queue_mutex);
-                if (taskQueue.empty()) {
-                    break;  // All the tasks are done!
-                }
-                task = taskQueue.front();
-                taskQueue.pop();
-                remainingTasks = taskQueue.size();
-            }
-
-            std::clog << "\rTasks remaining: " << remainingTasks << "   " << std::flush;
-
-            int start_j = task.first;
-            int end_j = task.second;
-
-            for (int j = start_j; j <= end_j; ++j) {
-                renderLine(world, lights, j);
-            }
-        }
-    };
-
-    // start the threads
-    for (int t = 0; t < numThreads; ++t) {
-        threads[t] = std::thread(processSegment);
-    }
-
-    // Waiting for the threads to finish their tasks
-    for (auto& t : threads) {
-        t.join();
-    }
-    std::clog << std::endl;
-}
-
 void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
     int idx = j * imageWidth * 3;
 
     for (int i = 0; i < imageWidth; i++) {
+        // TODO:
+
+        // reject:
+        // restructure aggregator
+        // take 2 lists into account 1 for the geometry, 1 for the contributions
+        // the aggregator builds the geometry (Voronoi Diag) from the sampler
+        // until it conforms to our expectations
+        // THEN rays are cast
 
         auto sampler = pixelSamplerFactory->create(i, j);
         sampler->begin();
@@ -124,52 +70,6 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
         imageData.data[idx++] = bbyte;  // B
     }
 }
-
-//void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
-//    int idx = j * imageWidth * 3;
-//
-//    for (int i = 0; i < imageWidth; i++) {
-//
-//        auto sampler = pixelSamplerFactory->create(i, j);
-//
-////        VoronoiAggregator aggregator(sampler->sampleSize());
-//        MCSampleAggregator aggregator(sampler->sampleSize());
-//
-//        for (sampler->begin(); sampler->hasNext() ;) {
-//            Point3 p = sampler->get();
-//            Ray r = getRay(p.x(), p.y());
-//
-//            Vec3 color = rayColor(r, maxDepth, world, lights);
-//
-//            Sample sample;
-//            sample.color = color;
-//            sample.x = sampler->dx();
-//            sample.y = sampler->dy();
-//            aggregator << sample;
-//        }
-//
-//        Color pixel_color = aggregator.aggregate();
-//
-//        auto r = pixel_color.x();
-//        auto g = pixel_color.y();
-//        auto b = pixel_color.z();
-//
-//        // Apply a linear to gamma transform for gamma 2
-//        r = linearToGamma(r);
-//        g = linearToGamma(g);
-//        b = linearToGamma(b);
-//
-//        // Translate the [0,1] component values to the byte range [0,255].
-//        static const Interval intensity(0.000, 0.999);
-//        int rbyte = int(256 * intensity.clamp(r));
-//        int gbyte = int(256 * intensity.clamp(g));
-//        int bbyte = int(256 * intensity.clamp(b));
-//
-//        imageData.data[idx++] = rbyte;  // R
-//        imageData.data[idx++] = gbyte;  // G
-//        imageData.data[idx++] = bbyte;  // B
-//    }
-//}
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
     initialize();
@@ -279,4 +179,62 @@ Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hit
     Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
 
     return color_from_emission + colorFromScatter;
+}
+
+void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
+    initialize();
+
+    std::mutex queue_mutex;
+    std::condition_variable queue_cv;
+
+    // Available threads
+    auto numThreads = std::thread::hardware_concurrency();
+
+    std::clog << "rendering using " << numThreads << " threads" << std::endl;
+    std::vector<std::thread> threads(numThreads);
+
+    std::queue<std::pair<int, int>> taskQueue;
+
+    for (int start_j = 0 ; start_j < imageHeight ; start_j += linesPerBatch) {
+        taskQueue.emplace(start_j, std::min(start_j + linesPerBatch - 1, imageHeight-1));
+    }
+    std::clog << std::endl;
+
+    // Here we declare a function to process a task (render a few lines of the image)
+    auto processSegment = [&]() {
+        randomSeed();
+        while (true) {
+            std::pair<int, int> task;
+            unsigned long remainingTasks;
+            {
+                std::unique_lock<std::mutex> lock(queue_mutex);
+                if (taskQueue.empty()) {
+                    break;  // All the tasks are done!
+                }
+                task = taskQueue.front();
+                taskQueue.pop();
+                remainingTasks = taskQueue.size();
+            }
+
+            std::clog << "\rTasks remaining: " << remainingTasks << "   " << std::flush;
+
+            int start_j = task.first;
+            int end_j = task.second;
+
+            for (int j = start_j; j <= end_j; ++j) {
+                renderLine(world, lights, j);
+            }
+        }
+    };
+
+    // start the threads
+    for (int t = 0; t < numThreads; ++t) {
+        threads[t] = std::thread(processSegment);
+    }
+
+    // Waiting for the threads to finish their tasks
+    for (auto& t : threads) {
+        t.join();
+    }
+    std::clog << std::endl;
 }

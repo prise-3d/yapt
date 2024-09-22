@@ -10,6 +10,7 @@
 class PixelSampler {
 public:
     PixelSampler(double x, double y): x(x), y(y) {}
+    virtual ~PixelSampler() = default;
     virtual void begin() = 0;
     virtual bool hasNext() = 0;
     virtual Point3 get() = 0;
@@ -26,7 +27,7 @@ protected:
 
 class TrivialPixelSampler: public PixelSampler {
 public:
-    TrivialPixelSampler(double x, double y, int size): PixelSampler(x, y), size(size) {}
+    TrivialPixelSampler(double x, double y, int size): PixelSampler(x, y), size(size), _dx(0), _dy(0) {}
 
     void begin() override {
         index = 0;
@@ -73,7 +74,7 @@ protected:
 
 class StratifiedPixelSampler: public PixelSampler {
 public:
-    StratifiedPixelSampler(double x, double y, int sqrtSpp): PixelSampler(x, y), sqrtSpp(sqrtSpp) {step = 1. / (sqrtSpp + 1);}
+    StratifiedPixelSampler(double x, double y, int sqrtSpp): PixelSampler(x, y), sqrtSpp(sqrtSpp), _dx(0), _dy(0) {step = 1. / (sqrtSpp + 1);}
 
     void begin() override {
         internal_dx = 0;
@@ -156,7 +157,7 @@ protected:
 
 class PPPPixelSampler : public PixelSampler {
 public:
-    PPPPixelSampler(double x, double y, double intensity, double confidence) : PixelSampler(x, y), intensity(intensity) {
+    PPPPixelSampler(double x, double y, double intensity, double confidence) : PixelSampler(x, y), intensity(intensity), _dx(0), _dy(0), index(0) {
         epsilon_margin = sqrt(log(intensity * log(intensity)) - log(log(1./confidence))) / sqrt(pi * intensity);
         referencePoint = Point3(x, y, 0);
         min_value = -.5 - epsilon_margin;
@@ -244,7 +245,9 @@ public:
         _dx = 0;
         _dy = 0;
         _is_virtual = false;
-        total_area = 2 * epsilon_margin * (1 + 2 * epsilon_margin);
+        index = 0;
+        total_area = 4 * epsilon_margin * (1 + epsilon_margin);
+        bottom_side_crit = (3 + 2 * epsilon_margin) * epsilon_margin;
     }
 
     void begin() override {
@@ -256,9 +259,9 @@ public:
     Point3 get() override {
         if (index < number_of_samples) {
             Vec3 v(
-                    randomDouble(-.5, .5),
-                    randomDouble(-.5, .5),
-                    0
+                randomDouble(-.5, .5),
+                randomDouble(-.5, .5),
+                0
             );
             _dx = v.x();
             _dy = v.y();
@@ -268,16 +271,16 @@ public:
             _is_virtual = true;
             double r = randomDouble() * total_area;
             Vec3 v(0, 0, 0);
-            if (r < epsilon_margin) {
+            if (r < epsilon_margin) { // left side
                 v.e[0] = randomDouble(min_value, -.5);
                 v.e[1] = randomDouble(-.5, .5);
-            } else if (r < 2 * epsilon_margin) {
+            } else if (r < 2 * epsilon_margin) { // right side
                 v.e[0] = randomDouble(.5, max_value);
                 v.e[1] = randomDouble(-.5, .5);
-            } else if (r < left_side_crit) {
+            } else if (r < bottom_side_crit) { // bottom
                 v.e[0] = randomDouble(-min_value, max_value);
                 v.e[1] = randomDouble(min_value, -.5);
-            } else {
+            } else { // top
                 v.e[0] = randomDouble(-min_value, max_value);
                 v.e[1] = randomDouble(.5, max_value);
             }
@@ -308,25 +311,27 @@ private:
     double max_value;
     bool _is_virtual;
     double total_area;
-    double left_side_crit;
+    double bottom_side_crit;
 };
 
 class SkewedPPPPixelSamplerFactory: public PixelSamplerFactory {
 public:
     SkewedPPPPixelSamplerFactory(std::size_t number_of_samples, double confidence): confidence(confidence), number_of_samples(number_of_samples) {
-        // here we try to estimate the gamma parameter of a PPP thrown into a eps-lilated square which would
+        // here we try to estimate the gamma parameter of a PPP thrown into an eps-dilated square which would
         // have an expected number of generated points inside the unit square of exactly "intensity"
 
         auto N = (double)number_of_samples;
         double n = N;
+        double margin;
 
         for (int i = 0 ; i < 10 ; i++) {
-            double margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
+            margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
             n = N * (1 + margin) * (1 + margin);
         }
 
         skewed_intensity = (std::size_t)n + 1;
-        std::cout << " skewed_intensity = " << skewed_intensity << std::endl;
+        std::cout << "skewed_intensity = " << skewed_intensity << std::endl;
+        std::cout << "margin = " << margin << std::endl;
     }
 
     shared_ptr<PixelSampler> create(double x, double y) override {

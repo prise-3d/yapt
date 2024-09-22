@@ -16,7 +16,7 @@
 #include "bvh.h"
 
 void simple_light(std::string path);
-void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory);
+void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth);
 void triangle(std::string path);
 void single_triangle(std::string path);
 void original(std::string path);

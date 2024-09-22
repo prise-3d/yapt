@@ -32,19 +32,18 @@ public:
 
     virtual void render(const Hittable &world, const Hittable &lights);
     virtual void renderLine(const Hittable &world, const Hittable &lights, int j);
-    virtual void parallelRender(const Hittable &world, const Hittable &lights);
 
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
 
 protected:
-    Point3 center;               // Camera center
-    Point3 pixel00_loc;          // Location of pixel 0, 0
-    Vec3 pixel_delta_u;        // Offset to pixel to the right
-    Vec3 pixel_delta_v;        // Offset to pixel below
-    Vec3 u, v, w;              // Camera frame basis vectors
+    Point3 center;           // Camera center
+    Point3 pixel00_loc;      // Location of pixel 0, 0
+    Vec3 pixel_delta_u;      // Offset to pixel to the right
+    Vec3 pixel_delta_v;      // Offset to pixel below
+    Vec3 u, v, w;            // Camera frame basis vectors
     Vec3 defocusDiskU;       // Defocus disk horizontal radius
     Vec3 defocusDiskV;       // Defocus disk vertical radius
-    ImageData imageData;       // image output
+    ImageData imageData;     // image output
 
     virtual void initialize();
 
@@ -53,6 +52,13 @@ protected:
     [[nodiscard]] Point3 defocusDiskSample() const;
 
     Ray getRay(double x, double y) const;
+};
+
+class ParallelCamera: public Camera {
+public:
+    void render(const Hittable &world, const Hittable &lights) override;
+
+    int linesPerBatch = 10;
 };
 
 #endif //YAPT_CAMERA_H

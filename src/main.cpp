@@ -74,31 +74,41 @@ int main(int argc, char* argv[]) {
     std::string sampler = "sppp";
     std::size_t spp = 500;
     double confidence = .999;
+    std::string source;
+    std::size_t maxDepth = 25;
 
     std::string pathprefix = "path=";
     std::string sppprefix = "spp=";
     std::string samplerprefix = "sampler=";
     std::string aggregatorprefix = "aggregator=";
     std::string confidenceprefix = "confidence=";
+    std::string sourceprefix = "source=";
+    std::string maxDepthprefix = "maxdepth=";
 
     for (int i = 0 ; i < argc ; i++) {
         std::string parameter(argv[i]);
         if (parameter.rfind(sppprefix, 0) == 0) {
             spp = std::stoi(parameter.substr(sppprefix.size()));
         }
-        if (parameter.rfind(pathprefix, 0) == 0) {
+        else if (parameter.rfind(pathprefix, 0) == 0) {
             path = parameter.substr(pathprefix.size());
         }
-        if (parameter.rfind(samplerprefix, 0) == 0) {
+        else if (parameter.rfind(samplerprefix, 0) == 0) {
             sampler = parameter.substr(samplerprefix.size());
         }
-        if (parameter.rfind(aggregatorprefix, 0) == 0) {
+        else if (parameter.rfind(aggregatorprefix, 0) == 0) {
             aggregator = parameter.substr(aggregatorprefix.size());
         }
-        if (parameter.rfind(confidenceprefix, 0) == 0) {
+        else if (parameter.rfind(confidenceprefix, 0) == 0) {
             confidence = std::stod(parameter.substr(confidenceprefix.size()));
         }
-        if (parameter.rfind("help", 0) == 0) {
+        else if (parameter.rfind(sourceprefix, 0) == 0) {
+            source = parameter.substr(sourceprefix.size());
+        }
+        else if (parameter.rfind(maxDepthprefix, 0) == 0) {
+            maxDepth = std::stoi(parameter.substr(maxDepthprefix.size()));
+        }
+        else if (parameter.rfind("help", 0) == 0) {
             std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
             std::cout << " - path       => path to render output (DEFAULT = out.png)" << std::endl;
             std::cout << " - spp        => samples per pixel (DEFAULT=500)" << std::endl;
@@ -113,7 +123,6 @@ int main(int argc, char* argv[]) {
             std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
             return 0;
         }
-
     }
 
     std::shared_ptr<PixelSamplerFactory> samplerFactory;
@@ -132,7 +141,7 @@ int main(int argc, char* argv[]) {
     } else if (sampler == "ppp") {
         samplerFactory = std::make_shared<PPPPixelSamplerFactory>(spp, confidence);
     } else if (sampler == "sppp") {
-        samplerFactory = std::make_shared<SkewedPPPPixelSamplerFactory>(spp, .999);
+        samplerFactory = std::make_shared<SkewedPPPPixelSamplerFactory>(spp, confidence);
     }
 
     // AGGREGATOR FACTORY INIT
@@ -146,10 +155,13 @@ int main(int argc, char* argv[]) {
     std::cout << "spp=        " << spp         << std::endl;
     std::cout << "sampler=    " << sampler     << std::endl;
     std::cout << "aggregator= " << aggregator  << std::endl;
+    std::cout << "confidence= " << confidence  << std::endl;
+    std::cout << "maxdepth=   " << maxDepth    << std::endl;
+    std::cout << "source=     " << source      << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    cornellBox(path, samplerFactory, aggregatorFactory);
+    cornellBox(path, samplerFactory, aggregatorFactory, maxDepth);
 
 //    switch(1) {
 //        case 1:  break;

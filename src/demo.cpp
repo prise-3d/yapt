@@ -48,7 +48,7 @@ void simple_light(std::string path) {
 }
 
 
-void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory) {
+void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth) {
     HittableList world;
 
     auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
@@ -84,16 +84,13 @@ void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSam
     lights.add(make_shared<Quad>(Point3(343, 554, 332), Vec3(-130, 0, 0), Vec3(0, 0, -105), m));
     lights.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
 
-    Camera cam;
+    ParallelCamera cam;
 
     cam.aspect_ratio      = 1.0;
-    cam.imageWidth       = 900;
-    cam.maxDepth         = 25;
+    cam.imageWidth        = 900;
+    cam.maxDepth          = maxDepth;
     cam.background        = Color(0, 0, 0);
 
-//    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(256);
-//    cam.pixelSamplerFactory = make_shared<TrivialPixelSamplerFactory>(10000);
-//    cam.pixelSamplerFactory = make_shared<PPPPixelSamplerFactory>(500,.999);
     cam.pixelSamplerFactory = pixelSamplerFactory;
     cam.samplerAggregator = aggregatorFactory;
     cam.vfov     = 40;
@@ -103,8 +100,7 @@ void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSam
 
     cam.defocusAngle = 0;
 
-    cam.parallelRender(world, lights);
-//    cam.render(world, lights);
+    cam.render(world, lights);
 
     PNGImageExporter exporter(cam.data());
     exporter.write(path);
@@ -127,7 +123,7 @@ void triangle(std::string path) {
     world.add(the_light);
     lights.add(the_light);
 
-    Camera cam;
+    ParallelCamera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.imageWidth       = 1600;
@@ -143,7 +139,7 @@ void triangle(std::string path) {
 
     cam.defocusAngle = 0;
 
-    cam.parallelRender(world, lights);
+    cam.render(world, lights);
 
     PNGImageExporter exporter(cam.data());
     exporter.write(path);
@@ -155,7 +151,7 @@ void single_triangle(std::string path) {
 
     world.add(make_shared<Triangle>(Point3(-1,-1,-1), Point3(0,2,0), Point3(0,0,-2), green));
 
-    Camera cam;
+    ParallelCamera cam;
 
     cam.aspect_ratio      = 1.0;
     cam.imageWidth       = 900;
@@ -177,7 +173,7 @@ void single_triangle(std::string path) {
 
     world.add(make_shared<Sphere>(Point3(1.2, 3, .5), 90, difflight));
 
-    cam.parallelRender(world, lights);
+    cam.render(world, lights);
 
     PNGImageExporter exporter(cam.data());
     exporter.write(path);
@@ -194,7 +190,7 @@ void original(std::string path) {
 
     world = HittableList(make_shared<BVHNode>(world));
 
-    Camera cam;
+    ParallelCamera cam;
 
     cam.aspect_ratio      = 16.0/9;
     cam.imageWidth       = 1600;
@@ -217,7 +213,7 @@ void original(std::string path) {
     lights.add(make_shared<Sphere>(Point3(0, 28, 0), 5, lightMat));
     world.add(make_shared<Sphere>(Point3(0, 28, 0), 5, lightMat));
 
-    cam.parallelRender(world, lights);
+    cam.render(world, lights);
 
     PNGImageExporter exporter(cam.data());
     exporter.write(path);

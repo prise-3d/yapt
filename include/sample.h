@@ -19,6 +19,7 @@ struct Sample {
 
 class SampleAggregator {
 public:
+    virtual ~SampleAggregator() = default;
     virtual Color aggregate() = 0;
     virtual void insert(Sample sample) = 0;
 };
@@ -143,7 +144,6 @@ public:
     }
 
     void insert(const Sample sample) override {
-//        std::cout << " inserting " << sample.x << " " << sample.y << "  -  " << sample.color << std::endl;
         samples[index] = sample;
         ++index;
     }
