@@ -87,7 +87,7 @@ void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSam
     Camera cam;
 
     cam.aspect_ratio      = 1.0;
-    cam.imageWidth       = 200;
+    cam.imageWidth       = 900;
     cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
