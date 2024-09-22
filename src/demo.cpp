@@ -48,7 +48,7 @@ void simple_light(std::string path) {
 }
 
 
-void final (std::string path) {
+void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory) {
     HittableList world;
 
     auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
@@ -65,8 +65,6 @@ void final (std::string path) {
 
     // Light
     world.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(130, 0, 0), Vec3(0, 0, 105), light));
-//    world.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
-//    world.add(make_shared<Quad>(Point3(400, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
 
     // Box
     shared_ptr<Hittable> box1 = box(Point3(0, 0, 0), Point3(165, 330, 165), white);
@@ -85,18 +83,19 @@ void final (std::string path) {
     auto m = shared_ptr<Material>();
     lights.add(make_shared<Quad>(Point3(343, 554, 332), Vec3(-130, 0, 0), Vec3(0, 0, -105), m));
     lights.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
-//    lights.add(make_shared<Sphere>(Point3(190, 90, 190), 90, m));
-//    lights.add(make_shared<Quad>(Point3(400, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
 
     Camera cam;
 
     cam.aspect_ratio      = 1.0;
-    cam.imageWidth       = 900;
+    cam.imageWidth       = 200;
     cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
-//    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(10);
-    cam.pixelSamplerFactory = make_shared<TrivialPixelSamplerFactory>(500);
+//    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(256);
+//    cam.pixelSamplerFactory = make_shared<TrivialPixelSamplerFactory>(10000);
+//    cam.pixelSamplerFactory = make_shared<PPPPixelSamplerFactory>(500,.999);
+    cam.pixelSamplerFactory = pixelSamplerFactory;
+    cam.samplerAggregator = aggregatorFactory;
     cam.vfov     = 40;
     cam.lookFrom = Point3(278, 278, -800);
     cam.lookAt   = Point3(278, 278, 0);
@@ -105,6 +104,7 @@ void final (std::string path) {
     cam.defocusAngle = 0;
 
     cam.parallelRender(world, lights);
+//    cam.render(world, lights);
 
     PNGImageExporter exporter(cam.data());
     exporter.write(path);

@@ -20,12 +20,12 @@ struct Sample {
 class SampleAggregator {
 public:
     virtual Color aggregate() = 0;
-    virtual SampleAggregator& operator<<(Sample sample) = 0;
+    virtual void insert(Sample sample) = 0;
 };
 
 class MCSampleAggregator : public SampleAggregator {
 public:
-    MCSampleAggregator(int size) : samples(std::vector<Sample>(size)) {}
+    MCSampleAggregator(std::size_t size) : samples(std::vector<Sample>(size)) {}
 
     Color aggregate() override {
         Vec3 v(0, 0,0);
@@ -37,10 +37,9 @@ public:
         return v / samples.size();
     }
 
-    SampleAggregator& operator<<(const Sample sample) override {
+    void insert(const Sample sample) override {
         samples[index] = sample;
         ++index;
-        return *this;
     }
 
 private:
@@ -79,7 +78,7 @@ struct VertexHandleHash {
 
 class VoronoiAggregator: public SampleAggregator {
 public:
-    VoronoiAggregator(int size): samples(std::vector<Sample>(size)) {}
+    VoronoiAggregator(std::size_t size): samples(std::vector<Sample>(size)) {}
 
     Color aggregate() override {
 
@@ -110,6 +109,7 @@ public:
             Face_handle face = voronoi.dual(vertex);
 
             Polygon polygon;
+
             Ccb_halfedge_circulator halfEdge = face->ccb();
 
             // Voronoi region area computation
@@ -142,14 +142,31 @@ public:
         return color;
     }
 
-    SampleAggregator& operator<<(const Sample sample) override {
+    void insert(const Sample sample) override {
+//        std::cout << " inserting " << sample.x << " " << sample.y << "  -  " << sample.color << std::endl;
         samples[index] = sample;
         ++index;
-        return *this;
     }
 private:
     std::vector<Sample> samples;
     int index = 0;
+};
+
+class AggregatorFactory {
+public:
+    virtual std::shared_ptr<SampleAggregator> create(std::size_t size) = 0;
+};
+
+class MCAggregatorFactory: public AggregatorFactory {
+    std::shared_ptr<SampleAggregator> create(std::size_t size) override {
+        return std::make_shared<MCSampleAggregator>(size);
+    }
+};
+
+class VoronoiAggregatorFactory: public AggregatorFactory {
+    std::shared_ptr<SampleAggregator> create(std::size_t size) override {
+        return std::make_shared<VoronoiAggregator>(size);
+    }
 };
 
 #endif //YAPT_SAMPLE_H

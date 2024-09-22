@@ -19,6 +19,7 @@ public:
     int imageHeight;         // Rendered image height
     int maxDepth = 10;   // Maximum number of ray bounces into scene
     shared_ptr<PixelSamplerFactory> pixelSamplerFactory;
+    shared_ptr<AggregatorFactory> samplerAggregator;
     Color background;               // Scene background color
 
     double vfov = 90;              // Vertical view angle (field of view)

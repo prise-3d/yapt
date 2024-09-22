@@ -8,15 +8,37 @@
 #include "constants.h"
 #include <random>
 
+thread_local static std::mt19937 generator;
+
 inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.;
 }
 
 inline double randomDouble() {
     thread_local static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-    thread_local static std::mt19937 generator;
     return distribution(generator);
 }
+
+class Poisson {
+public:
+    Poisson(double mean): distribution(std::poisson_distribution<>(mean)) {}
+    size_t next() {
+        return distribution(generator);
+    }
+private:
+    std::poisson_distribution<> distribution;
+};
+
+inline void seed(unsigned seed) {
+    generator.seed(seed);
+}
+
+inline void randomSeed() {
+    std::random_device rd;
+    generator.seed(rd());
+}
+
+//inline size_t randomDoublePoisson()
 
 /**
  * Returns a random real in [min,max).

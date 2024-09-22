@@ -26,7 +26,8 @@ void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
     std::vector<std::thread> threads(numThreads);
 
     // Number of lines per task
-    int N = 10;
+    int N = imageHeight / 100;
+    if (N < 1) N = 1;
 
     std::queue<std::pair<int, int>> taskQueue;
 
@@ -37,6 +38,7 @@ void Camera::parallelRender(const Hittable &world, const Hittable &lights) {
 
     // Here we declare a function to process a task (render a few lines of the image)
     auto processSegment = [&]() {
+        randomSeed();
         while (true) {
             std::pair<int, int> task;
             unsigned long remainingTasks;
@@ -79,24 +81,28 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
     for (int i = 0; i < imageWidth; i++) {
 
         auto sampler = pixelSamplerFactory->create(i, j);
+        sampler->begin();
 
-        VoronoiAggregator aggregator(sampler->sampleSize());
-//        MCSampleAggregator aggregator(sampler->sampleSize());
+        auto aggregator = samplerAggregator->create(sampler->sampleSize());
 
-        for (sampler->begin(); sampler->hasNext() ;) {
+        while(sampler->hasNext()) {
             Point3 p = sampler->get();
-            Ray r = getRay(p.x(), p.y());
 
-            Vec3 color = rayColor(r, maxDepth, world, lights);
+            Vec3 color(0, 0, 0);
+            if (!sampler->isVirtual()) {
+                Ray r = getRay(p.x(), p.y());
+                color = rayColor(r, maxDepth, world, lights);
+            }
 
             Sample sample;
             sample.color = color;
             sample.x = sampler->dx();
             sample.y = sampler->dy();
-            aggregator << sample;
+
+            aggregator->insert(sample);
         }
 
-        Color pixel_color = aggregator.aggregate();
+        Color pixel_color = aggregator->aggregate();
 
         auto r = pixel_color.x();
         auto g = pixel_color.y();
@@ -118,6 +124,52 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
         imageData.data[idx++] = bbyte;  // B
     }
 }
+
+//void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
+//    int idx = j * imageWidth * 3;
+//
+//    for (int i = 0; i < imageWidth; i++) {
+//
+//        auto sampler = pixelSamplerFactory->create(i, j);
+//
+////        VoronoiAggregator aggregator(sampler->sampleSize());
+//        MCSampleAggregator aggregator(sampler->sampleSize());
+//
+//        for (sampler->begin(); sampler->hasNext() ;) {
+//            Point3 p = sampler->get();
+//            Ray r = getRay(p.x(), p.y());
+//
+//            Vec3 color = rayColor(r, maxDepth, world, lights);
+//
+//            Sample sample;
+//            sample.color = color;
+//            sample.x = sampler->dx();
+//            sample.y = sampler->dy();
+//            aggregator << sample;
+//        }
+//
+//        Color pixel_color = aggregator.aggregate();
+//
+//        auto r = pixel_color.x();
+//        auto g = pixel_color.y();
+//        auto b = pixel_color.z();
+//
+//        // Apply a linear to gamma transform for gamma 2
+//        r = linearToGamma(r);
+//        g = linearToGamma(g);
+//        b = linearToGamma(b);
+//
+//        // Translate the [0,1] component values to the byte range [0,255].
+//        static const Interval intensity(0.000, 0.999);
+//        int rbyte = int(256 * intensity.clamp(r));
+//        int gbyte = int(256 * intensity.clamp(g));
+//        int bbyte = int(256 * intensity.clamp(b));
+//
+//        imageData.data[idx++] = rbyte;  // R
+//        imageData.data[idx++] = gbyte;  // G
+//        imageData.data[idx++] = bbyte;  // B
+//    }
+//}
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
     initialize();
