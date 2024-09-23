@@ -10,42 +10,103 @@
 #include "yapt.h"
 #include "Vec3.h"
 
-
-struct Sample {
-    double x;
-    double y;
-    Color color;
-};
-
 class SampleAggregator {
 public:
     virtual ~SampleAggregator() = default;
     virtual Color aggregate() = 0;
-    virtual void insert(Sample sample) = 0;
+    virtual void sampleFrom(std::shared_ptr<SamplerFactory>, double x, double y) = 0;
+    virtual void insertContribution(Color color) = 0;
+    virtual void traverse() = 0;
+    virtual bool hasNext() = 0;
+    virtual Sample next() = 0;
+    virtual void debug() = 0;
 };
 
 class MCSampleAggregator : public SampleAggregator {
 public:
-    MCSampleAggregator(std::size_t size) : samples(std::vector<Sample>(size)) {}
+    MCSampleAggregator() {
+        contributions_index = 0;
+    }
+
+    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
+        auto pixelSampler = factory->create(x, y);
+        std::size_t size = pixelSampler->sampleSize();
+        samples = std::vector<Sample>(size);
+        contributions = std::vector<Color>(size);
+
+        std::size_t i = 0;
+        for (pixelSampler->begin() ; pixelSampler->hasNext() ; i++) {
+            samples[i] = pixelSampler->get();
+        }
+
+        contributions_index = 0;
+    }
+
 
     Color aggregate() override {
         Vec3 v(0, 0,0);
 
-        for (auto & sample : samples) {
-            v += sample.color;
+        for (auto & color : contributions) {
+            v += color;
         }
 
-        return v / samples.size();
+        return v / (double)samples.size();
     }
 
-    void insert(const Sample sample) override {
-        samples[index] = sample;
-        ++index;
+    void insertContribution(Color color) override {
+        contributions[contributions_index] = color;
+    }
+
+    void traverse() override {
+        current_index = nextIndexFrom(-1);
+        if (current_index < 0) can_traverse = false;
+        else can_traverse = true;
+    }
+
+    bool hasNext() override {
+        return can_traverse;
+    }
+
+    Sample next() override {
+        contributions_index = current_index;
+        Sample sample = samples[current_index];
+        current_index = nextIndexFrom(current_index);
+        if (current_index < 0) can_traverse = false;
+        else can_traverse = true;
+
+        return sample;
+    }
+
+    void debug() override {
+
     }
 
 private:
+    int nextIndexFrom(std::size_t start) {
+        size_t i = start + 1;
+        int value_found = -1;
+
+        bool search = i < samples.size();
+        bool found = false;
+
+        while (search && !found) {
+            Sample sample = samples[i];
+            if (sample.dx > -.5 && sample.dx < .5 && sample.dy > -.5 && sample.dy < .5) {
+                found = true;
+                value_found = i;
+            }
+            ++i;
+            search = i < samples.size();
+        }
+        return value_found;
+    }
+
+protected:
     std::vector<Sample> samples;
-    int index = 0;
+    std::vector<Color> contributions;
+    std::size_t contributions_index;
+    int current_index;
+    bool can_traverse;
 };
 
 #include <cassert>
@@ -63,11 +124,8 @@ typedef CGAL::Delaunay_triangulation_adaptation_traits_2 <Delaunay> AT;
 typedef CGAL::Delaunay_triangulation_caching_degeneracy_removal_policy_2 <Delaunay> AP;
 typedef CGAL::Voronoi_diagram_2 <Delaunay, AT, AP> Voronoi;
 // typedef for the result type of the point location
-typedef AT::Site_2 Site;
 typedef AT::Point_2 Point;
-typedef Voronoi::Locate_result Locate_result;
 typedef Voronoi::Face_handle Face_handle;
-typedef Voronoi::Halfedge_handle Halfedge_handle;
 typedef Voronoi::Ccb_halfedge_circulator Ccb_halfedge_circulator;
 typedef CGAL::Polygon_2<K> Polygon;
 
@@ -79,34 +137,68 @@ struct VertexHandleHash {
 
 class VoronoiAggregator: public SampleAggregator {
 public:
-    VoronoiAggregator(std::size_t size): samples(std::vector<Sample>(size)) {}
+    VoronoiAggregator() = default;
+
+    /**
+     * collect samples from a pixel sampler. Makes sure the sampling is correct
+     * ie: no sample drawn inside the pixel has an infinite area
+     * @param factory pixel sampler factory
+     * @param x x coordinate of the pixel to sample
+     * @param y y coordinate of the pixel to sample
+     */
+    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
+        bool isInvalid = false;
+
+        do {
+            // we collect samples
+            auto pixelSampler = factory->create(x, y);
+            pixelSampler->begin();
+            std::size_t size = pixelSampler->sampleSize();
+            samples = std::vector<Sample>(size);
+            contributions = std::vector<Color>(size);
+            std::size_t i = 0;
+            for (; pixelSampler->hasNext(); i++) {
+                samples[i] = pixelSampler->get();
+            }
+
+            // we now need to construct the voronoi diagram to check if it satisfies our
+            // robustness criterion
+
+            // Voronoi point sites
+            std::vector<Point> points(samples.size());
+
+            // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
+            // a correspondence by hand to be able to map sites to weights and thus sites to samples
+            vertexToIndex.clear();
+
+            // here we populate the Delaunay triangulation and the vertex -> index mapping
+            for (i = 0 ; i < samples.size() ; i++) {
+                Sample sample = samples[i];
+                Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
+                vertexToIndex[vertexHandle] = i;
+            }
+
+            voronoi = Voronoi(delaunay);
+
+            for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() && !isInvalid ; ++vertex) {
+                Point site = vertex->point();
+                if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
+                Face_handle face = voronoi.dual(vertex);
+
+                if (face->is_unbounded()) {
+                    isInvalid = true;
+                }
+            }
+        } while (isInvalid);
+        current_index = 0;
+    }
 
     Color aggregate() override {
-
-        // Voronoi regions weights
-        std::vector<double> weights(samples.size(), 0.);
-
-        // Voronoi point sites
-        std::vector<Point> points(samples.size());
-
-        // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
-        // a correspondance by hand to be able to map sites to weights and thus sites to samples
-        std::unordered_map<Delaunay::Vertex_handle, std::size_t, VertexHandleHash> vertexToIndex;
-
-        // underlying Delaunay triangulation
-        Delaunay delaunay;
-
-        // here we populate the Delaunay triangulation and the vertex -> index mapping
-        for (std::size_t i = 0 ; i < samples.size() ; i++) {
-            Sample sample = samples[i];
-            Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.x, sample.y));
-            vertexToIndex[vertexHandle] = i;
-        }
-
-        Voronoi voronoi(delaunay);
-
-        // We traverse the Delaunay triangulation. Its vertices are the Voronoi site points
+        weights = std::vector<double>(samples.size());
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
+            Point site = vertex->point();
+            if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
+
             Face_handle face = voronoi.dual(vertex);
 
             Polygon polygon;
@@ -114,58 +206,104 @@ public:
             Ccb_halfedge_circulator halfEdge = face->ccb();
 
             // Voronoi region area computation
-            bool isValid = true;
             do {
-                if (!halfEdge->is_unbounded()) {
-                    Point p = halfEdge->source()->point();
-                    polygon.push_back(p);
-                    // quick and dirty region pruning: if an edge is located outside the sampled pixel, flag this polygon as invalid
-                    if (p.x() < -.5 || p.x() > .5 || p.y() < -.5 || p.y() > .5) isValid = false;
-                } else isValid = false;
-            } while (++halfEdge != face->ccb() && isValid);
+                Point p = halfEdge->source()->point();
+                polygon.push_back(p);
+            } while (++halfEdge != face->ccb());
 
-            if (isValid) {
-                std::size_t pointIndex = vertexToIndex[vertex];
-                double area = polygon.area();
-                weights[pointIndex] = area;
-            }
+            std::size_t pointIndex = vertexToIndex[vertex];
+            double area = polygon.area();
+            if (area < 0) area = -area;
+            weights[pointIndex] = area;
         }
 
         Color color(0, 0, 0);
 
         // And finally, we weight the samples
         for (int i = 0 ; i < samples.size() ; i++) {
-            Sample sample = samples[i];
             double weight = weights[i];
-            color += weight * sample.color;
+            color += weight * contributions[i];
         }
-
         return color;
     }
 
-    void insert(const Sample sample) override {
-        samples[index] = sample;
-        ++index;
+    void insertContribution(Color color) override {
+        contributions[contributions_index] = color;
     }
+
+    void traverse() override {
+        current_index = nextIndexFrom(-1);
+        if (current_index < 0) can_traverse = false;
+        else can_traverse = true;
+    }
+
+    bool hasNext() override {
+        return can_traverse;
+    }
+
+    Sample next() override {
+        contributions_index = current_index;
+        Sample sample = samples[current_index];
+        current_index = nextIndexFrom(current_index);
+        if (current_index < 0) can_traverse = false;
+        else can_traverse = true;
+
+        return sample;
+    }
+
+    void debug() override {
+        for (int i = 0 ; i < samples.size() ; i++) {
+            std::cout << i << "  =>  " << samples[i] << "  -  " << weights[i] << std::endl;
+        }
+    }
+
 private:
+
+    int nextIndexFrom(std::size_t start) {
+        size_t i = start + 1;
+        int value_found = -1;
+
+        bool search = i < samples.size();
+        bool found = false;
+
+        while (search && !found) {
+            Sample sample = samples[i];
+            if (sample.dx > -.5 && sample.dx < .5 && sample.dy > -.5 && sample.dy < .5) {
+                found = true;
+                value_found = i;
+            }
+            ++i;
+            search = i < samples.size();
+        }
+        return value_found;
+    }
+
     std::vector<Sample> samples;
-    int index = 0;
+    std::vector<double> weights;
+    std::vector<Color> contributions;
+    std::unordered_map<Delaunay::Vertex_handle, std::size_t, VertexHandleHash> vertexToIndex;
+    Voronoi voronoi;
+    Delaunay delaunay;
+
+    int current_index = 0;
+    std::size_t contributions_index;
+    bool can_traverse = false;
 };
 
 class AggregatorFactory {
 public:
-    virtual std::shared_ptr<SampleAggregator> create(std::size_t size) = 0;
+    virtual std::shared_ptr<SampleAggregator> create() = 0;
 };
 
 class MCAggregatorFactory: public AggregatorFactory {
-    std::shared_ptr<SampleAggregator> create(std::size_t size) override {
-        return std::make_shared<MCSampleAggregator>(size);
+    std::shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<MCSampleAggregator>();
     }
 };
 
 class VoronoiAggregatorFactory: public AggregatorFactory {
-    std::shared_ptr<SampleAggregator> create(std::size_t size) override {
-        return std::make_shared<VoronoiAggregator>(size);
+    std::shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<VoronoiAggregator>();
     }
 };
 

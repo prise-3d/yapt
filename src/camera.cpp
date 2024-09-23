@@ -26,26 +26,22 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
         // until it conforms to our expectations
         // THEN rays are cast
 
-        auto sampler = pixelSamplerFactory->create(i, j);
-        sampler->begin();
 
-        auto aggregator = samplerAggregator->create(sampler->sampleSize());
+        // DO SOMETHING LIKE
 
-        while(sampler->hasNext()) {
-            Point3 p = sampler->get();
+        auto aggregator = samplerAggregator->create();
+
+        aggregator->sampleFrom(pixelSamplerFactory, i, j);
+
+        aggregator->traverse();
+
+        while (aggregator-> hasNext()) {
+            Sample sample = aggregator->next();
 
             Vec3 color(0, 0, 0);
-            if (!sampler->isVirtual()) {
-                Ray r = getRay(p.x(), p.y());
-                color = rayColor(r, maxDepth, world, lights);
-            }
-
-            Sample sample;
-            sample.color = color;
-            sample.x = sampler->dx();
-            sample.y = sampler->dy();
-
-            aggregator->insert(sample);
+            Ray r = getRay(sample.x, sample.y);
+            color = rayColor(r, maxDepth, world, lights);
+            aggregator->insertContribution(color);
         }
 
         Color pixel_color = aggregator->aggregate();
@@ -68,6 +64,7 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
         imageData.data[idx++] = rbyte;  // R
         imageData.data[idx++] = gbyte;  // G
         imageData.data[idx++] = bbyte;  // B
+
     }
 }
 

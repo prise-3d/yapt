@@ -74,23 +74,23 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    std::shared_ptr<PixelSamplerFactory> samplerFactory;
+    std::shared_ptr<SamplerFactory> samplerFactory;
     std::shared_ptr<AggregatorFactory> aggregatorFactory;
 
     // SAMPLER FACTORY INIT
     if (sampler == "rnd") {
-        samplerFactory = std::make_shared<TrivialPixelSamplerFactory>(spp);
+        samplerFactory = std::make_shared<TrivialSamplerFactory>(spp);
     } else if (sampler == "strat") {
         auto sqrtSpp = (std::size_t) sqrt(spp);
-        samplerFactory = std::make_shared<StratifiedPixelSamplerFactory>(sqrtSpp);
+        samplerFactory = std::make_shared<StratifiedSamplerFactory>(sqrtSpp);
         if ((sqrtSpp * sqrtSpp) < spp) {
             std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
         }
         spp = sqrtSpp * sqrtSpp;
     } else if (sampler == "ppp") {
-        samplerFactory = std::make_shared<PPPPixelSamplerFactory>(spp, confidence);
+        samplerFactory = std::make_shared<PPPSamplerFactory>(spp, confidence);
     } else if (sampler == "sppp") {
-        samplerFactory = std::make_shared<SkewedPPPPixelSamplerFactory>(spp, confidence);
+        samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(spp, confidence);
     }
 
     // AGGREGATOR FACTORY INIT
@@ -128,3 +128,33 @@ int main(int argc, char* argv[]) {
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
     std::clog << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
 }
+
+//Color f(Sample sample) {
+//    double x = sample.x;
+//    double y = sample.y;
+//
+//    if (x * x + y * y < 1)
+//        return {1., 0, 0};
+//    else
+//        return {0, 0, 0};
+//}
+//
+//int main() {
+//    for (int i = 0; i < 20; i++) {
+//        randomSeed();
+//        std::shared_ptr<SamplerFactory> samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(50000,
+//                                                                                                             .999);
+//
+//        std::shared_ptr<AggregatorFactory> aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
+//
+//        std::shared_ptr<SampleAggregator> aggregator = aggregatorFactory->create();
+//
+//        aggregator->sampleFrom(samplerFactory, .5, .5);
+//        for (aggregator->traverse(); aggregator->hasNext();) {
+//            Sample sample = aggregator->next();
+//            Color color = f(sample);
+//            aggregator->insertContribution(color);
+//        }
+//        std::cout << aggregator->aggregate() << std::endl;
+//    }
+//}

@@ -37,7 +37,7 @@ void simple_light(std::string path) {
     cam.lookAt   = Point3(0, 2, 0);
     cam.vup      = Vec3(0, 1, 0);
 
-    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(10);
+    cam.pixelSamplerFactory = make_shared<StratifiedSamplerFactory>(10);
 
     cam.defocusAngle = 0;
 
@@ -48,7 +48,7 @@ void simple_light(std::string path) {
 }
 
 
-void cornellBox (std::string path, std::shared_ptr<PixelSamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth) {
+void cornellBox (std::string path, std::shared_ptr<SamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth) {
     HittableList world;
 
     auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
@@ -135,7 +135,7 @@ void triangle(std::string path) {
     cam.lookAt   = Point3(0, 2, 0);
     cam.vup      = Vec3(0, 1, 0);
 
-    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(6);
+    cam.pixelSamplerFactory = make_shared<StratifiedSamplerFactory>(6);
 
     cam.defocusAngle = 0;
 
@@ -158,7 +158,7 @@ void single_triangle(std::string path) {
     cam.maxDepth         = 25;
     cam.background        = Color(0, 0, 0);
 
-    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(5);
+    cam.pixelSamplerFactory = make_shared<StratifiedSamplerFactory>(5);
 
     cam.vfov     = 40;
     cam.lookFrom = Point3(4, 4, 5);
@@ -197,7 +197,7 @@ void original(std::string path) {
     cam.maxDepth         = 25;
     cam.background        = Color(0.7, 0.7, 0.95);
 
-    cam.pixelSamplerFactory = make_shared<StratifiedPixelSamplerFactory>(23);
+    cam.pixelSamplerFactory = make_shared<StratifiedSamplerFactory>(23);
 
     cam.vfov     = 20;
     cam.lookFrom = Point3(13,2,3);

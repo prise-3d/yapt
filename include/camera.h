@@ -18,7 +18,7 @@ public:
     int imageWidth = 100;  // Rendered image width in pixel count
     int imageHeight;         // Rendered image height
     int maxDepth = 10;   // Maximum number of ray bounces into scene
-    shared_ptr<PixelSamplerFactory> pixelSamplerFactory;
+    shared_ptr<SamplerFactory> pixelSamplerFactory;
     shared_ptr<AggregatorFactory> samplerAggregator;
     Color background;               // Scene background color
 

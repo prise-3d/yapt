@@ -5,9 +5,15 @@
 #ifndef YAPT_IMPORTER_H
 #define YAPT_IMPORTER_H
 
+#include <assimp/types.h>
 #include "color.h"
 #include "hittable_list.h"
-/*
+#include "material.h"
+#include "triangle.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 Color colorFromAi(aiColor3D aiCol) {
     return {aiCol.r, aiCol.g, aiCol.b};
 }
@@ -42,6 +48,7 @@ HittableList import(std::string &path) {
 
     HittableList world;
 
+    // number of meshes in the scene
     auto nMeshes = scene->mNumMeshes;
 
     for (auto i = 0 ; i < nMeshes ; i++) {
@@ -56,7 +63,7 @@ HittableList import(std::string &path) {
         auto nTriangles = mesh->mNumFaces;
         for (auto j = 0 ;j < nTriangles ; j++) {
             auto triangle = mesh->mFaces[j];
-            std::cout << "Triangle" << j << " " << triangle.mIndices[0] << " " << triangle.mIndices[1] << " " << triangle.mIndices[2] << std::endl;
+            std::cout << "Triangle " << j << " " << triangle.mIndices[0] << " " << triangle.mIndices[1] << " " << triangle.mIndices[2] << std::endl;
             auto A = points[triangle.mIndices[0]];
             auto B = points[triangle.mIndices[1]];
             auto C = points[triangle.mIndices[2]];
@@ -115,5 +122,5 @@ HittableList import(std::string &path) {
 
     return world;
 }
-*/
+
 #endif //YAPT_IMPORTER_H
