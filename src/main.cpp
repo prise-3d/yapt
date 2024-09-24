@@ -9,7 +9,6 @@
 #include "demo.h"
 
 int main(int argc, char* argv[]) {
-
     std::string path;
     std::string aggregator = "vor";
     std::string sampler = "sppp";
@@ -20,7 +19,6 @@ int main(int argc, char* argv[]) {
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
     std::size_t width = 0;
-    long seed = -1;
 
     std::string pathprefix = "path=";
     std::string sppprefix = "spp=";
@@ -32,7 +30,6 @@ int main(int argc, char* argv[]) {
     std::string dirprefix = "dir=";
     std::string numThreadsprefix = "threads=";
     std::string widthprefix="width=";
-    std::string seedprefix="seed=";
 
     for (int i = 0 ; i < argc ; i++) {
         std::string parameter(argv[i]);
@@ -62,9 +59,6 @@ int main(int argc, char* argv[]) {
         }
         else if (parameter.rfind(widthprefix, 0) == 0) {
             width = std::stoi(parameter.substr(widthprefix.size()));
-        }
-        else if (parameter.rfind(seedprefix, 0) == 0) {
-            seed = std::stol(parameter.substr(seedprefix.size()));
         }
         else if (parameter.rfind(dirprefix, 0) == 0) {
             dir = parameter.substr(dirprefix.size());

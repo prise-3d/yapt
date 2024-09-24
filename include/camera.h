@@ -54,7 +54,7 @@ protected:
 
     [[nodiscard]] Point3 defocusDiskSample() const;
 
-    Ray getRay(double x, double y) const;
+    virtual Ray getRay(double x, double y) const;
 };
 
 class ParallelCamera: public Camera {
@@ -65,10 +65,25 @@ public:
 };
 
 class TestCamera: public ParallelCamera {
+
+    Ray getRay(double x, double y) const override {
+        double ex, ey;
+        double dx = modf(x, &ex);
+        double dy = modf(y, &ey);
+
+        return Ray(Point3(dx, dy, 0), Vec3(0, 0, 0));
+
+    }
+
     Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
-        if (randomDouble() < .5) {
-            return {0,0,0};
+
+        if (-r.origin().x() + r.origin().y() > 0) {
+            return {0, 0, 0};
         } else return {1, 1, 1};
+
+//        if (randomDouble() < .5) {
+//            return {0,0,0};
+//        } else return {1, 1, 1};
     }
 };
 
