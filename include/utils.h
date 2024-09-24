@@ -29,7 +29,7 @@ private:
     std::poisson_distribution<> distribution;
 };
 
-inline void seed(unsigned seed) {
+inline void randomSeed(unsigned seed) {
     generator.seed(seed);
 }
 

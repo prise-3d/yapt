@@ -199,7 +199,8 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
 
     // Here we declare a function to process a task (render a few lines of the image)
     auto processSegment = [&]() {
-        randomSeed();
+        auto now = std::chrono::high_resolution_clock::now();
+        auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
         while (true) {
             std::pair<int, int> task;
             unsigned long remainingTasks;

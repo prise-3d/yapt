@@ -16,10 +16,10 @@
 #include "bvh.h"
 
 void simple_light(std::string path);
-void cornellBox (std::string path, std::shared_ptr<SamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth, std::size_t numThreads);
+void cornellBox (std::shared_ptr<Camera> cam);
 void triangle(std::string path);
 void single_triangle(std::string path);
 void original(std::string path);
-void test(std::string path, std::shared_ptr<SamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth, std::size_t numThreads);
+void test(std::shared_ptr<Camera> camera);
 
 #endif //YAPT_DEMO_H

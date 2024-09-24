@@ -19,6 +19,8 @@ int main(int argc, char* argv[]) {
     std::string source;
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
+    std::size_t width = 0;
+    long seed = -1;
 
     std::string pathprefix = "path=";
     std::string sppprefix = "spp=";
@@ -29,6 +31,8 @@ int main(int argc, char* argv[]) {
     std::string maxDepthprefix = "maxdepth=";
     std::string dirprefix = "dir=";
     std::string numThreadsprefix = "threads=";
+    std::string widthprefix="width=";
+    std::string seedprefix="seed=";
 
     for (int i = 0 ; i < argc ; i++) {
         std::string parameter(argv[i]);
@@ -56,6 +60,12 @@ int main(int argc, char* argv[]) {
         else if (parameter.rfind(numThreadsprefix, 0) == 0) {
             numThreads = std::stoi(parameter.substr(numThreadsprefix.size()));
         }
+        else if (parameter.rfind(widthprefix, 0) == 0) {
+            width = std::stoi(parameter.substr(widthprefix.size()));
+        }
+        else if (parameter.rfind(seedprefix, 0) == 0) {
+            seed = std::stol(parameter.substr(seedprefix.size()));
+        }
         else if (parameter.rfind(dirprefix, 0) == 0) {
             dir = parameter.substr(dirprefix.size());
         }
@@ -76,6 +86,7 @@ int main(int argc, char* argv[]) {
             std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
             std::cout << " - dir        => output directory (optional, ignored if path is specified)" << std::endl;
             std::cout << " - threads    => number of threads used (DEFAULT=hardware_concurrency)" << std::endl;
+            std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
             return 0;
         }
     }
@@ -126,16 +137,34 @@ int main(int argc, char* argv[]) {
     std::cout << "source=     " << source      << std::endl;
     std::cout << "dir=        " << dir         << std::endl;
     std::cout << "threads=    " << numThreads  << std::endl;
+    std::cout << "width=      " << width       << std::endl;
 
 
     auto start = std::chrono::high_resolution_clock::now();
 
+    std::shared_ptr<Camera> cam = std::make_shared<ParallelCamera>();
+    if (source == "test") {
+        cam = std::make_shared<TestCamera>();
+    } else {
+        cam = std::make_shared<ParallelCamera>();
+    }
+
+    cam->numThreads = numThreads;
+    cam->maxDepth = maxDepth;
+    cam->samplerAggregator = aggregatorFactory;
+    cam->pixelSamplerFactory = samplerFactory;
+    cam->imageWidth = width;
+
 
     if (source == "test") {
-        test(path, samplerFactory, aggregatorFactory, maxDepth, numThreads);
+        test(cam);
     } else {
-        cornellBox(path, samplerFactory, aggregatorFactory, maxDepth, numThreads);
+        cornellBox(cam);
     }
+
+
+    PNGImageExporter exporter(cam->data());
+    exporter.write(path);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);

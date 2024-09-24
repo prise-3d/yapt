@@ -36,6 +36,8 @@ public:
 
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
 
+
+
 protected:
     Point3 center;           // Camera center
     Point3 pixel00_loc;      // Location of pixel 0, 0
