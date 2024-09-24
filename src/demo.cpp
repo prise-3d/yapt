@@ -48,7 +48,7 @@ void simple_light(std::string path) {
 }
 
 
-void cornellBox (std::string path, std::shared_ptr<SamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth) {
+void cornellBox (std::string path, std::shared_ptr<SamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth, std::size_t numThreads) {
     HittableList world;
 
     auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
@@ -99,6 +99,7 @@ void cornellBox (std::string path, std::shared_ptr<SamplerFactory> pixelSamplerF
     cam.vup      = Vec3(0, 1, 0);
 
     cam.defocusAngle = 0;
+    cam.numThreads = numThreads;
 
     cam.render(world, lights);
 
@@ -215,6 +216,18 @@ void original(std::string path) {
 
     cam.render(world, lights);
 
+    PNGImageExporter exporter(cam.data());
+    exporter.write(path);
+}
+
+void test(std::string path, std::shared_ptr<SamplerFactory> pixelSamplerFactory, std::shared_ptr<AggregatorFactory> aggregatorFactory, std::size_t maxDepth, std::size_t numThreads) {
+    TestCamera cam;
+    cam.pixelSamplerFactory = pixelSamplerFactory;
+    cam.samplerAggregator = aggregatorFactory;
+    cam.maxDepth = 25;
+    cam.imageWidth = 900;
+    cam.numThreads = numThreads;
+    cam.render(HittableList(), HittableList());
     PNGImageExporter exporter(cam.data());
     exporter.write(path);
 }

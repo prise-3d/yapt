@@ -185,7 +185,7 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
     std::condition_variable queue_cv;
 
     // Available threads
-    auto numThreads = std::thread::hardware_concurrency();
+    if (numThreads <= 0) numThreads = std::thread::hardware_concurrency();
 
     std::clog << "rendering using " << numThreads << " threads" << std::endl;
     std::vector<std::thread> threads(numThreads);

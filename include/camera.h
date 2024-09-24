@@ -21,6 +21,7 @@ public:
     shared_ptr<SamplerFactory> pixelSamplerFactory;
     shared_ptr<AggregatorFactory> samplerAggregator;
     Color background;               // Scene background color
+    std::size_t numThreads = 0;
 
     double vfov = 90;              // Vertical view angle (field of view)
     Point3 lookFrom = Point3(0, 0, 0);   // Point camera is looking from
@@ -59,6 +60,14 @@ public:
     void render(const Hittable &world, const Hittable &lights) override;
 
     int linesPerBatch = 10;
+};
+
+class TestCamera: public ParallelCamera {
+    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
+        if (randomDouble() < .5) {
+            return {0,0,0};
+        } else return {1, 1, 1};
+    }
 };
 
 #endif //YAPT_CAMERA_H

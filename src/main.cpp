@@ -18,6 +18,7 @@ int main(int argc, char* argv[]) {
     double confidence = .999;
     std::string source;
     std::size_t maxDepth = 25;
+    std::size_t numThreads = 0;
 
     std::string pathprefix = "path=";
     std::string sppprefix = "spp=";
@@ -27,6 +28,7 @@ int main(int argc, char* argv[]) {
     std::string sourceprefix = "source=";
     std::string maxDepthprefix = "maxdepth=";
     std::string dirprefix = "dir=";
+    std::string numThreadsprefix = "threads=";
 
     for (int i = 0 ; i < argc ; i++) {
         std::string parameter(argv[i]);
@@ -51,6 +53,9 @@ int main(int argc, char* argv[]) {
         else if (parameter.rfind(maxDepthprefix, 0) == 0) {
             maxDepth = std::stoi(parameter.substr(maxDepthprefix.size()));
         }
+        else if (parameter.rfind(numThreadsprefix, 0) == 0) {
+            numThreads = std::stoi(parameter.substr(numThreadsprefix.size()));
+        }
         else if (parameter.rfind(dirprefix, 0) == 0) {
             dir = parameter.substr(dirprefix.size());
         }
@@ -70,6 +75,7 @@ int main(int argc, char* argv[]) {
             std::cout << " - source     => Scene model to import" << std::endl;
             std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
             std::cout << " - dir        => output directory (optional, ignored if path is specified)" << std::endl;
+            std::cout << " - threads    => number of threads used (DEFAULT=hardware_concurrency)" << std::endl;
             return 0;
         }
     }
@@ -119,10 +125,17 @@ int main(int argc, char* argv[]) {
     std::cout << "maxdepth=   " << maxDepth    << std::endl;
     std::cout << "source=     " << source      << std::endl;
     std::cout << "dir=        " << dir         << std::endl;
+    std::cout << "threads=    " << numThreads  << std::endl;
+
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    cornellBox(path, samplerFactory, aggregatorFactory, maxDepth);
+
+    if (source == "test") {
+        test(path, samplerFactory, aggregatorFactory, maxDepth, numThreads);
+    } else {
+        cornellBox(path, samplerFactory, aggregatorFactory, maxDepth, numThreads);
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
