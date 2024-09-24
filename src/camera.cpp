@@ -201,6 +201,7 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
     auto processSegment = [&]() {
         auto now = std::chrono::high_resolution_clock::now();
         auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+        randomSeed(seed);
         while (true) {
             std::pair<int, int> task;
             unsigned long remainingTasks;

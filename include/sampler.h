@@ -196,7 +196,9 @@ protected:
 
 
 
-
+/**
+ * TODO: FIXME
+  */
 class SkewedPPPSampler : public PixelSampler {
 public:
     SkewedPPPSampler(double x, double y, std::size_t number_of_samples, double intensity, double confidence) :
@@ -277,7 +279,7 @@ public:
 
         for (int i = 0 ; i < 10 ; i++) {
             margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
-            n = N * (1 + 2*margin) * (1 + 2 * margin);
+            n = N * (1 + 2 * margin) * (1 + 2 * margin);
         }
 
         skewed_intensity = (std::size_t)n + 1;
