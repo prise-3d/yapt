@@ -316,8 +316,6 @@ public:
             samples[++i] = {sample.x, sample.y, .5 + sample.dx, .5 + sample.dy};
         }
 
-
-
         // Voronoi point sites
         std::vector<Point> points(samples.size());
 
@@ -335,6 +333,80 @@ public:
         voronoi = Voronoi(delaunay);
 
         current_index = 0;
+    }
+};
+
+class InnerVoronoiAggregator: public VoronoiAggregator {
+public:
+    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
+        // we collect samples
+        auto pixelSampler = factory->create(x, y);
+        pixelSampler->begin();
+        std::size_t size = pixelSampler->sampleSize();
+        samples = std::vector<Sample>(9 * size);
+        contributions = std::vector<Color>(9 * size);
+
+        for (int i = 0; pixelSampler->hasNext(); i++) {
+            samples[i] = pixelSampler->get();
+        }
+
+        // Voronoi point sites
+        std::vector<Point> points(samples.size());
+
+        // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
+        // a correspondence by hand to be able to map sites to weights and thus sites to samples
+        vertexToIndex.clear();
+
+        // here we populate the Delaunay triangulation and the vertex -> index mapping
+        for (int i = 0 ; i < samples.size() ; i++) {
+            Sample sample = samples[i];
+            Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
+            vertexToIndex[vertexHandle] = i;
+        }
+
+        voronoi = Voronoi(delaunay);
+
+        current_index = 0;
+    }
+
+    Color aggregate() override {
+        weights = std::vector<double>(samples.size());
+        double total_weight = 0.;
+        for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
+            Point site = vertex->point();
+            if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
+
+            Face_handle face = voronoi.dual(vertex);
+
+            if (face->is_unbounded()) continue;
+
+            Polygon polygon;
+
+            Ccb_halfedge_circulator halfEdge = face->ccb();
+
+            // Voronoi region area computation
+            bool valid = true;
+            do {
+                Point p = halfEdge->source()->point();
+                if (p.x() < -.5 || p.x() > .5 || p.y() < -.5 || p.y() > .5) valid = false;
+                polygon.push_back(p);
+            } while (valid && ++halfEdge != face->ccb());
+            if (!valid) continue;
+            std::size_t pointIndex = vertexToIndex[vertex];
+            double area = polygon.area();
+            if (area < 0) area = -area;
+            weights[pointIndex] = area;
+            total_weight += area;
+        }
+
+        Color color(0, 0, 0);
+
+        // And finally, we weight the samples
+        for (int i = 0 ; i < samples.size() ; i++) {
+            double weight = weights[i];
+            color += weight * contributions[i] / total_weight;
+        }
+        return color;
     }
 };
 
@@ -359,6 +431,13 @@ class ClippedVoronoiAggregatorFactory: public AggregatorFactory {
 public:
     shared_ptr<SampleAggregator> create() override {
         return std::make_shared<ClippedVoronoiAggregator>();
+    }
+};
+
+class InnerVoronoiAggregatorFactory: public AggregatorFactory {
+public:
+    shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<InnerVoronoiAggregator>();
     }
 };
 

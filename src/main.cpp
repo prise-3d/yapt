@@ -76,6 +76,7 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - mc   => Monte Carlo integration" << std::endl;
             std::cout << "                 - vor  => Voronoi aggregation (DEFAULT)" << std::endl;
             std::cout << "                 - cvor => Clipped Voronoi aggregation" << std::endl;
+            std::cout << "                 - ivor => Inner Voronoi aggregation" << std::endl;
             std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
             std::cout << " - source     => Scene model to import" << std::endl;
             std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -112,6 +113,8 @@ int main(int argc, char* argv[]) {
         aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
     } else if (aggregator == "cvor") {
         aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
+    } else if (aggregator == "ivor") {
+        aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
     }
 
     //  PATH CONSTRUCTION
