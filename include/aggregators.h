@@ -4,8 +4,8 @@
 
 
 
-#ifndef YAPT_SAMPLE_H
-#define YAPT_SAMPLE_H
+#ifndef YAPT_AGGREGATORS_H
+#define YAPT_AGGREGATORS_H
 
 #include "yapt.h"
 #include "Vec3.h"
@@ -41,7 +41,6 @@ public:
 
         contributions_index = 0;
     }
-
 
     Color aggregate() override {
         Vec3 v(0, 0,0);
@@ -222,7 +221,7 @@ public:
         // And finally, we weight the samples
         for (int i = 0 ; i < samples.size() ; i++) {
             double weight = weights[i];
-            color += weight * contributions[i];
+            color += weight * contributions[i] ;
         }
         return color;
     }
@@ -307,4 +306,4 @@ class VoronoiAggregatorFactory: public AggregatorFactory {
     }
 };
 
-#endif //YAPT_SAMPLE_H
+#endif //YAPT_AGGREGATORS_H

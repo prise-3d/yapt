@@ -87,12 +87,11 @@ void cornellBox (std::shared_ptr<Camera> cam) {
     cam->aspect_ratio      = 1.0;
     if (cam->imageWidth == 0)
         cam->imageWidth = 900;
-    cam->background        = Color(0, 0, 0);
+    cam->background = Color(0, 0, 0);
     cam->vfov     = 40;
     cam->lookFrom = Point3(278, 278, -800);
     cam->lookAt   = Point3(278, 278, 0);
     cam->vup      = Vec3(0, 1, 0);
-
     cam->defocusAngle = 0;
 
     cam->render(world, lights);
@@ -184,9 +183,9 @@ void original(std::string path) {
 
     ParallelCamera cam;
 
-    cam.aspect_ratio      = 16.0/9;
-    cam.imageWidth       = 1600;
-    cam.maxDepth         = 25;
+    cam.aspect_ratio      = 16.0 / 9;
+    cam.imageWidth        = 1600;
+    cam.maxDepth          = 25;
     cam.background        = Color(0.7, 0.7, 0.95);
 
     cam.pixelSamplerFactory = make_shared<StratifiedSamplerFactory>(23);

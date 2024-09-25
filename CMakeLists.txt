@@ -69,7 +69,7 @@ add_executable(yapt ${SOURCES}
         src/demo.cpp
         include/demo.h
         include/importer.h
-        include/sample.h
+        include/aggregators.h
 )
 
 find_package(Threads REQUIRED)
@@ -134,7 +134,7 @@ add_executable(tests ${TEST_SOURCES}
         include/sampler.h
         include/triangle.h
         tests/triangletest.cpp
-        include/sample.h
+        include/aggregators.h
 )
 
 # Link external libraries to tests executable if needed

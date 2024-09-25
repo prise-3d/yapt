@@ -17,18 +17,6 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
     int idx = j * imageWidth * 3;
 
     for (int i = 0; i < imageWidth; i++) {
-        // TODO:
-
-        // reject:
-        // restructure aggregator
-        // take 2 lists into account 1 for the geometry, 1 for the contributions
-        // the aggregator builds the geometry (Voronoi Diag) from the sampler
-        // until it conforms to our expectations
-        // THEN rays are cast
-
-
-        // DO SOMETHING LIKE
-
         auto aggregator = samplerAggregator->create();
 
         aggregator->sampleFrom(pixelSamplerFactory, i, j);

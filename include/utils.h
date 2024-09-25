@@ -41,8 +41,6 @@ inline void randomSeed() {
     threadGenerator().seed(rd());
 }
 
-//inline size_t randomDoublePoisson()
-
 /**
  * Returns a random real in [min,max).
  * @param min minimum bound (included)
