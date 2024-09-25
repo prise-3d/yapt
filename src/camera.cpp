@@ -18,9 +18,7 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
 
     for (int i = 0; i < imageWidth; i++) {
         auto aggregator = samplerAggregator->create();
-
         aggregator->sampleFrom(pixelSamplerFactory, i, j);
-
         aggregator->traverse();
 
         while (aggregator-> hasNext()) {

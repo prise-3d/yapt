@@ -194,6 +194,7 @@ public:
 
     Color aggregate() override {
         weights = std::vector<double>(samples.size());
+        double total_weight = 0.;
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
             Point site = vertex->point();
             if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
@@ -214,6 +215,7 @@ public:
             double area = polygon.area();
             if (area < 0) area = -area;
             weights[pointIndex] = area;
+            total_weight += area;
         }
 
         Color color(0, 0, 0);
@@ -221,7 +223,7 @@ public:
         // And finally, we weight the samples
         for (int i = 0 ; i < samples.size() ; i++) {
             double weight = weights[i];
-            color += weight * contributions[i] ;
+            color += weight * contributions[i] / total_weight;
         }
         return color;
     }
@@ -256,8 +258,7 @@ public:
         }
     }
 
-private:
-
+protected:
     int nextIndexFrom(std::size_t start) {
         size_t i = start + 1;
         int value_found = -1;
@@ -289,6 +290,54 @@ private:
     bool can_traverse = false;
 };
 
+class ClippedVoronoiAggregator: public VoronoiAggregator {
+public:
+    ClippedVoronoiAggregator() = default;
+
+    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
+        // we collect samples
+        auto pixelSampler = factory->create(x, y);
+        pixelSampler->begin();
+        std::size_t size = pixelSampler->sampleSize();
+        samples = std::vector<Sample>(9 * size);
+        contributions = std::vector<Color>(9 * size);
+        int i = -1;
+
+        while (pixelSampler->hasNext()) {
+            Sample sample = pixelSampler->get();
+            samples[++i] = sample;
+            samples[++i] = {sample.x, sample.y, -.5 - sample.dx, sample.dy};
+            samples[++i] = {sample.x, sample.y, .5 + sample.dx, sample.dy};
+            samples[++i] = {sample.x, sample.y, sample.dx, -.5 - sample.dy};
+            samples[++i] = {sample.x, sample.y, sample.dx, .5 + sample.dy};
+            samples[++i] = {sample.x, sample.y, -.5 - sample.dx, -.5 - sample.dy};
+            samples[++i] = {sample.x, sample.y, .5 + sample.dx, -.5 - sample.dy};
+            samples[++i] = {sample.x, sample.y, -.5 - sample.dx, .5 + sample.dy};
+            samples[++i] = {sample.x, sample.y, .5 + sample.dx, .5 + sample.dy};
+        }
+
+
+
+        // Voronoi point sites
+        std::vector<Point> points(samples.size());
+
+        // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
+        // a correspondence by hand to be able to map sites to weights and thus sites to samples
+        vertexToIndex.clear();
+
+        // here we populate the Delaunay triangulation and the vertex -> index mapping
+        for (i = 0 ; i < samples.size() ; i++) {
+            Sample sample = samples[i];
+            Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
+            vertexToIndex[vertexHandle] = i;
+        }
+
+        voronoi = Voronoi(delaunay);
+
+        current_index = 0;
+    }
+};
+
 class AggregatorFactory {
 public:
     virtual std::shared_ptr<SampleAggregator> create() = 0;
@@ -303,6 +352,13 @@ class MCAggregatorFactory: public AggregatorFactory {
 class VoronoiAggregatorFactory: public AggregatorFactory {
     std::shared_ptr<SampleAggregator> create() override {
         return std::make_shared<VoronoiAggregator>();
+    }
+};
+
+class ClippedVoronoiAggregatorFactory: public AggregatorFactory {
+public:
+    shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<ClippedVoronoiAggregator>();
     }
 };
 

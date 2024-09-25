@@ -73,8 +73,9 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - ppp   => Poisson Point Process sampling with margin" << std::endl;
             std::cout << "                 - sppp  => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl;
             std::cout << " - aggregator => path aggregation method:" << std::endl;
-            std::cout << "                 - mc  => Monte Carlo integration" << std::endl;
-            std::cout << "                 - vor => Voronoi aggregation (DEFAULT)" << std::endl;
+            std::cout << "                 - mc   => Monte Carlo integration" << std::endl;
+            std::cout << "                 - vor  => Voronoi aggregation (DEFAULT)" << std::endl;
+            std::cout << "                 - cvor => Clipped Voronoi aggregation" << std::endl;
             std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
             std::cout << " - source     => Scene model to import" << std::endl;
             std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -109,6 +110,8 @@ int main(int argc, char* argv[]) {
         aggregatorFactory = std::make_shared<MCAggregatorFactory>();
     } else if (aggregator == "vor") {
         aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
+    } else if (aggregator == "cvor") {
+        aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
     }
 
     //  PATH CONSTRUCTION
@@ -164,33 +167,3 @@ int main(int argc, char* argv[]) {
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
     std::clog << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
 }
-
-//Color f(Sample sample) {
-//    double x = sample.x;
-//    double y = sample.y;
-//
-//    if (x * x + y * y < 1)
-//        return {1., 0, 0};
-//    else
-//        return {0, 0, 0};
-//}
-//
-//int main() {
-//    for (int i = 0; i < 20; i++) {
-//        randomSeed();
-//        std::shared_ptr<SamplerFactory> samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(50000,
-//                                                                                                             .999);
-//
-//        std::shared_ptr<AggregatorFactory> aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
-//
-//        std::shared_ptr<SampleAggregator> aggregator = aggregatorFactory->create();
-//
-//        aggregator->sampleFrom(samplerFactory, .5, .5);
-//        for (aggregator->traverse(); aggregator->hasNext();) {
-//            Sample sample = aggregator->next();
-//            Color color = f(sample);
-//            aggregator->insertContribution(color);
-//        }
-//        std::cout << aggregator->aggregate() << std::endl;
-//    }
-//}

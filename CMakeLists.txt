@@ -135,6 +135,7 @@ add_executable(tests ${TEST_SOURCES}
         include/triangle.h
         tests/triangletest.cpp
         include/aggregators.h
+        tests/samplertest.cpp
 )
 
 # Link external libraries to tests executable if needed
