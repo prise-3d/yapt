@@ -306,14 +306,14 @@ public:
         while (pixelSampler->hasNext()) {
             Sample sample = pixelSampler->get();
             samples[++i] = sample;
-            samples[++i] = {sample.x, sample.y, -.5 - sample.dx, sample.dy};
-            samples[++i] = {sample.x, sample.y, .5 + sample.dx, sample.dy};
-            samples[++i] = {sample.x, sample.y, sample.dx, -.5 - sample.dy};
-            samples[++i] = {sample.x, sample.y, sample.dx, .5 + sample.dy};
-            samples[++i] = {sample.x, sample.y, -.5 - sample.dx, -.5 - sample.dy};
-            samples[++i] = {sample.x, sample.y, .5 + sample.dx, -.5 - sample.dy};
-            samples[++i] = {sample.x, sample.y, -.5 - sample.dx, .5 + sample.dy};
-            samples[++i] = {sample.x, sample.y, .5 + sample.dx, .5 + sample.dy};
+            samples[++i] = {sample.x, sample.y, 1 - sample.dx, sample.dy};
+            samples[++i] = {sample.x, sample.y, -1 - sample.dx, sample.dy};
+            samples[++i] = {sample.x, sample.y, sample.dx, 1 - sample.dy};
+            samples[++i] = {sample.x, sample.y, sample.dx, -1 - sample.dy};
+            samples[++i] = {sample.x, sample.y, 1 - sample.dx, -1 - sample.dy};
+            samples[++i] = {sample.x, sample.y, -1 - sample.dx, -1 - sample.dy};
+            samples[++i] = {sample.x, sample.y, -1 - sample.dx, 1 - sample.dy};
+            samples[++i] = {sample.x, sample.y, 1 - sample.dx, 1 - sample.dy};
         }
 
         // Voronoi point sites

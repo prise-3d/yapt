@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
         std::ostringstream stream;
         if (!dir.empty()) stream << dir;
         if (!source.empty()) stream << source << "-";
-        stream << aggregator << "-" << sampler << "-" << spp << "-depth" << maxDepth;
+        stream << aggregator << "-" << sampler << "-" << spp << "-depth-" << maxDepth;
 
         stream << ".png";
         path = stream.str();
