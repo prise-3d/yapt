@@ -11,7 +11,8 @@
 struct ImageData {
     int width;
     int height;
-    std::vector<uint8_t> data;
+//    std::vector<uint8_t> data;
+    std::vector<double> data;
 };
 
 #endif //YAPT_IMAGE_DATA_H

@@ -19,7 +19,7 @@ public:
     Ray skip_pdf_ray;
 };
 
-class Material {
+class Material: public std::enable_shared_from_this<Material> {
 public:
     virtual ~Material() = default;
 
@@ -37,6 +37,8 @@ public:
     const {
         return 0;
     }
+
+    virtual shared_ptr<Material> get() {return shared_from_this();}
 };
 
 class Lambertian : public Material {
@@ -46,7 +48,6 @@ public:
     Lambertian(shared_ptr<Texture> tex) : tex(tex) {}
 
     bool scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const override;
-
 
     double scattering_pdf(const Ray &r_in, const HitRecord &rec, const Ray &scattered) const override;
 
@@ -109,5 +110,19 @@ private:
     shared_ptr<Texture> tex;
 };
 
+class Composite: public Material {
+public:
+    Composite(shared_ptr<Material> material1, shared_ptr<Material> material2, double ratio): mat1(material1), mat2(material2), ratio(ratio) {}
 
+    shared_ptr<Material> get() override {
+        double r = randomDouble();
+        if (r < ratio)  return mat1;
+        return mat2;
+    }
+
+private:
+    shared_ptr<Material> mat1;
+    shared_ptr<Material> mat2;
+    double ratio;
+};
 #endif //YAPT_MATERIAL_H

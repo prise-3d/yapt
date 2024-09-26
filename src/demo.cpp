@@ -74,15 +74,20 @@ void cornellBox (std::shared_ptr<Camera> cam) {
 
     // Glass Sphere
     auto glass = make_shared<Dielectric>(1.5);
-    world.add(make_shared<Sphere>(Point3(190, 90, 190), 90, glass));
-
+    auto metal = make_shared<Metal>(Color(.5,.45,0.),0.0);
+    auto composite = make_shared<Composite>(
+            make_shared<Lambertian>(Color(.67,.67,.05)),
+            make_shared<Metal>(Color(.6,.6,0.05),0.05),
+            .4);
+    world.add(make_shared<Sphere>(Point3(190, 90, 190), 90, composite));
     world = HittableList(make_shared<BVHNode>(world));
 
     // Light Sources
     HittableList lights;
-    auto m = shared_ptr<Material>();
-    lights.add(make_shared<Quad>(Point3(343, 554, 332), Vec3(-130, 0, 0), Vec3(0, 0, -105), m));
-    lights.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
+//    auto m = shared_ptr<Material>();
+//    lights.add(make_shared<Quad>(Point3(343, 554, 332), Vec3(-130, 0, 0), Vec3(0, 0, -105), light));
+//    lights.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(30, 0, 0), Vec3(0, 0, 30), light));
+    lights.add(make_shared<Quad>(Point3(213, 554, 227), Vec3(130, 0, 0), Vec3(0, 0, 105), light));
 
     cam->aspect_ratio      = 1.0;
     if (cam->imageWidth == 0)
@@ -93,7 +98,6 @@ void cornellBox (std::shared_ptr<Camera> cam) {
     cam->lookAt   = Point3(278, 278, 0);
     cam->vup      = Vec3(0, 1, 0);
     cam->defocusAngle = 0;
-
     cam->render(world, lights);
 }
 

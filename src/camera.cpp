@@ -32,24 +32,9 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
 
         Color pixel_color = aggregator->aggregate();
 
-        auto r = pixel_color.x();
-        auto g = pixel_color.y();
-        auto b = pixel_color.z();
-
-        // Apply a linear to gamma transform for gamma 2
-        r = linearToGamma(r);
-        g = linearToGamma(g);
-        b = linearToGamma(b);
-
-        // Translate the [0,1] component values to the byte range [0,255].
-        static const Interval intensity(0.000, 0.999);
-        int rbyte = int(256 * intensity.clamp(r));
-        int gbyte = int(256 * intensity.clamp(g));
-        int bbyte = int(256 * intensity.clamp(b));
-
-        imageData.data[idx++] = rbyte;  // R
-        imageData.data[idx++] = gbyte;  // G
-        imageData.data[idx++] = bbyte;  // B
+        imageData.data[idx++] = pixel_color.x();  // R
+        imageData.data[idx++] = pixel_color.y();  // G
+        imageData.data[idx++] = pixel_color.z();  // B
 
     }
 }
@@ -66,7 +51,7 @@ void Camera::render(const Hittable& world, const Hittable& lights) {
 void Camera::initialize() {
     imageHeight = int(imageWidth / aspect_ratio);
     imageHeight = (imageHeight < 1) ? 1 : imageHeight;
-    imageData.data = std::vector<uint8_t>(imageWidth * imageHeight * 3);
+    imageData.data = std::vector<double>(imageWidth * imageHeight * 3);
     center = lookFrom;
 
     // Determine viewport dimensions.
@@ -97,7 +82,7 @@ void Camera::initialize() {
     defocusDiskU = u * defocusRadius;
     defocusDiskV = v * defocusRadius;
 
-    imageData.data = std::vector<uint8_t>(imageWidth * imageHeight * 3);
+    imageData.data = std::vector<double>(imageWidth * imageHeight * 3);
     imageData.width = imageWidth;
     imageData.height = imageHeight;
 }
@@ -135,7 +120,6 @@ Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hit
         return {0, 0, 0};
 
     HitRecord rec;
-
     // If the ray hits nothing, return the background color.
     if (!world.hit(r, Interval(0.001, infinity), rec))
         return background;
