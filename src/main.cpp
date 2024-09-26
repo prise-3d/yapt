@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iomanip>
 #include "demo.h"
+#include "sceneloader.h"
 
 int main(int argc, char* argv[]) {
     std::string path;
@@ -155,13 +156,28 @@ int main(int argc, char* argv[]) {
     cam->pixelSamplerFactory = samplerFactory;
     cam->imageWidth = width;
 
+    cam->aspect_ratio      = 1.0;
+    if (cam->imageWidth == 0)
+        cam->imageWidth = 900;
+    cam->background = Color(0, 0, 0);
+    cam->vfov     = 40;
+    cam->lookFrom = Point3(278, 278, -800);
+    cam->lookAt   = Point3(278, 278, 0);
+    cam->vup      = Vec3(0, 1, 0);
+    cam->defocusAngle = 0;
+
+    shared_ptr scene = make_shared<HittableList>();
+    shared_ptr lights = make_shared<HittableList>();
+
+    if (source.empty()) source = "../scenes/cornell.ypt";
 
     if (source == "test") {
         test(cam);
     } else {
-        cornellBox(cam);
+        YaptSceneLoader loader;
+        loader.load(source, scene, lights, cam);
+        cam->render(*scene, *lights);
     }
-
 
     PNGImageExporter exporter(cam->data());
     exporter.write(path);

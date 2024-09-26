@@ -70,6 +70,8 @@ add_executable(yapt ${SOURCES}
         include/demo.h
         include/importer.h
         include/aggregators.h
+        include/sceneloader.h
+        src/sceneloader.cpp
 )
 
 find_package(Threads REQUIRED)
@@ -136,6 +138,8 @@ add_executable(tests ${TEST_SOURCES}
         tests/triangletest.cpp
         include/aggregators.h
         tests/samplertest.cpp
+        include/sceneloader.h
+        src/sceneloader.cpp
 )
 
 # Link external libraries to tests executable if needed
