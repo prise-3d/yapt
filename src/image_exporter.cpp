@@ -59,7 +59,17 @@ inline bool write_png(const std::string& file_name, const std::vector<uint8_t>& 
 }
 
 void PNGImageExporter::write(std::string fileName) {
-    if (write_png(fileName, imageData->data, imageData->width, imageData->height)) {
+    std::vector<uint8_t> png_data(imageData->data.size());
+
+    for (int i = 0 ; i < imageData->data.size() ; ++i) {
+        double value = imageData->data[i];
+        value = linearToGamma(value);
+        // Translate the [0,1] component values to the byte range [0,255].
+        static const Interval intensity(0.000, 0.999);
+        int b = int(256 * intensity.clamp(value));
+        png_data[i] = b;
+    }
+    if (write_png(fileName, png_data, imageData->width, imageData->height)) {
         std::clog << "Image successfully written to " << fileName << std::endl;
     } else {
         std::clog << "Error while writing to " << fileName << std::endl;
