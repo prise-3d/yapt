@@ -7,6 +7,10 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <OpenEXR/ImfRgbaFile.h>
+#include <ImfArray.h>
+
+
 
 using std::shared_ptr;
 
@@ -59,9 +63,43 @@ inline bool write_png(const std::string& file_name, const std::vector<uint8_t>& 
 }
 
 void PNGImageExporter::write(std::string fileName) {
-    if (write_png(fileName, imageData->data, imageData->width, imageData->height)) {
+    std::vector<uint8_t> png_data(imageData->data.size());
+
+    for (int i = 0 ; i < imageData->data.size() ; ++i) {
+        double value = imageData->data[i];
+        value = linearToGamma(value);
+        // Translate the [0,1] component values to the byte range [0,255].
+        static const Interval intensity(0.000, 0.999);
+        int b = int(256 * intensity.clamp(value));
+        png_data[i] = b;
+    }
+    if (write_png(fileName, png_data, imageData->width, imageData->height)) {
         std::clog << "Image successfully written to " << fileName << std::endl;
     } else {
         std::clog << "Error while writing to " << fileName << std::endl;
+    }
+}
+
+void EXRImageExporter::write(std::string fileName) {
+
+    int width = imageData->width;
+    int height = imageData->height;
+
+    Imf::Array2D<Imf::Rgba> pixels(width, height);
+    for (int y=0; y<height; y++) {
+        for (int x=0; x<width; x++) {
+            double r = imageData->data[3*(y * width + x)];
+            double g = imageData->data[3*(y * width + x) + 1];
+            double b = imageData->data[3*(y * width + x) + 2];
+            pixels[y][x] = Imf::Rgba(r, g, b);
+        }
+    }
+
+    try {
+        Imf::RgbaOutputFile file (fileName.c_str(), width, height, Imf::WRITE_RGBA);
+        file.setFrameBuffer (&pixels[0][0], 1, width);
+        file.writePixels (height);
+    } catch (const std::exception &e) {
+        std::cerr << "error writing image file " <<  fileName << std::endl;
     }
 }

@@ -54,7 +54,7 @@ void cornellBox (std::shared_ptr<Camera> cam) {
     auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
     auto white = make_shared<Lambertian>(Color(.73, .73, .73));
     auto green = make_shared<Lambertian>(Color(.12, .45, .15));
-    auto light = make_shared<DiffuseLight>(Color(24, 24, 24));
+    auto light = make_shared<DiffuseLight>(Color(5, 5, 5));
 
     // Cornell box sides
     world.add(make_shared<Quad>(Point3(555, 0, 0), Vec3(0, 0, 555), Vec3(0, 555, 0), green));

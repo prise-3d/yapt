@@ -23,6 +23,8 @@ include_directories(include)
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIRS})
 
+find_package(OpenEXR REQUIRED)
+
 find_package(CGAL REQUIRED COMPONENTS Core)
 
 find_package(Threads REQUIRED)
@@ -73,7 +75,7 @@ add_executable(yapt ${SOURCES}
 )
 
 find_package(Threads REQUIRED)
-target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads assimp CGAL::CGAL CGAL::CGAL_Core)
+target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads assimp CGAL::CGAL CGAL::CGAL_Core OpenEXR::OpenEXR)
 
 
 add_custom_target(clean-all
