@@ -104,7 +104,9 @@ public:
         if (!(ray_t.contains(rec.t))) return false;
 
         rec.normal = n;
-        rec.mat = mat;
+
+        rec.mat = mat->get();
+
         rec.p = r.at(rec.t);
         rec.set_face_normal(r, n);
         return true;
@@ -114,9 +116,6 @@ private:
     // vertices
     double area;
     AABB bbox;
-
 };
-
-
 
 #endif //YAPT_TRIANGLE_H

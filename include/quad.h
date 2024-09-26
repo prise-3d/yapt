@@ -56,7 +56,8 @@ public:
         // Ray hits the 2D shape; set the rest of the hit record and return true.
         rec.t = t;
         rec.p = intersection;
-        rec.mat = mat;
+
+        rec.mat = mat->get();
         rec.set_face_normal(r, normal);
 
         return true;

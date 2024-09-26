@@ -135,7 +135,6 @@ Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hit
         return {0, 0, 0};
 
     HitRecord rec;
-
     // If the ray hits nothing, return the background color.
     if (!world.hit(r, Interval(0.001, infinity), rec))
         return background;
