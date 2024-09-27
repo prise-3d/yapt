@@ -7,7 +7,7 @@
 #include <memory>
 #include <iostream>
 #include <vector>
-#include <OpenEXR/ImfRgbaFile.h>
+#include <ImfRgbaFile.h>
 #include <ImfArray.h>
 
 
