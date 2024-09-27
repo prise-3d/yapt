@@ -24,4 +24,13 @@ protected:
     shared_ptr<ImageData> imageData;
 };
 
+class EXRImageExporter: public ImageExporter {
+public:
+    EXRImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
+    virtual void write(std::string fileName) override;
+
+protected:
+    shared_ptr<ImageData> imageData;
+};
+
 #endif //YAPT_IMAGE_EXPORTER_H

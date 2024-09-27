@@ -9,6 +9,7 @@
 #include "demo.h"
 #include "sceneloader.h"
 
+
 int main(int argc, char* argv[]) {
     std::string path;
     std::string aggregator = "vor";
@@ -22,6 +23,7 @@ int main(int argc, char* argv[]) {
     std::size_t width = 0;
 
     std::string pathprefix = "path=";
+    std::string format = "png";
     std::string sppprefix = "spp=";
     std::string samplerprefix = "sampler=";
     std::string aggregatorprefix = "aggregator=";
@@ -179,11 +181,16 @@ int main(int argc, char* argv[]) {
         cam->render(*scene, *lights);
     }
 
-    PNGImageExporter exporter(cam->data());
-    exporter.write(path);
+    std::string exrExt = ".exr";
+    if (path.size() >= exrExt.size() && path.compare(path.size() - exrExt.size(), exrExt.size(), exrExt) == 0) {
+        EXRImageExporter exporter(cam->data());
+        exporter.write(path);
+    }else{
+        PNGImageExporter exporter(cam->data());
+        exporter.write(path);
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
     std::clog << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
-    std::clog << "Commit: ne pas le prendre" << std::endl;
 }
