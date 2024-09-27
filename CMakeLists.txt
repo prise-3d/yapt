@@ -4,11 +4,6 @@ project(yapt)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(OpenEXR_USE_SYSTEM OFF CACHE BOOL "Disable system OpenEXR")
-set(Imath_USE_SYSTEM OFF CACHE BOOL "Disable system Imath")
-
-add_subdirectory(external/openexr)
-
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
@@ -19,8 +14,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 # Add include directory
 include_directories(include)
-include_directories(${CMAKE_SOURCE_DIR}/external/openexr/src/lib/OpenEXR)
-include_directories(${CMAKE_SOURCE_DIR}/external/openexr/src/lib/OpenEXRCore)
 
 # Add source files
 #file(GLOB SOURCES "src/*.cpp")
@@ -30,8 +23,23 @@ include_directories(${CMAKE_SOURCE_DIR}/external/openexr/src/lib/OpenEXRCore)
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIRS})
 
-# no longer needed we now use a submodule
-# find_package(OpenEXR REQUIRED 
+# Enable FetchContent
+include(FetchContent)
+
+# Declare OpenEXR repository to fetch
+FetchContent_Declare(
+        OpenEXR
+        GIT_REPOSITORY https://github.com/AcademySoftwareFoundation/openexr.git
+        GIT_TAG v3.2.0
+)
+
+# Optionally, set build options
+set(OPENEXR_BUILD_UTILS OFF)  # Turn off utilities
+set(OPENEXR_BUILD_DOCS OFF)   # Turn off documentation
+
+# Fetch and make the library available
+FetchContent_MakeAvailable(OpenEXR)
+
 
 find_package(CGAL REQUIRED COMPONENTS Core)
 
@@ -83,14 +91,7 @@ add_executable(yapt ${SOURCES}
 )
 
 find_package(Threads REQUIRED)
-target_link_libraries(yapt PRIVATE 
-    ${PNG_LIBRARIES}
-    Threads::Threads
-    assimp
-    CGAL::CGAL
-    CGAL::CGAL_Core
-    OpenEXR::OpenEXR
-)
+target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads assimp CGAL::CGAL CGAL::CGAL_Core OpenEXR::OpenEXR)
 
 
 add_custom_target(clean-all
