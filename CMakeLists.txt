@@ -141,7 +141,7 @@ add_executable(tests ${TEST_SOURCES}
 )
 
 # Link external libraries to tests executable if needed
-target_link_libraries(tests ${PNG_LIBRARIES} CGAL::CGAL CGAL::CGAL_Core Threads::Threads OpenEXR::OpenEXR)
+target_link_libraries(tests ${PNG_LIBRARIES} CGAL::CGAL CGAL::CGAL_Core Threads::Threads)
 
 # Enable testing
 enable_testing()
