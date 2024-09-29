@@ -4,20 +4,20 @@
 
 #include "yapt.h"
 #include "camera.h"
-#include <chrono>
-#include <iomanip>
 #include "demo.h"
 #include "sceneloader.h"
-
+#include <chrono>
+#include <iomanip>
+#include <filesystem>
 
 int main(int argc, char* argv[]) {
-    std::string path;
+    std::filesystem::path path;
     std::string aggregator = "vor";
     std::string sampler = "sppp";
     std::string dir;
     std::size_t spp = 500;
     double confidence = .999;
-    std::string source;
+    std::filesystem::path source;
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
     std::size_t width = 0;
@@ -181,14 +181,23 @@ int main(int argc, char* argv[]) {
         cam->render(*scene, *lights);
     }
 
-    std::string exrExt = ".exr";
-    if (path.size() >= exrExt.size() && path.compare(path.size() - exrExt.size(), exrExt.size(), exrExt) == 0) {
-        EXRImageExporter exporter(cam->data());
-        exporter.write(path);
-    }else{
-        PNGImageExporter exporter(cam->data());
-        exporter.write(path);
+    std::shared_ptr<ImageExporter> exporter;
+    std::string extension = path.extension();
+
+    if (extension == ".exr") {
+        std::clog << "Exporting to EXR format" << std::endl;
+        exporter = make_shared<EXRImageExporter>(cam->data());
+    } else if (extension == ".png") {
+        std::clog << "Exporting to PNG format" << std::endl;
+        exporter = make_shared<PNGImageExporter>(cam->data());
     }
+
+    if (!exporter) {
+        std::cerr << "Unrecognized file extension: \"" << extension << "\"." << std::endl << "Terminating." << std::endl;
+        return 1;
+    }
+
+    exporter->write(path);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);

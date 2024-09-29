@@ -63,7 +63,7 @@ material : metallic
 metal = .6, .6, .05, .05
 
 material : transp
-dielectric = 0.5
+dielectric = 1.5
 
 material : iso
 isotropic = 1, 2, 3
@@ -93,7 +93,7 @@ object: source1
 quad = 213,554,227 - 130,0,0 - 0,0,105 - light
 
 object: ball
-sphere = 190,110,190 - 90 - comp
+sphere = 190,90,190 - 90 - transp
 
 object: box1
 box = 0,0,0 - 165,330,165 - white
@@ -108,4 +108,4 @@ scene:main
 box1, left_wall, right_wall, ceiling, ball, source1, floor, rear_wall
 
 lights:main
-source1
+source1, ball
