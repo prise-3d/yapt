@@ -77,14 +77,9 @@ class TestCamera: public ParallelCamera {
     }
 
     Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
-
         if (-r.origin().x() + r.origin().y() > 0) {
             return {0, 0, 0};
         } else return {1, 1, 1};
-
-//        if (randomDouble() < .5) {
-//            return {0,0,0};
-//        } else return {1, 1, 1};
     }
 };
 
