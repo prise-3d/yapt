@@ -11,19 +11,20 @@
 #include <filesystem>
 
 int main(int argc, char* argv[]) {
+    std::filesystem::path source = "../scenes/cornell.ypt";
+    std::filesystem::path dir;
     std::filesystem::path path;
+
     std::string aggregator = "vor";
     std::string sampler = "sppp";
-    std::string dir;
     std::size_t spp = 500;
     double confidence = .999;
-    std::filesystem::path source;
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
     std::size_t width = 0;
 
+
     std::string pathprefix = "path=";
-    std::string format = "png";
     std::string sppprefix = "spp=";
     std::string samplerprefix = "sampler=";
     std::string aggregatorprefix = "aggregator=";
@@ -120,15 +121,19 @@ int main(int argc, char* argv[]) {
         aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
     }
 
+
+
     //  PATH CONSTRUCTION
     if (path.empty()) {
-        std::ostringstream stream;
-        if (!dir.empty()) stream << dir;
-        if (!source.empty()) stream << source << "-";
-        stream << aggregator << "-" << sampler << "-" << spp << "-depth-" << maxDepth;
+        if (!dir.empty())
+            path = dir;
+        std::filesystem::path filename;
 
-        stream << ".png";
-        path = stream.str();
+        filename += source.stem();
+        filename += "-";
+
+        filename += aggregator + "-" + sampler + "-" + std::to_string(spp) + "-depth-" + std::to_string(maxDepth) + ".exr";
+        path /= filename;
     }
 
     std::cout << "path=       " << path        << std::endl;
@@ -170,8 +175,6 @@ int main(int argc, char* argv[]) {
 
     shared_ptr scene = make_shared<HittableList>();
     shared_ptr lights = make_shared<HittableList>();
-
-    if (source.empty()) source = "../scenes/cornell.ypt";
 
     if (source == "test") {
         test(cam);
