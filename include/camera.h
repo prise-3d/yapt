@@ -55,6 +55,7 @@ protected:
     [[nodiscard]] Point3 defocusDiskSample() const;
 
     virtual Ray getRay(double x, double y) const;
+    virtual void renderPixel (const Hittable &world, const Hittable &lights, int row, int column);
 };
 
 class ParallelCamera: public Camera {

@@ -14,30 +14,34 @@
 #include <memory>
 
 void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
-    int idx = j * imageWidth * 3;
-
-    for (int i = 0; i < imageWidth; i++) {
-        auto aggregator = samplerAggregator->create();
-        aggregator->sampleFrom(pixelSamplerFactory, i, j);
-        aggregator->traverse();
-
-        while (aggregator-> hasNext()) {
-            Sample sample = aggregator->next();
-
-            Vec3 color(0, 0, 0);
-            Ray r = getRay(sample.x, sample.y);
-            color = rayColor(r, maxDepth, world, lights);
-            aggregator->insertContribution(color);
-        }
-
-        Color pixel_color = aggregator->aggregate();
-
-        imageData.data[idx++] = pixel_color.x();  // R
-        imageData.data[idx++] = pixel_color.y();  // G
-        imageData.data[idx++] = pixel_color.z();  // B
-
+    for (int column = 0; column < imageWidth; ++column) {
+        renderPixel(world, lights, j, column);
     }
 }
+
+void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row, int column) {
+    auto aggregator = samplerAggregator->create();
+    aggregator->sampleFrom(pixelSamplerFactory, column, row);
+    aggregator->traverse();
+
+    while (aggregator-> hasNext()) {
+        Sample sample = aggregator->next();
+
+        Vec3 color(0, 0, 0);
+        Ray r = getRay(sample.x, sample.y);
+        color = rayColor(r, maxDepth, world, lights);
+        aggregator->insertContribution(color);
+    }
+
+    Color pixel_color = aggregator->aggregate();
+
+    size_t idx = 3 * (column + row * imageWidth);
+
+    imageData.data[idx++] = pixel_color.x();  // R
+    imageData.data[idx++] = pixel_color.y();  // G
+    imageData.data[idx]   = pixel_color.z();  // B
+}
+
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
     initialize();
