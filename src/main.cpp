@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
     std::filesystem::path dir;
     std::filesystem::path path;
 
+    std::string cameraType = "vor";
     std::string aggregator = "vor";
     std::string sampler = "sppp";
     std::size_t spp = 500;
@@ -22,6 +23,8 @@ int main(int argc, char* argv[]) {
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
     std::size_t width = 0;
+    std::size_t pixel_x = 0;
+    std::size_t pixel_y = 0;
 
 
     std::string pathprefix = "path=";
@@ -34,6 +37,10 @@ int main(int argc, char* argv[]) {
     std::string dirprefix = "dir=";
     std::string numThreadsprefix = "threads=";
     std::string widthprefix="width=";
+    std::string camprefix="cam=";
+
+    std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
+    std::smatch matches;
 
     for (int i = 0 ; i < argc ; i++) {
         std::string parameter(argv[i]);
@@ -67,6 +74,9 @@ int main(int argc, char* argv[]) {
         else if (parameter.rfind(dirprefix, 0) == 0) {
             dir = parameter.substr(dirprefix.size());
         }
+        else if (parameter.rfind(camprefix, 0) == 0) {
+            cameraType = parameter.substr(camprefix.size());
+        }
         else if (parameter.rfind("help", 0) == 0) {
             std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
             std::cout << " - path       => path to render output (optional)" << std::endl;
@@ -87,7 +97,19 @@ int main(int argc, char* argv[]) {
             std::cout << " - dir        => output directory (optional, ignored if path is specified)" << std::endl;
             std::cout << " - threads    => number of threads used (DEFAULT=hardware_concurrency)" << std::endl;
             std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
+            std::cout << " - cam        => camera type" << std::endl;
+            std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
+            std::cout << "                 - test      => test camera" << std::endl;
+            std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
             return 0;
+        }
+        if (std::regex_match(parameter, matches, coords)) {
+            std::cout << parameter << " match" << std::endl;
+            cameraType = "pixel";
+            pixel_x = std::stoi(matches[1]);
+            pixel_y = std::stoi(matches[2]);
+        } else {
+            std::cout << parameter << " => no match" << std::endl;
         }
     }
 
@@ -122,7 +144,6 @@ int main(int argc, char* argv[]) {
     }
 
 
-
     //  PATH CONSTRUCTION
     if (path.empty()) {
         if (!dir.empty())
@@ -147,12 +168,14 @@ int main(int argc, char* argv[]) {
     std::cout << "threads=    " << numThreads  << std::endl;
     std::cout << "width=      " << width       << std::endl;
 
-
     auto start = std::chrono::high_resolution_clock::now();
 
     std::shared_ptr<Camera> cam = std::make_shared<ParallelCamera>();
-    if (source == "test") {
+    if (cameraType == "test") {
         cam = std::make_shared<TestCamera>();
+    }
+    else if (cameraType == "pixel") {
+        cam = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
     } else {
         cam = std::make_shared<ParallelCamera>();
     }
@@ -163,20 +186,20 @@ int main(int argc, char* argv[]) {
     cam->pixelSamplerFactory = samplerFactory;
     cam->imageWidth = width;
 
-    cam->aspect_ratio      = 1.0;
+    cam->aspect_ratio   = 1.0;
+    cam->background = Color(0, 0, 0);
+    cam->vfov           = 40;
+    cam->lookFrom       = Point3(278, 278, -800);
+    cam->lookAt         = Point3(278, 278, 0);
+    cam->vup            = Vec3(0, 1, 0);
+    cam->defocusAngle   = 0;
     if (cam->imageWidth == 0)
         cam->imageWidth = 900;
-    cam->background = Color(0, 0, 0);
-    cam->vfov     = 40;
-    cam->lookFrom = Point3(278, 278, -800);
-    cam->lookAt   = Point3(278, 278, 0);
-    cam->vup      = Vec3(0, 1, 0);
-    cam->defocusAngle = 0;
 
     shared_ptr scene = make_shared<HittableList>();
     shared_ptr lights = make_shared<HittableList>();
 
-    if (source == "test") {
+    if (cameraType == "test") {
         test(cam);
     } else {
         YaptSceneLoader loader;

@@ -72,8 +72,7 @@ class TestCamera: public ParallelCamera {
         double dx = modf(x, &ex);
         double dy = modf(y, &ey);
 
-        return Ray(Point3(dx, dy, 0), Vec3(0, 0, 0));
-
+        return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
     }
 
     Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
@@ -81,6 +80,22 @@ class TestCamera: public ParallelCamera {
             return {0, 0, 0};
         } else return {1, 1, 1};
     }
+};
+
+class CartographyCamera: public Camera {
+public:
+    CartographyCamera(size_t pixel_x, size_t pixel_y);
+    void render(const Hittable &world, const Hittable &lights) override;
+
+protected:
+    void renderPixel(const Hittable &world, const Hittable &lights, int row, int column) override;
+
+    void initialize() override;
+
+public:
+
+    size_t pixel_x;
+    size_t pixel_y;
 };
 
 #endif //YAPT_CAMERA_H
