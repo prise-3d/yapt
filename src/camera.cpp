@@ -236,7 +236,7 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
         double dy = (double)y / imageHeight - .5;
         for (size_t x = 0 ; x < imageWidth ; ++x) {
             double dx = (double)x / imageWidth - .5;
-            Ray r = getRay(row + dy, column + dx);
+            Ray r = getRay(dx + column, dy + row);
             Color color = rayColor(r, maxDepth, world, lights);
 
             size_t idx = 3 * (x + y * imageWidth);
