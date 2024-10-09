@@ -23,3 +23,11 @@ void writeColor(std::ostream &out, const Color &pixel_color) {
     // Write out the pixel color components.
     out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
 }
+
+/**
+ * compute luminance according the ITU-R BT.709 standard
+ */
+double luminance(const Color &pixel_color)
+{
+    return 0.2126 * pixel_color.x() + 0.7152 * pixel_color.y() + 0.0722 * pixel_color.z();
+}

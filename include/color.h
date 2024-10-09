@@ -12,11 +12,14 @@ using Color = Vec3;
 
 void writeColor(std::ostream &out, const Color &pixel_color);
 
-inline double linearToGamma(double linear_component) {
+double luminance(const Color &pixel_color);
+
+inline double linearToGamma(double linear_component)
+{
     if (linear_component > 0)
         return sqrt(linear_component);
 
     return 0;
 }
 
-#endif //YAPT_COLOR_H
+#endif // YAPT_COLOR_H
