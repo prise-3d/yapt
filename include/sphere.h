@@ -53,7 +53,8 @@ public:
         rec.set_face_normal(r, outward_normal);
         get_sphere_uv(outward_normal, rec.u, rec.v);
 
-        rec.mat = mat->get();
+        if (mat)
+            rec.mat = mat->get();
 
         return true;
     }

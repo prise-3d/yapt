@@ -14,30 +14,34 @@
 #include <memory>
 
 void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
-    int idx = j * imageWidth * 3;
-
-    for (int i = 0; i < imageWidth; i++) {
-        auto aggregator = samplerAggregator->create();
-        aggregator->sampleFrom(pixelSamplerFactory, i, j);
-        aggregator->traverse();
-
-        while (aggregator-> hasNext()) {
-            Sample sample = aggregator->next();
-
-            Vec3 color(0, 0, 0);
-            Ray r = getRay(sample.x, sample.y);
-            color = rayColor(r, maxDepth, world, lights);
-            aggregator->insertContribution(color);
-        }
-
-        Color pixel_color = aggregator->aggregate();
-
-        imageData.data[idx++] = pixel_color.x();  // R
-        imageData.data[idx++] = pixel_color.y();  // G
-        imageData.data[idx++] = pixel_color.z();  // B
-
+    for (int column = 0; column < imageWidth; ++column) {
+        renderPixel(world, lights, j, column);
     }
 }
+
+void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row, int column) {
+    auto aggregator = samplerAggregator->create();
+    aggregator->sampleFrom(pixelSamplerFactory, column, row);
+    aggregator->traverse();
+
+    while (aggregator-> hasNext()) {
+        Sample sample = aggregator->next();
+
+        Vec3 color(0, 0, 0);
+        Ray r = getRay(sample.x, sample.y);
+        color = rayColor(r, maxDepth, world, lights);
+        aggregator->insertContribution(color);
+    }
+
+    Color pixel_color = aggregator->aggregate();
+
+    size_t idx = 3 * (column + row * imageWidth);
+
+    imageData.data[idx++] = pixel_color.x();  // R
+    imageData.data[idx++] = pixel_color.y();  // G
+    imageData.data[idx]   = pixel_color.z();  // B
+}
+
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
     initialize();
@@ -207,3 +211,41 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
     }
     std::clog << std::endl;
 }
+
+CartographyCamera::CartographyCamera(size_t pixel_x, size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
+
+void CartographyCamera::render(const Hittable &world, const Hittable &lights) {
+    initialize();
+    renderPixel(world, lights, pixel_y, pixel_x);
+}
+
+void CartographyCamera::initialize() {
+    Camera::initialize();
+}
+
+/**
+ * Render a pixel cartography. We assume for now that the pixel is uniformly sampled
+ * @param world
+ * @param lights
+ * @param row
+ * @param column
+ */
+void CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights, int row, int column) {
+    std::clog << "Rendering pixel @ " << column << ", " << row << std::endl;
+    for (size_t y = 0 ; y < imageHeight ; ++y) {
+        double dy = (double)y / imageHeight - .5;
+        for (size_t x = 0 ; x < imageWidth ; ++x) {
+            double dx = (double)x / imageWidth - .5;
+            Ray r = getRay(dx + column, dy + row);
+            Color color = rayColor(r, maxDepth, world, lights);
+
+            size_t idx = 3 * (x + y * imageWidth);
+
+            imageData.data[idx]     = color.x();  // R
+            imageData.data[idx + 1] = color.y();  // G
+            imageData.data[idx + 2] = color.z();  // B
+        }
+    }
+}
+
+

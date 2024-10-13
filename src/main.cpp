@@ -4,25 +4,30 @@
 
 #include "yapt.h"
 #include "camera.h"
+#include "demo.h"
+#include "sceneloader.h"
 #include <chrono>
 #include <iomanip>
-#include "demo.h"
-
+#include <filesystem>
 
 int main(int argc, char* argv[]) {
-    std::string path;
+    std::filesystem::path source = "../scenes/cornell.ypt";
+    std::filesystem::path dir;
+    std::filesystem::path path;
+
+    std::string cameraType = "vor";
     std::string aggregator = "vor";
     std::string sampler = "sppp";
-    std::string dir;
     std::size_t spp = 500;
     double confidence = .999;
-    std::string source;
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
     std::size_t width = 0;
+    std::size_t pixel_x = 0;
+    std::size_t pixel_y = 0;
+
 
     std::string pathprefix = "path=";
-    std::string format = "png";
     std::string sppprefix = "spp=";
     std::string samplerprefix = "sampler=";
     std::string aggregatorprefix = "aggregator=";
@@ -32,6 +37,10 @@ int main(int argc, char* argv[]) {
     std::string dirprefix = "dir=";
     std::string numThreadsprefix = "threads=";
     std::string widthprefix="width=";
+    std::string camprefix="cam=";
+
+    std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
+    std::smatch matches;
 
     for (int i = 0 ; i < argc ; i++) {
         std::string parameter(argv[i]);
@@ -65,6 +74,9 @@ int main(int argc, char* argv[]) {
         else if (parameter.rfind(dirprefix, 0) == 0) {
             dir = parameter.substr(dirprefix.size());
         }
+        else if (parameter.rfind(camprefix, 0) == 0) {
+            cameraType = parameter.substr(camprefix.size());
+        }
         else if (parameter.rfind("help", 0) == 0) {
             std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
             std::cout << " - path       => path to render output (optional)" << std::endl;
@@ -87,7 +99,19 @@ int main(int argc, char* argv[]) {
             std::cout << " - dir        => output directory (optional, ignored if path is specified)" << std::endl;
             std::cout << " - threads    => number of threads used (DEFAULT=hardware_concurrency)" << std::endl;
             std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
+            std::cout << " - cam        => camera type" << std::endl;
+            std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
+            std::cout << "                 - test      => test camera" << std::endl;
+            std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
             return 0;
+        }
+        if (std::regex_match(parameter, matches, coords)) {
+            std::cout << parameter << " match" << std::endl;
+            cameraType = "pixel";
+            pixel_x = std::stoi(matches[1]);
+            pixel_y = std::stoi(matches[2]);
+        } else {
+            std::cout << parameter << " => no match" << std::endl;
         }
     }
 
@@ -125,15 +149,18 @@ int main(int argc, char* argv[]) {
         aggregatorFactory = std::make_shared<MonAggregatorFactory>();
     }
 
+
     //  PATH CONSTRUCTION
     if (path.empty()) {
-        std::ostringstream stream;
-        if (!dir.empty()) stream << dir;
-        if (!source.empty()) stream << source << "-";
-        stream << aggregator << "-" << sampler << "-" << spp << "-depth-" << maxDepth;
+        if (!dir.empty())
+            path = dir;
+        std::filesystem::path filename;
 
-        stream << ".png";
-        path = stream.str();
+        filename += source.stem();
+        filename += "-";
+
+        filename += aggregator + "-" + sampler + "-" + std::to_string(spp) + "-depth-" + std::to_string(maxDepth) + ".exr";
+        path /= filename;
     }
 
     std::cout << "path=       " << path        << std::endl;
@@ -147,12 +174,14 @@ int main(int argc, char* argv[]) {
     std::cout << "threads=    " << numThreads  << std::endl;
     std::cout << "width=      " << width       << std::endl;
 
-
     auto start = std::chrono::high_resolution_clock::now();
 
     std::shared_ptr<Camera> cam = std::make_shared<ParallelCamera>();
-    if (source == "test") {
+    if (cameraType == "test") {
         cam = std::make_shared<TestCamera>();
+    }
+    else if (cameraType == "pixel") {
+        cam = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
     } else {
         cam = std::make_shared<ParallelCamera>();
     }
@@ -163,22 +192,44 @@ int main(int argc, char* argv[]) {
     cam->pixelSamplerFactory = samplerFactory;
     cam->imageWidth = width;
 
+    cam->aspect_ratio   = 1.0;
+    cam->background = Color(0, 0, 0);
+    cam->vfov           = 40;
+    cam->lookFrom       = Point3(278, 278, -800);
+    cam->lookAt         = Point3(278, 278, 0);
+    cam->vup            = Vec3(0, 1, 0);
+    cam->defocusAngle   = 0;
+    if (cam->imageWidth == 0)
+        cam->imageWidth = 900;
 
-    if (source == "test") {
+    shared_ptr scene = make_shared<HittableList>();
+    shared_ptr lights = make_shared<HittableList>();
+
+    if (cameraType == "test") {
         test(cam);
     } else {
-        cornellBox(cam);
+        YaptSceneLoader loader;
+        loader.load(source, scene, lights, cam);
+        cam->render(*scene, *lights);
     }
 
-    std::string exrExt = ".exr";
-    if (path.size() >= exrExt.size() && path.compare(path.size() - exrExt.size(), exrExt.size(), exrExt) == 0) {
-        EXRImageExporter exporter(cam->data());
-        exporter.write(path);
-    }else{
-        PNGImageExporter exporter(cam->data());
-        exporter.write(path);
+    std::shared_ptr<ImageExporter> exporter;
+    std::string extension = path.extension();
+
+    if (extension == ".exr") {
+        std::clog << "Exporting to EXR format" << std::endl;
+        exporter = make_shared<EXRImageExporter>(cam->data());
+    } else if (extension == ".png") {
+        std::clog << "Exporting to PNG format" << std::endl;
+        exporter = make_shared<PNGImageExporter>(cam->data());
     }
 
+    if (!exporter) {
+        std::cerr << "Unrecognized file extension: \"" << extension << "\"." << std::endl << "Terminating." << std::endl;
+        return 1;
+    }
+
+    exporter->write(path);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);

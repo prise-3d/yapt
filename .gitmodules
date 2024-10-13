@@ -1,3 +1,0 @@
-[submodule "external/openexr"]
-	path = external/openexr
-	url = https://github.com/AcademySoftwareFoundation/openexr.git
