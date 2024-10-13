@@ -93,6 +93,7 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - ivor => Inner Voronoi aggregation" << std::endl;
             std::cout << "                 - median => Median aggregation" << std::endl;
             std::cout << "                 - mon => MoN (Meadian of meaNs) aggregation" << std::endl;
+            std::cout << "                 - winsor =>  Winsorization" << std::endl;
             std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
             std::cout << " - source     => Scene model to import" << std::endl;
             std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -147,6 +148,8 @@ int main(int argc, char* argv[]) {
         aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
     } else if (aggregator == "mon") {
         aggregatorFactory = std::make_shared<MonAggregatorFactory>();
+    }else if (aggregator == "winsor") {
+        aggregatorFactory = std::make_shared<WinsorAggregatorFactory>();
     }
 
 

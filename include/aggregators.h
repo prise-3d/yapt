@@ -180,6 +180,25 @@ public:
     }
 };
 
+class WinsorAggregator: public MCSampleAggregator {
+public:
+    WinsorAggregator() = default;
+    Color aggregate() override {
+
+        std::sort(contributions.begin(), contributions.end(), [](const Color & a, const Color & b) {
+            return luminance(a) < luminance(b);
+        });
+        auto size = contributions.size();
+        int min = (int)(size * 0.025);
+        int max = (int)(size * 0.975);
+        Color sum = Color(0, 0, 0);
+        for (size_t i = min; i < max; ++i) {
+            sum += contributions[i];
+        }
+        return sum / (max - min);
+    }
+};
+
 class VoronoiAggregator: public SampleAggregator {
 public:
     VoronoiAggregator() = default;
@@ -498,6 +517,13 @@ class MonAggregatorFactory: public AggregatorFactory {
 public:
     shared_ptr<SampleAggregator> create() override {
         return std::make_shared<MonAggregator>();
+    }
+};
+
+class WinsorAggregatorFactory: public AggregatorFactory {
+public:
+    shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<WinsorAggregator>();
     }
 };
 
