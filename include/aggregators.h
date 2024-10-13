@@ -9,6 +9,7 @@
 
 #include "yapt.h"
 #include "Vec3.h"
+#include "color.h"
 
 class SampleAggregator {
 public:
@@ -131,6 +132,51 @@ typedef CGAL::Polygon_2<K> Polygon;
 struct VertexHandleHash {
     std::size_t operator()(const Delaunay::Vertex_handle& vh) const {
         return std::hash<void*>()(&(*vh));
+    }
+};
+
+class MedianAggregator: public MCSampleAggregator {
+public:
+    MedianAggregator() = default;
+    Color aggregate() override {
+
+        std::sort(contributions.begin(), contributions.end(), [](const Color & a, const Color & b) {
+            return luminance(a) < luminance(b);
+        });
+        int mid = contributions.size() / 2;        
+        return contributions[mid];
+    }
+};
+
+class MonAggregator: public MCSampleAggregator {
+public:
+    MonAggregator() = default;
+    Color aggregate() override {
+        // blocks and block size
+        auto const nb_block = 5;
+        std::vector<Color> block(nb_block);
+        std::array<int, nb_block> block_size = {0};
+
+        // fold each block
+        for (size_t i = 0; i < contributions.size(); ++i) {
+            block[i % nb_block] += contributions[i];
+            block_size[i % nb_block] += 1;
+        }
+
+        // compute the mean in each block and sort
+        for (size_t i = 0; i < nb_block; ++i){
+            block[i] /= block_size[i];
+        }
+        std::sort(block.begin(), block.end(), [](const Color & a, const Color & b) {
+            return luminance(a) < luminance(b);
+        });
+
+        // if the number of block is even, return de mean of central block
+        // else return the value of the central block
+        if (nb_block % 2 == 0)
+            return (block[nb_block / 2] + block[nb_block / 2 - 1] )/2.0;
+        else
+            return block[nb_block / 2];
     }
 };
 
@@ -438,6 +484,20 @@ class InnerVoronoiAggregatorFactory: public AggregatorFactory {
 public:
     shared_ptr<SampleAggregator> create() override {
         return std::make_shared<InnerVoronoiAggregator>();
+    }
+};
+
+class MedianAggregatorFactory: public AggregatorFactory {
+public:
+    shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<MedianAggregator>();
+    }
+};
+
+class MonAggregatorFactory: public AggregatorFactory {
+public:
+    shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<MonAggregator>();
     }
 };
 
