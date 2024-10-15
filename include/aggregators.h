@@ -150,12 +150,11 @@ public:
 
 class MonAggregator: public MCSampleAggregator {
 public:
-    MonAggregator() = default;
+    MonAggregator(size_t nb_blocks) : MCSampleAggregator(), nb_block(nb_block) {}
+
     Color aggregate() override {
-        // blocks and block size
-        auto const nb_block = 5;
         std::vector<Color> block(nb_block);
-        std::array<int, nb_block> block_size = {0};
+        std::vector<size_t> block_size(nb_block);
 
         // fold each block
         for (size_t i = 0; i < contributions.size(); ++i) {
@@ -165,7 +164,7 @@ public:
 
         // compute the mean in each block and sort
         for (size_t i = 0; i < nb_block; ++i){
-            block[i] /= block_size[i];
+            block[i] /= (double)block_size[i];
         }
         std::sort(block.begin(), block.end(), [](const Color & a, const Color & b) {
             return luminance(a) < luminance(b);
@@ -174,29 +173,54 @@ public:
         // if the number of block is even, return de mean of central block
         // else return the value of the central block
         if (nb_block % 2 == 0)
-            return (block[nb_block / 2] + block[nb_block / 2 - 1] )/2.0;
+            return (block[nb_block / 2] + block[nb_block / 2 - 1]) / 2.0;
         else
             return block[nb_block / 2];
     }
+
+private:
+    size_t nb_block;
 };
 
 class WinsorAggregator: public MCSampleAggregator {
 public:
-    WinsorAggregator() = default;
+    WinsorAggregator(double rejectRate, bool clipped) : MCSampleAggregator(), rejectRate(rejectRate), clipped(clipped) {}
     Color aggregate() override {
 
         std::sort(contributions.begin(), contributions.end(), [](const Color & a, const Color & b) {
             return luminance(a) < luminance(b);
         });
         auto size = contributions.size();
-        int min = (int)(size * 0.025);
-        int max = (int)(size * 0.975);
+
+        size_t min = (size_t) (size * rejectRate / 2.0);
+        size_t max = (size_t) (size * (1 - rejectRate / 2.0));
+
         Color sum = Color(0, 0, 0);
+
+        size_t corrected_size;
+
+        if (!clipped) {
+            for (size_t i = 0 ; i < min - 1 ; ++i) {
+                sum += contributions[min];
+            }
+            for (size_t i = max + 1 ; i < size ; ++i) {
+                sum += contributions[max];
+            }
+            corrected_size = size;
+        } else {
+            corrected_size = max - min;
+        }
+
         for (size_t i = min; i < max; ++i) {
             sum += contributions[i];
         }
-        return sum / (max - min);
+
+        return sum / corrected_size;
     }
+
+private:
+    bool clipped;
+    double rejectRate;
 };
 
 class VoronoiAggregator: public SampleAggregator {
@@ -515,16 +539,26 @@ public:
 
 class MonAggregatorFactory: public AggregatorFactory {
 public:
+    MonAggregatorFactory(size_t nb_blocks) : AggregatorFactory(), nb_blocks(nb_blocks) {}
+
     shared_ptr<SampleAggregator> create() override {
-        return std::make_shared<MonAggregator>();
+        return std::make_shared<MonAggregator>(nb_blocks);
     }
+
+private:
+    size_t nb_blocks;
 };
 
 class WinsorAggregatorFactory: public AggregatorFactory {
 public:
+    WinsorAggregatorFactory(double rejectRate, bool clipped) : AggregatorFactory(), rejectRate(rejectRate), clipped(clipped) {}
     shared_ptr<SampleAggregator> create() override {
-        return std::make_shared<WinsorAggregator>();
+        return std::make_shared<WinsorAggregator>(rejectRate, clipped);
     }
+
+private:
+    double rejectRate;
+    bool clipped;
 };
 
 #endif //YAPT_AGGREGATORS_H

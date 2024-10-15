@@ -25,7 +25,9 @@ int main(int argc, char* argv[]) {
     std::size_t width = 0;
     std::size_t pixel_x = 0;
     std::size_t pixel_y = 0;
-
+    std::size_t monSize = 5;
+    bool winClip = false;
+    double winRate = .05;
 
     std::string pathprefix = "path=";
     std::string sppprefix = "spp=";
@@ -36,8 +38,11 @@ int main(int argc, char* argv[]) {
     std::string maxDepthprefix = "maxdepth=";
     std::string dirprefix = "dir=";
     std::string numThreadsprefix = "threads=";
-    std::string widthprefix="width=";
-    std::string camprefix="cam=";
+    std::string widthprefix = "width=";
+    std::string camprefix = "cam=";
+    std::string monsizeprefix = "monsize=";
+    std::string winclipprefix = "winclip=";
+    std::string winrateprefix = "winrate=";
 
     std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
     std::smatch matches;
@@ -77,6 +82,16 @@ int main(int argc, char* argv[]) {
         else if (parameter.rfind(camprefix, 0) == 0) {
             cameraType = parameter.substr(camprefix.size());
         }
+        else if (parameter.rfind(monsizeprefix, 0) == 0) {
+            monSize = std::stoi(parameter.substr(monsizeprefix.size()));
+        }
+        else if (parameter.rfind(winrateprefix, 0) == 0) {
+            winRate = std::stod(parameter.substr(winrateprefix.size()));
+        }
+        else if (parameter.rfind(winclipprefix, 0) == 0) {
+            std::string b = parameter.substr(winclipprefix.size());
+            winClip = (b == "true");
+        }
         else if (parameter.rfind("help", 0) == 0) {
             std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
             std::cout << " - path       => path to render output (optional)" << std::endl;
@@ -104,6 +119,9 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
             std::cout << "                 - test      => test camera" << std::endl;
             std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
+            std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
+            std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
+            std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
             return 0;
         }
         if (std::regex_match(parameter, matches, coords)) {
@@ -147,9 +165,9 @@ int main(int argc, char* argv[]) {
     } else if (aggregator == "median") {
         aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
     } else if (aggregator == "mon") {
-        aggregatorFactory = std::make_shared<MonAggregatorFactory>();
-    }else if (aggregator == "winsor") {
-        aggregatorFactory = std::make_shared<WinsorAggregatorFactory>();
+        aggregatorFactory = std::make_shared<MonAggregatorFactory>(monSize);
+    } else if (aggregator == "winsor") {
+        aggregatorFactory = std::make_shared<WinsorAggregatorFactory>(winRate, winClip);
     }
 
 
