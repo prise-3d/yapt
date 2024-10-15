@@ -194,6 +194,9 @@ int main(int argc, char* argv[]) {
     std::cout << "dir=        " << dir         << std::endl;
     std::cout << "threads=    " << numThreads  << std::endl;
     std::cout << "width=      " << width       << std::endl;
+    std::cout << "monsize=    " << monSize     << std::endl;
+    std::cout << "winrate=    " << winRate     << std::endl;
+    std::cout << "winclip=    " << winClip     << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
 

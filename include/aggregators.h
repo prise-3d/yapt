@@ -150,7 +150,7 @@ public:
 
 class MonAggregator: public MCSampleAggregator {
 public:
-    MonAggregator(size_t nb_blocks) : MCSampleAggregator(), nb_block(nb_block) {}
+    MonAggregator(size_t nb_block) : MCSampleAggregator(), nb_block(nb_block) {}
 
     Color aggregate() override {
         std::vector<Color> block(nb_block);
@@ -161,7 +161,6 @@ public:
             block[i % nb_block] += contributions[i];
             block_size[i % nb_block] += 1;
         }
-
         // compute the mean in each block and sort
         for (size_t i = 0; i < nb_block; ++i){
             block[i] /= (double)block_size[i];
@@ -169,7 +168,6 @@ public:
         std::sort(block.begin(), block.end(), [](const Color & a, const Color & b) {
             return luminance(a) < luminance(b);
         });
-
         // if the number of block is even, return de mean of central block
         // else return the value of the central block
         if (nb_block % 2 == 0)
