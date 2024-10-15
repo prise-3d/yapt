@@ -231,11 +231,15 @@ int main(int argc, char* argv[]) {
 
     if (cameraType == "test") {
         test(cam);
-    } else {
+    } else
+    if (source.extension() == ".ypt") {
         YaptSceneLoader loader;
         loader.load(source, scene, lights, cam);
         cam->render(*scene, *lights);
-    }
+    } else if (source.extension() == ".obj") {
+        cam->background = Color(1., .5, .5);
+        cam->render(*scene, *lights);
+    } else return -1;
 
     std::shared_ptr<ImageExporter> exporter;
     std::string extension = path.extension();

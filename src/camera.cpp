@@ -29,6 +29,7 @@ void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row,
 
         Vec3 color(0, 0, 0);
         Ray r = getRay(sample.x, sample.y);
+        // rayColor builds the path
         color = rayColor(r, maxDepth, world, lights);
         aggregator->insertContribution(color);
     }
@@ -41,7 +42,6 @@ void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row,
     imageData.data[idx++] = pixel_color.y();  // G
     imageData.data[idx]   = pixel_color.z();  // B
 }
-
 
 void Camera::render(const Hittable& world, const Hittable& lights) {
     initialize();
