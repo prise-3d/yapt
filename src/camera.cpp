@@ -31,7 +31,7 @@ void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row,
         Ray r = getRay(sample.x, sample.y);
 
         // rayColor builds the path
-        Path path(maxDepth);
+        Path path(center, maxDepth);
         color = rayColor(r, path, maxDepth, world, lights);
         aggregator->insertContribution(color);
     }
@@ -120,7 +120,7 @@ Point3 Camera::defocusDiskSample() const {
     return center + (p[0] * defocusDiskU) + (p[1] * defocusDiskV);
 }
 
-Color Camera::rayColor(const Ray& r, const Path& path, int depth, const Hittable& world, const Hittable& lights) const {
+Color Camera::rayColor(const Ray& r, Path& path, int depth, const Hittable& world, const Hittable& lights) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};
@@ -129,6 +129,8 @@ Color Camera::rayColor(const Ray& r, const Path& path, int depth, const Hittable
     // If the ray hits nothing, return the background color.
     if (!world.hit(r, Interval(0.001, infinity), rec))
         return background;
+
+    path.append(rec);
 
     ScatterRecord scatterRecord;
     Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
@@ -243,7 +245,7 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
             Ray r = getRay(dx + column, dy + row);
 
             //TODO: is this correct?
-            Path path(maxDepth);
+            Path path(center, maxDepth);
             Color color = rayColor(r, path, maxDepth, world, lights);
 
             size_t idx = 3 * (x + y * imageWidth);

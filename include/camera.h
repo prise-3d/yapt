@@ -51,7 +51,7 @@ protected:
 
     virtual void initialize();
 
-    [[nodiscard]] virtual Color rayColor(const Ray &r, const Path& path, int depth, const Hittable &world, const Hittable &lights) const;
+    [[nodiscard]] virtual Color rayColor(const Ray &r, Path& path, int depth, const Hittable &world, const Hittable &lights) const;
 
     [[nodiscard]] Point3 defocusDiskSample() const;
 
@@ -76,7 +76,7 @@ class TestCamera: public ParallelCamera {
         return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
     }
 
-    Color rayColor(const Ray &r, const Path &path, int depth, const Hittable &world, const Hittable &lights) const override {
+    Color rayColor(const Ray &r, Path &path, int depth, const Hittable &world, const Hittable &lights) const override {
         if (-r.origin().x() + r.origin().y() > 0) {
             return {0, 0, 0};
         } else return {1, 1, 1};
