@@ -1,4 +1,3 @@
-
 //
 // Created by franck on 09/06/24.
 //
@@ -6,6 +5,7 @@
 #include "yapt.h"
 #include "camera.h"
 #include "material.h"
+#include "path.h"
 #include <thread>
 #include <mutex>
 #include <vector>
@@ -29,8 +29,10 @@ void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row,
 
         Vec3 color(0, 0, 0);
         Ray r = getRay(sample.x, sample.y);
+
         // rayColor builds the path
-        color = rayColor(r, maxDepth, world, lights);
+        Path path(maxDepth);
+        color = rayColor(r, path, maxDepth, world, lights);
         aggregator->insertContribution(color);
     }
 
@@ -118,7 +120,7 @@ Point3 Camera::defocusDiskSample() const {
     return center + (p[0] * defocusDiskU) + (p[1] * defocusDiskV);
 }
 
-Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hittable& lights) const {
+Color Camera::rayColor(const Ray& r, const Path& path, int depth, const Hittable& world, const Hittable& lights) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};
@@ -135,7 +137,8 @@ Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hit
         return color_from_emission;
 
     if (scatterRecord.skip_pdf) {
-        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+        //TODO: is this correct?
+        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, path, depth - 1, world, lights);
     }
 
     auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
@@ -146,7 +149,8 @@ Color Camera::rayColor(const Ray& r, int depth, const Hittable& world, const Hit
 
     double scatteringPdf = rec.mat->scattering_pdf(r, rec, scattered);
 
-    Color sampleColor = rayColor(scattered, depth - 1, world, lights);
+    //TODO: is this correct?
+    Color sampleColor = rayColor(scattered, path, depth - 1, world, lights);
     Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
 
     return color_from_emission + colorFromScatter;
@@ -237,7 +241,10 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
         for (size_t x = 0 ; x < imageWidth ; ++x) {
             double dx = (double)x / imageWidth - .5;
             Ray r = getRay(dx + column, dy + row);
-            Color color = rayColor(r, maxDepth, world, lights);
+
+            //TODO: is this correct?
+            Path path(maxDepth);
+            Color color = rayColor(r, path, maxDepth, world, lights);
 
             size_t idx = 3 * (x + y * imageWidth);
 

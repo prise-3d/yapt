@@ -89,6 +89,7 @@ add_executable(yapt ${SOURCES}
         include/importer.h
         include/aggregators.h
         include/sceneloader.h
+        include/path.h
         src/sceneloader.cpp
 )
 

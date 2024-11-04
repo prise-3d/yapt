@@ -23,5 +23,4 @@ using std::sqrt;
 #include "color.h"
 #include "interval.h"
 
-
 #endif //YAPT_YAPT_H
