@@ -257,4 +257,3 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
     }
 }
 
-

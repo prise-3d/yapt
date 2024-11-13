@@ -202,4 +202,3 @@ shared_ptr<Hittable> YaptSceneLoader::loadLights(std::ifstream &file, shared_ptr
 
     return lights;
 }
-
