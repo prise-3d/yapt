@@ -7,6 +7,7 @@
 
 #include "yapt.h"
 #include "hittable.h"
+#include "material.h"
 
 class Path {
 public:
@@ -30,6 +31,22 @@ public:
                 append(path.records[i]);
             }
         }
+    }
+
+    Ray getRay(const size_t index) {
+        if (index == 0) return {Vec3(0, 0, 0), Vec3(0, 0, 0)};
+        if (index == 1) return {start, records[1].p - start};
+        const Vec3 current = records[index].p;
+        const Vec3 previous = records[index - 1].p;
+        return {previous, current - previous};
+    }
+
+    Ray getLastRay() {
+        return getRay(depth - 1);
+    }
+
+    HitRecord destinationRecord() {
+        return records[depth - 1];
     }
 
     [[nodiscard]] size_t max_depth() const {
@@ -76,7 +93,32 @@ class SimpleGuidingStrategy: public PathGuidingStrategy {
     SimpleGuidingStrategy(shared_ptr<Hittable> scene, shared_ptr<Hittable> lights, size_t max_depth): PathGuidingStrategy(scene, lights, max_depth) {};
 
     bool grow(Path& start, Path& end) override {
-        //TODO: do something dumb here
+        // grow from start
+        auto hitRecord = start.destinationRecord();
+        Ray incomingRay = start.getLastRay();
+
+        // not needed
+        // Color color_from_emission = hitRecord.mat->emitted(incomingRay, hitRecord, hitRecord.u, hitRecord.v, hitRecord.p);
+
+        ScatterRecord scatterRecord;
+        const bool scatter = hitRecord.mat->scatter(incomingRay, hitRecord, scatterRecord);
+
+        if (!scatter) {
+            // return colorFromEmission; // what should we do?
+            //TODO: is this correct?
+            return false;
+        }
+
+        if (scatterRecord.skip_pdf) {
+            //TODO: is this correct?
+            HitRecord nextRecord;
+            if (scene->hit(scatterRecord.skip_pdf_ray, Interval(0.001, infinity), nextRecord)) {
+                // we might have a problem here
+                start.append(nextRecord);
+                return true;
+            } else return false;
+        }
+
         return false;
     }
 };
@@ -96,9 +138,9 @@ public:
             if (strategy->visible(start.destination(), end.destination())) {
                 start.concatenate(end, true);
                 return true;
-            } else {
-                strategy->grow(start, end);
             }
+
+            strategy->grow(start, end);
         }
         return false;
     }
