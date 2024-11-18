@@ -8,13 +8,14 @@
 #include "yapt.h"
 #include "hittable.h"
 #include "image_data.h"
-#include <png.h>
 #include "sampler.h"
 #include "aggregators.h"
 #include "path.h"
 
 class Camera {
 public:
+    virtual ~Camera() = default;
+
     double aspect_ratio = 1.0;  // Ratio of image width over height
     int imageWidth = 100;  // Rendered image width in pixel count
     int imageHeight;         // Rendered image height
@@ -36,7 +37,6 @@ public:
     virtual void renderLine(const Hittable &world, const Hittable &lights, int j);
 
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
-
 
 
 protected:
@@ -85,18 +85,16 @@ class TestCamera: public ParallelCamera {
 
 class CartographyCamera: public Camera {
 public:
+    size_t pixel_x;
+    size_t pixel_y;
+
     CartographyCamera(size_t pixel_x, size_t pixel_y);
     void render(const Hittable &world, const Hittable &lights) override;
 
+
 protected:
     void renderPixel(const Hittable &world, const Hittable &lights, int row, int column) override;
-
     void initialize() override;
-
-public:
-
-    size_t pixel_x;
-    size_t pixel_y;
 };
 
 #endif //YAPT_CAMERA_H

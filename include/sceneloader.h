@@ -13,6 +13,8 @@
 
 class SceneLoader {
 public:
+    virtual ~SceneLoader() = default;
+
     virtual void load(std::string path, shared_ptr <HittableList> scene, shared_ptr <HittableList> lights, shared_ptr <Camera> camera) = 0;
 private:
     virtual shared_ptr<Material> loadMaterial(std::ifstream& file) = 0;

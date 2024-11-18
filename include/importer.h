@@ -118,7 +118,7 @@ HittableList import(std::string &path) {
 //    std:: cout << "Properties: " << std::endl;
 //    for (int i = 0 ; i < numProperties ; i++) {
 //        std::cout << " - " << material->mProperties[i] << std::endl;
-//    }
+//    }s
 
     return world;
 }

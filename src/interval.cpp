@@ -41,10 +41,10 @@ Interval Interval::expand(double delta) const {
     return Interval(min - padding, max + padding);
 }
 
-Interval operator+(const Interval& ival, double displacement) {
-    return Interval(ival.min + displacement, ival.max + displacement);
+Interval operator+(const Interval& interval, double displacement) {
+    return Interval(interval.min + displacement, interval.max + displacement);
 }
 
-Interval operator+(double displacement, const Interval& ival) {
-    return ival + displacement;
+Interval operator+(double displacement, const Interval& interval) {
+    return interval + displacement;
 }

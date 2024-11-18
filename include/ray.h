@@ -8,7 +8,7 @@
 #include "Vec3.h"
 
 /**
- * A ray, defined by an point3 origin and a Vec3 direction
+ * A ray, defined by a Point3 origin and a Vec3 direction
  * Note that a ray's direction is not necessarily a unit vector
  */
 class Ray {

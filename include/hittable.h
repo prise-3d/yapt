@@ -21,7 +21,7 @@ public:
     bool front_face;
 
     /**
-     * Sets the the hit record normal vector
+     * Sets the hit record normal vector
      * @param r  the ray intercepting a surface
      * @param outward_normal the outward normal to the surface the ray hits. @warning outward_normal is assumed to have
      * unit length
@@ -40,7 +40,7 @@ public:
 
     [[nodiscard]] virtual AABB boundingBox() const = 0;
 
-     [[nodiscard]] virtual double pdfValue(const Point3 &origin, const Vec3 &direction) const {
+    [[nodiscard]] virtual double pdfValue(const Point3 &origin, const Vec3 &direction) const {
         return 0.0;
     }
 
@@ -61,7 +61,7 @@ public:
         bbox = object->boundingBox() + offset;
     }
 
-    bool hit(const Ray &r, Interval ray_t, HitRecord &rec) const override {
+    bool hit(const Ray &r, const Interval ray_t, HitRecord &rec) const override {
         // Move the ray backwards by the offset
         Ray offset_r(r.origin() - offset, r.direction());
 
@@ -85,8 +85,8 @@ private:
 
 class RotateY : public Hittable {
 public:
-    RotateY(const shared_ptr<Hittable>& object, double angle) : object(object) {
-        auto radians = degrees_to_radians(angle);
+    RotateY(const shared_ptr<Hittable>& object, const double angle) : object(object) {
+        const auto radians = degrees_to_radians(angle);
         sin_theta = sin(radians);
         cos_theta = cos(radians);
         bbox = object->boundingBox();
@@ -97,9 +97,9 @@ public:
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
                 for (int k = 0; k < 2; k++) {
-                    auto x = i * bbox.x.max + (1 - i) * bbox.x.min;
-                    auto y = j * bbox.y.max + (1 - j) * bbox.y.min;
-                    auto z = k * bbox.z.max + (1 - k) * bbox.z.min;
+                    const auto x = i * bbox.x.max + (1 - i) * bbox.x.min;
+                    const auto y = j * bbox.y.max + (1 - j) * bbox.y.min;
+                    const auto z = k * bbox.z.max + (1 - k) * bbox.z.min;
 
                     auto newx = cos_theta * x + sin_theta * z;
                     auto newz = -sin_theta * x + cos_theta * z;

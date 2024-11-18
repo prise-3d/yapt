@@ -32,7 +32,7 @@ public:
 
     [[nodiscard]] AABB boundingBox() const override { return bbox; }
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
+    bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
         auto denom = dot(normal, r.direction());
 
         // No hit if the ray is parallel to the plane.
@@ -40,14 +40,14 @@ public:
             return false;
 
         // Return false if the hit point parameter t is outside the ray interval.
-        auto t = (D - dot(normal, r.origin())) / denom;
+        const auto t = (D - dot(normal, r.origin())) / denom;
         if (!ray_t.contains(t))
             return false;
 
         // Determine the hit point lies within the planar shape using its plane coordinates.
-        auto intersection = r.at(t);
-        Vec3 planar_hitpt_vector = intersection - Q;
-        auto alpha = dot(w, cross(planar_hitpt_vector, v));
+        const auto intersection = r.at(t);
+        const Vec3 planar_hitpt_vector = intersection - Q;
+        const auto alpha = dot(w, cross(planar_hitpt_vector, v));
         auto beta = dot(w, cross(u, planar_hitpt_vector));
 
         if (!isInterior(alpha, beta, rec))
@@ -64,7 +64,7 @@ public:
     }
 
     virtual bool isInterior(double a, double b, HitRecord& rec) const {
-        Interval unit_interval = Interval(0, 1);
+        auto unit_interval = Interval(0, 1);
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
 
@@ -81,13 +81,13 @@ public:
         if (!this->hit(Ray(origin, direction), Interval(0.001, infinity), rec))
             return 0;
 
-        auto distance_squared = rec.t * rec.t * direction.length2();
-        auto cosine = fabs(dot(direction, rec.normal) / direction.length());
+        const auto distance_squared = rec.t * rec.t * direction.length2();
+        const auto cosine = fabs(dot(direction, rec.normal) / direction.length());
 
         return distance_squared / (cosine * area);
     }
 
-    Vec3 random(const Point3& origin) const override {
+    [[nodiscard]] Vec3 random(const Point3& origin) const override {
         auto p = Q + (randomDouble() * u) + (randomDouble() * v);
         return p - origin;
     }
@@ -111,8 +111,8 @@ inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, shared_ptr
     auto sides = make_shared<HittableList>();
 
     // Construct the two opposite vertices with the minimum and maximum coordinates.
-    auto min = Point3(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));
-    auto max = Point3(fmax(a.x(), b.x()), fmax(a.y(), b.y()), fmax(a.z(), b.z()));
+    const auto min = Point3(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));
+    const auto max = Point3(fmax(a.x(), b.x()), fmax(a.y(), b.y()), fmax(a.z(), b.z()));
 
     auto dx = Vec3(max.x() - min.x(), 0, 0);
     auto dy = Vec3(0, max.y() - min.y(), 0);

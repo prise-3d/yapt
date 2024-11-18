@@ -25,10 +25,10 @@ public:
 
 class cosine_pdf : public PDF {
 public:
-    cosine_pdf(const Vec3 &w) { uvw.build_from_w(w); }
+    explicit cosine_pdf(const Vec3 &w) { uvw.build_from_w(w); }
 
     [[nodiscard]] double value(const Vec3 &direction) const override {
-        auto cosine_theta = dot(unit_vector(direction), uvw.w());
+        const auto cosine_theta = dot(unit_vector(direction), uvw.w());
         return fmax(0, cosine_theta / pi);
     }
 

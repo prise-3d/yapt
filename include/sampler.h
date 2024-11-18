@@ -34,7 +34,7 @@ protected:
 
 class TrivialSampler: public PixelSampler {
 public:
-    TrivialSampler(double x, double y, int size): PixelSampler(x, y), size(size), _dx(0), _dy(0) {}
+    TrivialSampler(const double x, const double y, const int size): PixelSampler(x, y), size(size), _dx(0), _dy(0) {}
 
     void begin() override {
         index = 0;
@@ -114,6 +114,8 @@ protected:
 
 class SamplerFactory {
 public:
+    virtual ~SamplerFactory() = default;
+
     virtual shared_ptr<PixelSampler> create(double x, double y) = 0;
 
 };
@@ -131,7 +133,7 @@ protected:
 
 class StratifiedSamplerFactory : public SamplerFactory {
 public:
-    explicit StratifiedSamplerFactory(int sqrtSpp): sqrtSpp(sqrtSpp) {}
+    explicit StratifiedSamplerFactory(const int sqrtSpp): sqrtSpp(sqrtSpp) {}
 
     shared_ptr<PixelSampler> create(double x, double y) override {
         return make_shared<StratifiedSampler>(x, y, sqrtSpp);

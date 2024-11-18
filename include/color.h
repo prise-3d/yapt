@@ -14,7 +14,7 @@ void writeColor(std::ostream &out, const Color &pixel_color);
 
 double luminance(const Color &pixel_color);
 
-inline double linearToGamma(double linear_component)
+inline double linearToGamma(const double linear_component)
 {
     if (linear_component > 0)
         return sqrt(linear_component);

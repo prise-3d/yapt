@@ -27,13 +27,13 @@ public:
         bbox = AABB(center - rvec, center + rvec);
     }
 
-    bool hit(const Ray &r, Interval ray_t, HitRecord &rec) const override {
-        Vec3 oc = center - r.origin();
-        auto a = r.direction().length2();
-        auto h = dot(r.direction(), oc);
-        auto c = oc.length2() - radius * radius;
+    bool hit(const Ray &r, const Interval ray_t, HitRecord &rec) const override {
+        const Vec3 oc = center - r.origin();
+        const auto a = r.direction().length2();
+        const auto h = dot(r.direction(), oc);
+        const auto c = oc.length2() - radius * radius;
 
-        auto discriminant = h * h - a * c;
+        const auto discriminant = h * h - a * c;
         if (discriminant < 0)
             return false;
 
@@ -49,7 +49,7 @@ public:
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        Vec3 outward_normal = (rec.p - center) / radius;
+        const Vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
         get_sphere_uv(outward_normal, rec.u, rec.v);
 
@@ -59,9 +59,9 @@ public:
         return true;
     }
 
-    bool has(Point3 point) {
-        auto r = point - center;
-        double radius2 = radius * radius;
+    [[nodiscard]] bool has(const Point3 &point) const {
+        const auto r = point - center;
+        const double radius2 = radius * radius;
         return Interval(radius2 - EPSILON, radius2 + EPSILON).contains(r.length2());
     }
 
@@ -74,8 +74,8 @@ public:
         if (!this->hit(Ray(origin, direction), Interval(0.001, infinity), rec))
             return 0;
 
-        auto cos_theta_max = sqrt(1 - radius * radius / (center - origin).length2());
-        auto solid_angle = 2 * pi * (1 - cos_theta_max);
+        const auto cos_theta_max = sqrt(1 - radius * radius / (center - origin).length2());
+        const auto solid_angle = 2 * pi * (1 - cos_theta_max);
 
         return 1 / solid_angle;
     }

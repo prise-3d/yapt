@@ -24,7 +24,7 @@ inline double randomDouble() {
 
 class Poisson {
 public:
-    Poisson(double mean): distribution(std::poisson_distribution<>(mean)) {}
+    explicit Poisson(const double mean): distribution(std::poisson_distribution<>(mean)) {}
     size_t next() {
         return distribution(threadGenerator());
     }

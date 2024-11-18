@@ -19,22 +19,22 @@ double Lambertian::scattering_pdf(const Ray &r_in, const HitRecord &rec, const R
     return cos_theta < 0 ? 0 : cos_theta / pi;
 }
 
-bool Metal::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const {
+bool Metal::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &scatterRecord) const {
     Vec3 reflected = reflect(r_in.direction(), rec.normal);
     reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
 
-    srec.attenuation = albedo;
-    srec.pdf_ptr = nullptr;
-    srec.skip_pdf = true;
-    srec.skip_pdf_ray = Ray(rec.p, reflected);
+    scatterRecord.attenuation = albedo;
+    scatterRecord.pdf_ptr = nullptr;
+    scatterRecord.skip_pdf = true;
+    scatterRecord.skip_pdf_ray = Ray(rec.p, reflected);
 
     return true;
 }
 
-bool Dielectric::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const {
-    srec.attenuation = Color(1.0, 1.0, 1.0);
-    srec.pdf_ptr = nullptr;
-    srec.skip_pdf = true;
+bool Dielectric::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &scatterRecord) const {
+    scatterRecord.attenuation = Color(1.0, 1.0, 1.0);
+    scatterRecord.pdf_ptr = nullptr;
+    scatterRecord.skip_pdf = true;
     double ri = rec.front_face ? (1.0 / refraction_index) : refraction_index;
 
     Vec3 unit_direction = unit_vector(r_in.direction());
@@ -49,7 +49,7 @@ bool Dielectric::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &s
     else
         direction = refract(unit_direction, rec.normal, ri);
 
-    srec.skip_pdf_ray = Ray(rec.p, direction);
+    scatterRecord.skip_pdf_ray = Ray(rec.p, direction);
     return true;
 }
 
@@ -60,10 +60,10 @@ double Dielectric::reflectance(double cosine, double refraction_index) {
     return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
 
-bool Isotropic::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &srec) const {
-    srec.attenuation = tex->value(rec.u, rec.v, rec.p);
-    srec.pdf_ptr = make_shared<sphere_pdf>();
-    srec.skip_pdf = false;
+bool Isotropic::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &scatterRecord) const {
+    scatterRecord.attenuation = tex->value(rec.u, rec.v, rec.p);
+    scatterRecord.pdf_ptr = make_shared<sphere_pdf>();
+    scatterRecord.skip_pdf = false;
     return true;
 }
 

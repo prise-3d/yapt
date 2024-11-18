@@ -49,7 +49,7 @@ public:
             const Interval &ax = axisInterval(axis);
             const double adinv = 1.0 / ray_dir[axis];
 
-            auto t0 = (ax.min - ray_orig[axis]) * adinv;
+            const auto t0 = (ax.min - ray_orig[axis]) * adinv;
             auto t1 = (ax.max - ray_orig[axis]) * adinv;
 
             if (t0 < t1) {
@@ -84,7 +84,7 @@ private:
     void pad_to_minimums() {
         // Adjust the AABB so that no side is narrower than some delta, padding if necessary.
 
-        double delta = 0.0001;
+        const double delta = 0.0001;
         if (x.size() < delta) x = x.expand(delta);
         if (y.size() < delta) y = y.expand(delta);
         if (z.size() < delta) z = z.expand(delta);

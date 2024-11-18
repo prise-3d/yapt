@@ -29,7 +29,7 @@ public:
         contributions_index = 0;
     }
 
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
+    void sampleFrom(std::shared_ptr<SamplerFactory> factory, const double x, const double y) override {
         auto pixelSampler = factory->create(x, y);
         std::size_t size = pixelSampler->sampleSize();
         samples = std::vector<Sample>(size);
@@ -69,7 +69,7 @@ public:
 
     Sample next() override {
         contributions_index = current_index;
-        Sample sample = samples[current_index];
+        const Sample sample = samples[current_index];
         current_index = nextIndexFrom(current_index);
         if (current_index < 0) can_traverse = false;
         else can_traverse = true;
@@ -143,7 +143,7 @@ public:
         std::sort(contributions.begin(), contributions.end(), [](const Color & a, const Color & b) {
             return luminance(a) < luminance(b);
         });
-        int mid = contributions.size() / 2;        
+        const int mid = contributions.size() / 2;
         return contributions[mid];
     }
 };
@@ -163,7 +163,7 @@ public:
         }
         // compute the mean in each block and sort
         for (size_t i = 0; i < nb_block; ++i){
-            block[i] /= (double)block_size[i];
+            block[i] /= static_cast<double>(block_size[i]);
         }
         std::sort(block.begin(), block.end(), [](const Color & a, const Color & b) {
             return luminance(a) < luminance(b);
@@ -190,10 +190,10 @@ public:
         });
         auto size = contributions.size();
 
-        size_t min = (size_t) (size * rejectRate / 2.0);
-        size_t max = (size_t) (size * (1 - rejectRate / 2.0));
+        const auto min = static_cast<size_t>(size * rejectRate / 2.0);
+        const auto max = static_cast<size_t>(size * (1 - rejectRate / 2.0));
 
-        Color sum = Color(0, 0, 0);
+        Color sum(0, 0, 0);
 
         size_t corrected_size;
 
@@ -237,9 +237,9 @@ public:
 
         do {
             // we collect samples
-            auto pixelSampler = factory->create(x, y);
+            const auto pixelSampler = factory->create(x, y);
             pixelSampler->begin();
-            std::size_t size = pixelSampler->sampleSize();
+            const std::size_t size = pixelSampler->sampleSize();
             samples = std::vector<Sample>(size);
             contributions = std::vector<Color>(size);
             std::size_t i = 0;
@@ -346,7 +346,7 @@ public:
     }
 
 protected:
-    int nextIndexFrom(std::size_t start) {
+    int nextIndexFrom(const std::size_t start) const {
         size_t i = start + 1;
         int value_found = -1;
 
@@ -499,6 +499,8 @@ public:
 
 class AggregatorFactory {
 public:
+    virtual ~AggregatorFactory() = default;
+
     virtual std::shared_ptr<SampleAggregator> create() = 0;
 };
 
@@ -537,7 +539,7 @@ public:
 
 class MonAggregatorFactory: public AggregatorFactory {
 public:
-    MonAggregatorFactory(size_t nb_blocks) : AggregatorFactory(), nb_blocks(nb_blocks) {}
+    explicit MonAggregatorFactory(size_t nb_blocks) : AggregatorFactory(), nb_blocks(nb_blocks) {}
 
     shared_ptr<SampleAggregator> create() override {
         return std::make_shared<MonAggregator>(nb_blocks);

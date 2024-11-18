@@ -15,7 +15,7 @@ public:
 
     HittableList();
 
-    HittableList(const shared_ptr<Hittable> &object);
+    explicit HittableList(const shared_ptr<Hittable> &object);
 
     void clear();
 
@@ -25,9 +25,9 @@ public:
 
     [[nodiscard]] AABB boundingBox() const override;
 
-    double pdfValue(const Point3 &origin, const Vec3 &direction) const override;
+    [[nodiscard]] double pdfValue(const Point3 &origin, const Vec3 &direction) const override;
 
-    Vec3 random(const Point3 &origin) const override;
+    [[nodiscard]] Vec3 random(const Point3 &origin) const override;
 
 private:
     AABB bbox;

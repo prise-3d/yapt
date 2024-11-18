@@ -12,12 +12,14 @@
 
 class ImageExporter {
 public:
+    virtual ~ImageExporter() = default;
+
     virtual void write(std::string path) = 0;
 };
 
 class PNGImageExporter: public ImageExporter {
 public:
-    PNGImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
+    explicit PNGImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
     virtual void write(std::string fileName) override;
 
 protected:
@@ -26,8 +28,8 @@ protected:
 
 class EXRImageExporter: public ImageExporter {
 public:
-    EXRImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
-    virtual void write(std::string fileName) override;
+    explicit EXRImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
+    void write(std::string fileName) override;
 
 protected:
     shared_ptr<ImageData> imageData;
