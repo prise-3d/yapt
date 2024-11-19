@@ -91,6 +91,7 @@ add_executable(yapt ${SOURCES}
         include/sceneloader.h
         include/path.h
         src/sceneloader.cpp
+        src/path.cpp
 )
 
 find_package(Threads REQUIRED)
@@ -159,6 +160,7 @@ add_executable(tests ${TEST_SOURCES}
         tests/samplertest.cpp
         include/sceneloader.h
         src/sceneloader.cpp
+        src/path.cpp
 )
 
 # Link external libraries to tests executable if needed

@@ -31,7 +31,8 @@ void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row,
         Ray r = getRay(sample.x, sample.y);
 
         // rayColor builds the path
-        Path path(center, maxDepth);
+        // Path path(center, maxDepth);
+        Path path;
         color = rayColor(r, path, maxDepth, world, lights);
         aggregator->insertContribution(color);
     }
@@ -130,7 +131,7 @@ Color Camera::rayColor(const Ray& r, Path& path, int depth, const Hittable& worl
     if (!world.hit(r, Interval(0.001, infinity), rec))
         return background;
 
-    path.append(rec);
+    // path.append(rec);
 
     ScatterRecord scatterRecord;
     Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
@@ -245,7 +246,8 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
             Ray r = getRay(dx + column, dy + row);
 
             //TODO: is this correct?
-            Path path(center, maxDepth);
+            // Path path(center, maxDepth);
+            Path path;
             Color color = rayColor(r, path, maxDepth, world, lights);
 
             size_t idx = 3 * (x + y * imageWidth);
