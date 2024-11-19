@@ -4,7 +4,7 @@
 
 #include "path.h"
 
-Path::Path(const std::size_t max_depth) : steps(std::vector<PathStep>(max_depth)), depth(0)  {}
+Path::Path(const std::size_t max_depth) : steps(std::vector<PathStep>(max_depth)) {}
 
 void Path::append(const PathStep &step) {
     steps[depth++] = step;
@@ -21,6 +21,11 @@ std::size_t Path::getDepth() const {
 size_t Path::getMaxDepth() const {
     return steps.size();
 }
+
+void Path::registerScatterRecord(const ScatterRecord &scatterRecord) {
+    steps[depth - 1].registerScatterRecord(scatterRecord);
+}
+
 
 bool PathGuidingStrategy::visible(const Vec3 &p, const Vec3 &q) const {
     HitRecord record;
@@ -76,6 +81,8 @@ PathStep Path::lastStep() const {
  * @return true if the path was successfully grown
  */
 bool SimpleGuidingStrategy::grow(Path &path) {
+    // TODO: we still need to account for light contributions!
+
     const auto lastStep = path.lastStep();
     const auto incomingRay = path.incomingRay();
 
@@ -89,6 +96,8 @@ bool SimpleGuidingStrategy::grow(Path &path) {
     // captures a ScatterRecord to describe what happens at the surface of the material
     const bool isScattering = hitRecord.mat->scatter(incomingRay, hitRecord, scatterRecord);
 
+    // registers the scatter record as the know scattering behaviour for the last step
+    path.registerScatterRecord(scatterRecord);
 
     if (!isScattering) {
         // the material does not scatter incoming light (eg. it is purely emissive)
@@ -110,11 +119,13 @@ bool SimpleGuidingStrategy::grow(Path &path) {
     }
 
     if (!scene->hit(scatteredRay, Interval(0.001, infinity), nextRecord)) {
-        // the out
+        // what shall we do?
         return false;
     }
 
-    return false;
+    path.append(PathStep(nextRecord));
+    // all is well that ends well
+    return true;
 }
 
 

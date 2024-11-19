@@ -10,15 +10,16 @@
 #include "material.h"
 
 
+// TODO: make PathStep carry more data to account for contributions?
 class PathStep {
 public:
     HitRecord hitRecord;
     ScatterRecord scatterRecord;
 
     PathStep() = default;
-    explicit PathStep(HitRecord hitRecord): hitRecord(hitRecord) {}
+    explicit PathStep(const HitRecord &hitRecord): hitRecord(hitRecord), scatterRecord() {}
 
-    void registerScatterRecord(ScatterRecord scatterRecord) {
+    void registerScatterRecord(const ScatterRecord &scatterRecord) {
         this->scatterRecord = scatterRecord;
     }
 };
@@ -37,9 +38,10 @@ public:
     [[nodiscard]] size_t getDepth() const;
     [[nodiscard]] size_t getMaxDepth() const;
     [[nodiscard]] Ray incomingRay() const;
+    void registerScatterRecord(const ScatterRecord &scatterRecord);
 
     std::vector<PathStep> steps;
-    size_t depth;
+    size_t depth = 0;
 };
 
 class PathGuidingStrategy {
