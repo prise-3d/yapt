@@ -6,6 +6,10 @@
 
 Path::Path(const std::size_t max_depth) : steps(std::vector<PathStep>(max_depth)) {}
 
+Path::Path(std::size_t max_depth, PathStep &step) : steps(std::vector<PathStep>(max_depth)) {
+    append(step);
+}
+
 void Path::append(const PathStep &step) {
     steps[depth++] = step;
 }

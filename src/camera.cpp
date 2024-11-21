@@ -19,25 +19,24 @@ void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
     }
 }
 
-void Camera::renderPixel(const Hittable &world, const Hittable &lights, int row, int column) {
-    auto aggregator = samplerAggregator->create();
+void Camera::renderPixel(const Hittable &world, const Hittable &lights, const int row, const int column) {
+    const auto aggregator = samplerAggregator->create();
     aggregator->sampleFrom(pixelSamplerFactory, column, row);
     aggregator->traverse();
 
     while (aggregator-> hasNext()) {
         Sample sample = aggregator->next();
 
-        Vec3 color(0, 0, 0);
         Ray r = getRay(sample.x, sample.y);
 
         // rayColor builds the path
         // Path path(center, maxDepth);
         Path path;
-        color = rayColor(r, path, maxDepth, world, lights);
+        const Color color = rayColor(r, path, maxDepth, world, lights);
         aggregator->insertContribution(color);
     }
 
-    Color pixel_color = aggregator->aggregate();
+    const Color pixel_color = aggregator->aggregate();
 
     size_t idx = 3 * (column + row * imageWidth);
 
@@ -62,10 +61,10 @@ void Camera::initialize() {
     center = lookFrom;
 
     // Determine viewport dimensions.
-    auto theta = degrees_to_radians(vfov);
-    auto h = tan(theta/2);
-    auto viewportHeight = 2 * h * focusDist;
-    auto viewportWidth = viewportHeight * (double(imageWidth) / imageHeight);
+    const auto theta = degrees_to_radians(vfov);
+    const auto h = tan(theta/2);
+    const auto viewportHeight = 2 * h * focusDist;
+    const auto viewportWidth = viewportHeight * (static_cast<double>(imageWidth) / imageHeight);
 
     // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
     w = unit_vector(lookFrom - lookAt);
@@ -81,11 +80,11 @@ void Camera::initialize() {
     pixel_delta_v = viewportV / imageHeight;
 
     // Calculate the location of the upper left pixel.
-    auto viewportUpperLeft = center - (focusDist * w) - viewportU / 2 - viewportV / 2;
+    const auto viewportUpperLeft = center - (focusDist * w) - viewportU / 2 - viewportV / 2;
     pixel00_loc = viewportUpperLeft + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     // Calculate the camera defocus disk basis vectors.
-    auto defocusRadius = focusDist * tan(degrees_to_radians(defocusAngle / 2));
+    const auto defocusRadius = focusDist * tan(degrees_to_radians(defocusAngle / 2));
     defocusDiskU = u * defocusRadius;
     defocusDiskV = v * defocusRadius;
 
@@ -121,7 +120,7 @@ Point3 Camera::defocusDiskSample() const {
     return center + (p[0] * defocusDiskU) + (p[1] * defocusDiskV);
 }
 
-Color Camera::rayColor(const Ray& r, Path& path, int depth, const Hittable& world, const Hittable& lights) const {
+Color Camera::rayColor(const Ray& r, Path& path, const int depth, const Hittable& world, const Hittable& lights) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};
@@ -134,27 +133,26 @@ Color Camera::rayColor(const Ray& r, Path& path, int depth, const Hittable& worl
     // path.append(rec);
 
     ScatterRecord scatterRecord;
-    Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
 
     if (!rec.mat->scatter(r, rec, scatterRecord))
         return color_from_emission;
 
     if (scatterRecord.skip_pdf) {
-        //TODO: is this correct?
         return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, path, depth - 1, world, lights);
     }
 
-    auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
-    MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
+    const auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
+    const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
 
-    Ray scattered = Ray(rec.p, p.generate());
-    auto pdfValue = p.value(scattered.direction());
+    const auto scattered = Ray(rec.p, p.generate());
+    const auto pdfValue = p.value(scattered.direction());
 
-    double scatteringPdf = rec.mat->scattering_pdf(r, rec, scattered);
+    const double scatteringPdf = rec.mat->scattering_pdf(r, rec, scattered);
 
-    //TODO: is this correct?
-    Color sampleColor = rayColor(scattered, path, depth - 1, world, lights);
-    Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
+
+    const Color sampleColor = rayColor(scattered, path, depth - 1, world, lights);
+    const Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
 
     return color_from_emission + colorFromScatter;
 }
@@ -180,12 +178,12 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
 
     // Here we declare a function to process a task (render a few lines of the image)
     auto processSegment = [&]() {
-        auto now = std::chrono::high_resolution_clock::now();
-        auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+        const auto now = std::chrono::high_resolution_clock::now();
+        const auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
         randomSeed(seed);
         while (true) {
             std::pair<int, int> task;
-            unsigned long remainingTasks;
+            size_t remainingTasks;
             {
                 std::unique_lock<std::mutex> lock(queue_mutex);
                 if (taskQueue.empty()) {
@@ -198,8 +196,8 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
 
             std::clog << "\rTasks remaining: " << remainingTasks << "   " << std::flush;
 
-            int start_j = task.first;
-            int end_j = task.second;
+            const int start_j = task.first;
+            const int end_j = task.second;
 
             for (int j = start_j; j <= end_j; ++j) {
                 renderLine(world, lights, j);
@@ -219,7 +217,7 @@ void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
     std::clog << std::endl;
 }
 
-CartographyCamera::CartographyCamera(size_t pixel_x, size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
+CartographyCamera::CartographyCamera(const size_t pixel_x, const size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
 
 void CartographyCamera::render(const Hittable &world, const Hittable &lights) {
     initialize();
@@ -237,20 +235,18 @@ void CartographyCamera::initialize() {
  * @param row
  * @param column
  */
-void CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights, int row, int column) {
+void CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights, const int row, const int column) {
     std::clog << "Rendering pixel @ " << column << ", " << row << std::endl;
     for (size_t y = 0 ; y < imageHeight ; ++y) {
-        double dy = (double)y / imageHeight - .5;
+        const double dy = static_cast<double>(y) / imageHeight - .5;
         for (size_t x = 0 ; x < imageWidth ; ++x) {
-            double dx = (double)x / imageWidth - .5;
+            const double dx = static_cast<double>(x) / imageWidth - .5;
             Ray r = getRay(dx + column, dy + row);
 
-            //TODO: is this correct?
-            // Path path(center, maxDepth);
             Path path;
             Color color = rayColor(r, path, maxDepth, world, lights);
 
-            size_t idx = 3 * (x + y * imageWidth);
+            const size_t idx = 3 * (x + y * imageWidth);
 
             imageData.data[idx]     = color.x();  // R
             imageData.data[idx + 1] = color.y();  // G

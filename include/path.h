@@ -28,6 +28,8 @@ class Path {
 public:
     explicit Path() = default;
     explicit Path(std::size_t max_depth);
+    Path(std::size_t max_depth, PathStep &step);
+    Path(std::size_t max_depth, Ray ray, shared_ptr<Hittable> hittable);
 
     virtual ~Path() = default;
 
@@ -66,8 +68,5 @@ class SimpleGuidingStrategy: public PathGuidingStrategy {
 
     bool grow(Path& path) override;
 };
-
-
-
 
 #endif //YAPT_PATH_H
