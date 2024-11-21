@@ -25,7 +25,7 @@ void simple_light(std::string path) {
     world.add(the_light);
     lights.add(the_light);
 
-    Camera cam;
+    ForwardParallelCamera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.imageWidth       = 1600;
@@ -118,7 +118,7 @@ void triangle(std::string path) {
     world.add(the_light);
     lights.add(the_light);
 
-    ParallelCamera cam;
+    ForwardParallelCamera cam;
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.imageWidth       = 1600;
@@ -146,7 +146,7 @@ void single_triangle(std::string path) {
 
     world.add(make_shared<Triangle>(Point3(-1,-1,-1), Point3(0,2,0), Point3(0,0,-2), green));
 
-    ParallelCamera cam;
+    ForwardParallelCamera cam;
 
     cam.aspect_ratio      = 1.0;
     cam.imageWidth       = 900;
@@ -185,7 +185,7 @@ void original(std::string path) {
 
     world = HittableList(make_shared<BVHNode>(world));
 
-    ParallelCamera cam;
+    ForwardParallelCamera cam;
 
     cam.aspect_ratio      = 16.0 / 9;
     cam.imageWidth        = 1600;

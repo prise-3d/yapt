@@ -200,14 +200,14 @@ int main(int argc, char* argv[]) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::shared_ptr<Camera> cam = std::make_shared<ParallelCamera>();
+    std::shared_ptr<Camera> cam = std::make_shared<ForwardParallelCamera>();
     if (cameraType == "test") {
         cam = std::make_shared<TestCamera>();
     }
     else if (cameraType == "pixel") {
         cam = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
     } else {
-        cam = std::make_shared<ParallelCamera>();
+        cam = std::make_shared<ForwardParallelCamera>();
     }
 
     cam->numThreads = numThreads;

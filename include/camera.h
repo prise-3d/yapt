@@ -14,8 +14,6 @@
 
 class Camera {
 public:
-    virtual ~Camera() = default;
-
     double aspect_ratio = 1.0;  // Ratio of image width over height
     int imageWidth = 100;  // Rendered image width in pixel count
     int imageHeight;         // Rendered image height
@@ -33,11 +31,8 @@ public:
     double defocusAngle = 0;  // Variation angle of rays through each pixel
     double focusDist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
-    virtual void render(const Hittable &world, const Hittable &lights);
-    virtual void renderLine(const Hittable &world, const Hittable &lights, int j);
-
+    virtual void render(const Hittable &world, const Hittable &lights) = 0;
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
-
 
 protected:
     Point3 center;           // Camera center
@@ -50,23 +45,30 @@ protected:
     ImageData imageData;     // image output
 
     virtual void initialize();
-
-    [[nodiscard]] virtual Color rayColor(const Ray &r, Path& path, int depth, const Hittable &world, const Hittable &lights) const;
-
     [[nodiscard]] Point3 defocusDiskSample() const;
-
     virtual Ray getRay(double x, double y) const;
+};
+
+class ForwardCamera: public Camera {
+public:
+    virtual ~ForwardCamera() = default;
+
+    virtual void render(const Hittable &world, const Hittable &lights);
+    virtual void renderLine(const Hittable &world, const Hittable &lights, int j);
+
+protected:
+
+    [[nodiscard]] virtual Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const;
     virtual void renderPixel (const Hittable &world, const Hittable &lights, int row, int column);
 };
 
-class ParallelCamera: public Camera {
+class ForwardParallelCamera: public ForwardCamera {
 public:
     void render(const Hittable &world, const Hittable &lights) override;
-
     int linesPerBatch = 10;
 };
 
-class TestCamera: public ParallelCamera {
+class TestCamera: public ForwardParallelCamera {
 
     Ray getRay(double x, double y) const override {
         double ex, ey;
@@ -76,14 +78,14 @@ class TestCamera: public ParallelCamera {
         return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
     }
 
-    Color rayColor(const Ray &r, Path &path, int depth, const Hittable &world, const Hittable &lights) const override {
+    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
         if (-r.origin().x() + r.origin().y() > 0) {
             return {0, 0, 0};
         } else return {1, 1, 1};
     }
 };
 
-class CartographyCamera: public Camera {
+class CartographyCamera: public ForwardCamera {
 public:
     size_t pixel_x;
     size_t pixel_y;
@@ -96,5 +98,4 @@ protected:
     void renderPixel(const Hittable &world, const Hittable &lights, int row, int column) override;
     void initialize() override;
 };
-
 #endif //YAPT_CAMERA_H

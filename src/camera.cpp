@@ -13,49 +13,9 @@
 #include <condition_variable>
 #include <memory>
 
-void Camera::renderLine(const Hittable &world, const Hittable &lights, int j) {
-    for (int column = 0; column < imageWidth; ++column) {
-        renderPixel(world, lights, j, column);
-    }
-}
-
-void Camera::renderPixel(const Hittable &world, const Hittable &lights, const int row, const int column) {
-    const auto aggregator = samplerAggregator->create();
-    aggregator->sampleFrom(pixelSamplerFactory, column, row);
-    aggregator->traverse();
-
-    while (aggregator-> hasNext()) {
-        Sample sample = aggregator->next();
-
-        Ray r = getRay(sample.x, sample.y);
-
-        // rayColor builds the path
-        // Path path(center, maxDepth);
-        Path path;
-        const Color color = rayColor(r, path, maxDepth, world, lights);
-        aggregator->insertContribution(color);
-    }
-
-    const Color pixel_color = aggregator->aggregate();
-
-    size_t idx = 3 * (column + row * imageWidth);
-
-    imageData.data[idx++] = pixel_color.x();  // R
-    imageData.data[idx++] = pixel_color.y();  // G
-    imageData.data[idx]   = pixel_color.z();  // B
-}
-
-void Camera::render(const Hittable& world, const Hittable& lights) {
-    initialize();
-
-    for (int j = 0; j < imageHeight; j++) {
-        std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
-        renderLine(world, lights, j);
-    }
-}
 
 void Camera::initialize() {
-    imageHeight = int(imageWidth / aspect_ratio);
+    imageHeight = static_cast<int>(imageWidth / aspect_ratio);
     imageHeight = (imageHeight < 1) ? 1 : imageHeight;
     imageData.data = std::vector<double>(imageWidth * imageHeight * 3);
     center = lookFrom;
@@ -120,7 +80,49 @@ Point3 Camera::defocusDiskSample() const {
     return center + (p[0] * defocusDiskU) + (p[1] * defocusDiskV);
 }
 
-Color Camera::rayColor(const Ray& r, Path& path, const int depth, const Hittable& world, const Hittable& lights) const {
+
+void ForwardCamera::renderLine(const Hittable &world, const Hittable &lights, int j) {
+    for (int column = 0; column < imageWidth; ++column) {
+        renderPixel(world, lights, j, column);
+    }
+}
+
+
+void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, const int row, const int column) {
+    const auto aggregator = samplerAggregator->create();
+    aggregator->sampleFrom(pixelSamplerFactory, column, row);
+    aggregator->traverse();
+
+    while (aggregator-> hasNext()) {
+        Sample sample = aggregator->next();
+
+        Ray r = getRay(sample.x, sample.y);
+
+        Path path;
+        const Color color = rayColor(r, maxDepth, world, lights);
+        aggregator->insertContribution(color);
+    }
+
+    const Color pixel_color = aggregator->aggregate();
+
+    size_t idx = 3 * (column + row * imageWidth);
+
+    imageData.data[idx++] = pixel_color.x();  // R
+    imageData.data[idx++] = pixel_color.y();  // G
+    imageData.data[idx]   = pixel_color.z();  // B
+}
+
+
+void ForwardCamera::render(const Hittable& world, const Hittable& lights) {
+    initialize();
+
+    for (int j = 0; j < imageHeight; j++) {
+        std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
+        renderLine(world, lights, j);
+    }
+}
+
+Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};
@@ -139,7 +141,7 @@ Color Camera::rayColor(const Ray& r, Path& path, const int depth, const Hittable
         return color_from_emission;
 
     if (scatterRecord.skip_pdf) {
-        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, path, depth - 1, world, lights);
+        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
     }
 
     const auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
@@ -151,13 +153,13 @@ Color Camera::rayColor(const Ray& r, Path& path, const int depth, const Hittable
     const double scatteringPdf = rec.mat->scattering_pdf(r, rec, scattered);
 
 
-    const Color sampleColor = rayColor(scattered, path, depth - 1, world, lights);
+    const Color sampleColor = rayColor(scattered, depth - 1, world, lights);
     const Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
 
     return color_from_emission + colorFromScatter;
 }
 
-void ParallelCamera::render(const Hittable &world, const Hittable &lights) {
+void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights) {
     initialize();
 
     std::mutex queue_mutex;
@@ -225,7 +227,7 @@ void CartographyCamera::render(const Hittable &world, const Hittable &lights) {
 }
 
 void CartographyCamera::initialize() {
-    Camera::initialize();
+    ForwardCamera::initialize();
 }
 
 /**
@@ -243,8 +245,7 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
             const double dx = static_cast<double>(x) / imageWidth - .5;
             Ray r = getRay(dx + column, dy + row);
 
-            Path path;
-            Color color = rayColor(r, path, maxDepth, world, lights);
+            Color color = rayColor(r, maxDepth, world, lights);
 
             const size_t idx = 3 * (x + y * imageWidth);
 
@@ -254,4 +255,6 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
         }
     }
 }
+
+
 
