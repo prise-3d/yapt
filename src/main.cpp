@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
         filename += source.stem();
         filename += "-";
 
-        filename += aggregator + "-" + sampler + "-" + std::to_string(spp) + "-depth-" + std::to_string(maxDepth) + ".exr";
+        filename += aggregator + "-" + sampler + "-spp-" + std::to_string(spp) + "-w-" + std::to_string(width) + "-d-" + std::to_string(maxDepth) + ".exr";
         path /= filename;
     }
 
