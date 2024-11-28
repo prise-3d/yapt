@@ -97,12 +97,13 @@ int main(int argc, char* argv[]) {
             std::cout << " - path       => path to render output (optional)" << std::endl;
             std::cout << " - spp        => samples per pixel (DEFAULT=500)" << std::endl;
             std::cout << " - sampler    => pixel sampling method:" << std::endl;
-            std::cout << "                 - rnd   => pure random sampling" << std::endl;
-            std::cout << "                 - strat => stratified sampling" << std::endl;
-            std::cout << "                 - ppp   => Poisson Point Process sampling with margin" << std::endl;
-            std::cout << "                 - sppp  => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl;
-            std::cout << "                 - cppp  => Constant Poisson Point Process sampling with margin" << std::endl;
-            std::cout << "                 - uni   => uniform sampling with margin" << std::endl;
+            std::cout << "                 - rnd    => pure random sampling" << std::endl;
+            std::cout << "                 - strat  => stratified sampling" << std::endl;
+            std::cout << "                 - cstrat => clippedstratified sampling" << std::endl;
+            std::cout << "                 - ppp    => Poisson Point Process sampling with margin" << std::endl;
+            std::cout << "                 - sppp   => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl;
+            std::cout << "                 - cppp   => Constant Poisson Point Process sampling with margin" << std::endl;
+            std::cout << "                 - uni    => uniform sampling with margin" << std::endl;
             std::cout << " - aggregator => path aggregation method:" << std::endl;
             std::cout << "                 - mc   => Monte Carlo integration" << std::endl;
             std::cout << "                 - vor  => Voronoi aggregation (DEFAULT)" << std::endl;
@@ -146,6 +147,14 @@ int main(int argc, char* argv[]) {
     } else if (sampler == "strat") {
         auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
         samplerFactory = std::make_shared<StratifiedSamplerFactory>(sqrtSpp);
+        if ((sqrtSpp * sqrtSpp) < spp) {
+            std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
+        }
+        spp = sqrtSpp * sqrtSpp;
+        std::cout << "done" << std::endl;
+    } else if (sampler == "cstrat") {
+        auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
+        samplerFactory = std::make_shared<ClippedStratifiedSamplerFactory>(sqrtSpp);
         if ((sqrtSpp * sqrtSpp) < spp) {
             std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
         }

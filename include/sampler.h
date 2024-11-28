@@ -129,10 +129,10 @@ class StratifiedSampler: public PixelSampler {
 public:
     StratifiedSampler(double x, double y, const size_t sqrtSpp) :
         PixelSampler(x,y),
+        sqrtSpp(sqrtSpp),
+        index(0),
         _dx(0),
         _dy(0),
-        index(0),
-        sqrtSpp(sqrtSpp),
         x_samples(sqrtSpp * sqrtSpp),
         y_samples(sqrtSpp * sqrtSpp) {
 
@@ -147,6 +147,79 @@ public:
                 x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + randomDouble(-margin, margin);
                 y_samples[row * sqrtSpp + column] = y_value + randomDouble(-margin, margin);
             }
+        }
+    }
+
+    void begin() override {
+        index = 0;
+    }
+
+    size_t sampleSize() override {
+        return total_samples_amount;
+    }
+
+    Sample get() override {
+        _dx = x_samples[index];
+        _dy = y_samples[index];
+        Sample sample{
+            x + _dx,
+            y + _dy,
+            _dx,
+            _dy
+        };
+        ++index;
+        return sample;
+    };
+
+    bool hasNext() override { return index < total_samples_amount; }
+
+private:
+    size_t sqrtSpp;
+    std::size_t total_samples_amount = 0;
+    std::size_t index;
+    double _dx;
+    double _dy;
+    std::vector<double> x_samples;
+    std::vector<double> y_samples;
+};
+
+class ClippedStratifiedSampler : public PixelSampler {
+public:
+    ClippedStratifiedSampler(double x, double y, const size_t sqrtSpp) :
+        PixelSampler(x,y),
+        sqrtSpp(sqrtSpp),
+        index(0),
+        _dx(0),
+        _dy(0),
+        x_samples(sqrtSpp * (sqrtSpp + 4)),
+        y_samples(sqrtSpp * (sqrtSpp + 4)) {
+
+        total_samples_amount = sqrtSpp * (sqrtSpp + 4);
+
+        const double n_steps = (static_cast<double>(sqrtSpp));
+        const double margin = 1./ (2 * static_cast<double>(sqrtSpp));
+        // inner part of the [0 ; 1] x [0 ; 1 ] square to sample
+        for (auto row = 0; row < sqrtSpp; ++row) {
+            const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
+            for (auto column = 0; column < sqrtSpp; ++column) {
+                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + randomDouble(-margin, margin);
+                y_samples[row * sqrtSpp + column] = y_value + randomDouble(-margin, margin);
+            }
+        }
+
+        const size_t pos = sqrtSpp * sqrtSpp;
+        for (auto t = 0 ; t < sqrtSpp; ++t) {
+            x_samples[pos + t] = x_samples[t];
+            y_samples[pos + t] = -1 - y_samples[t]; // close to y = -.5
+
+            x_samples[pos + sqrtSpp + t] = x_samples[pos - sqrtSpp + t];
+            y_samples[pos + sqrtSpp + t] = 1 - y_samples[pos - sqrtSpp + t]; // close to y = .5;
+
+            x_samples[pos + 2 * sqrtSpp + t] = -1 - x_samples[t * sqrtSpp]; // close to x = -.5
+            y_samples[pos + 2 * sqrtSpp + t] = y_samples[t * sqrtSpp];
+
+            x_samples[pos + 3 * sqrtSpp + t] = 1 - x_samples[t * sqrtSpp + sqrtSpp - 1]; // close to x = .5
+            y_samples[pos + 3 * sqrtSpp + t] = y_samples[t * sqrtSpp + sqrtSpp - 1];
         }
     }
 
@@ -208,6 +281,18 @@ public:
     shared_ptr<PixelSampler> create(double x, double y) override {
         return make_shared<StratifiedSampler>(x, y, sqrtSpp);
     }
+protected:
+    int sqrtSpp;
+};
+
+class ClippedStratifiedSamplerFactory : public SamplerFactory {
+public:
+    explicit ClippedStratifiedSamplerFactory(const int sqrtSpp): sqrtSpp(sqrtSpp) {}
+
+    shared_ptr<PixelSampler> create(double x, double y) override {
+        return make_shared<ClippedStratifiedSampler>(x, y, sqrtSpp);
+    }
+
 protected:
     int sqrtSpp;
 };
