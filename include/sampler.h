@@ -67,6 +67,65 @@ protected:
     double _dy;
 };
 
+class UniformSampler: public PixelSampler {
+public:
+    UniformSampler(double x, double y, const size_t intensity) :
+        PixelSampler(x,y),
+        _dx(0),
+        _dy(0),
+        index(0),
+        intensity(intensity),
+        x_samples(intensity * intensity),
+        y_samples(intensity * intensity) {
+
+        total_samples_amount = intensity * intensity;
+
+        const double n_steps = (static_cast<double>(intensity));
+        const double margin = 1./ (2 * static_cast<double>(intensity));
+        // inner part of the [0 ; 1] x [0 ; 1 ] square to sample
+        for (auto row = 0; row < intensity; ++row) {
+            const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
+            for (auto column = 0; column < intensity; ++column) {
+                x_samples[row * intensity + column] = margin + static_cast<double>(column) / n_steps - .5;
+                y_samples[row * intensity + column] = y_value;
+            }
+        }
+    }
+
+    void begin() override {
+        index = 0;
+    }
+
+    size_t sampleSize() override {
+        return total_samples_amount;
+    }
+
+    Sample get() override {
+        _dx = x_samples[index];
+        _dy = y_samples[index];
+        Sample sample{
+            x + _dx,
+            y + _dy,
+            _dx,
+            _dy
+        };
+        ++index;
+        return sample;
+    };
+
+    bool hasNext() override { return index < total_samples_amount; }
+
+private:
+    size_t intensity;
+    std::size_t total_samples_amount = 0;
+    std::size_t index;
+    double _dx;
+    double _dy;
+    std::vector<double> x_samples;
+    std::vector<double> y_samples;
+};
+
+
 
 class StratifiedSampler: public PixelSampler {
 public:
@@ -182,6 +241,80 @@ private:
     double max_value;
 };
 
+class CPPPSampler: public PixelSampler {
+public:
+    CPPPSampler(double x, double y, const size_t intensity) :
+        PixelSampler(x,y),
+        _dx(0),
+        _dy(0),
+        index(0),
+        intensity(intensity),
+        x_samples(intensity * (intensity + 4)),
+        y_samples(intensity * (intensity + 4)) {
+
+        total_samples_amount = intensity * (intensity + 4);
+
+        const double n_steps = (static_cast<double>(intensity));
+        const double margin = 1./ (2 * static_cast<double>(intensity));
+        // inner part of the [0 ; 1] x [0 ; 1 ] square to sample
+        for (auto row = 0; row < intensity; ++row) {
+            const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
+            for (auto column = 0; column < intensity; ++column) {
+                x_samples[row * intensity + column] = margin + static_cast<double>(column) / n_steps - .5;
+                y_samples[row * intensity + column] = y_value;
+            }
+        }
+
+        size_t pos = intensity * intensity;
+        for (auto t = 0 ; t < intensity; ++t) {
+            // upper and lower line
+            x_samples[pos    ] =  margin + static_cast<double>(t) / n_steps - .5;
+            x_samples[pos + 1] =  margin + static_cast<double>(t) / n_steps - .5;
+            y_samples[pos    ] = -.5 - margin;
+            y_samples[pos + 1] =  .5 + margin;
+
+            // left / right columns
+            x_samples[pos + 2] = -margin -.5;
+            x_samples[pos + 3] = margin +  .5;
+            y_samples[pos + 2] = margin + static_cast<double>(t) / n_steps -.5;
+            y_samples[pos + 3] = margin + static_cast<double>(t) / n_steps -.5;
+            pos += 4;
+        }
+    }
+
+    void begin() override {
+        index = 0;
+    }
+
+    size_t sampleSize() override {
+        return total_samples_amount;
+    }
+
+    Sample get() override {
+        _dx = x_samples[index];
+        _dy = y_samples[index];
+        Sample sample{
+            x + _dx,
+            y + _dy,
+            _dx,
+            _dy
+        };
+        ++index;
+        return sample;
+    };
+
+    bool hasNext() override { return index < total_samples_amount; }
+
+private:
+    size_t intensity;
+    std::size_t total_samples_amount = 0;
+    std::size_t index;
+    double _dx;
+    double _dy;
+    std::vector<double> x_samples;
+    std::vector<double> y_samples;
+};
+
 class PPPSamplerFactory: public SamplerFactory {
 public:
     PPPSamplerFactory(std::size_t intensity, double confidence): intensity(intensity), confidence(confidence) {}
@@ -193,6 +326,30 @@ public:
 protected:
     std::size_t intensity;
     double confidence;
+};
+
+class CPPPSamplerFactory: public SamplerFactory {
+public:
+    explicit CPPPSamplerFactory(const std::size_t intensity): intensity(intensity) {}
+
+    shared_ptr<PixelSampler> create(double x, double y) override {
+        return make_shared<CPPPSampler>(x, y, intensity);
+    }
+
+    protected:
+    std::size_t intensity;
+};
+
+class UniformSamplerFactory: public SamplerFactory {
+public:
+    explicit UniformSamplerFactory(const std::size_t intensity): intensity(intensity) {}
+
+    shared_ptr<PixelSampler> create(double x, double y) override {
+        return make_shared<UniformSampler>(x, y, intensity);
+    }
+
+protected:
+    std::size_t intensity;
 };
 
 
@@ -275,16 +432,15 @@ public:
         // here we try to estimate the gamma parameter of a PPP thrown into an eps-dilated square which would
         // have an expected number of generated points inside the unit square of exactly "intensity"
 
-        auto N = (double)number_of_samples;
+        const auto N = static_cast<double>(number_of_samples);
         double n = N;
-        double margin;
 
         for (int i = 0 ; i < 10 ; i++) {
-            margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
+            const double margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
             n = N * (1 + 2 * margin) * (1 + 2 * margin);
         }
 
-        skewed_intensity = (std::size_t)n + 1;
+        skewed_intensity = static_cast<size_t>(n + 1);
     }
 
     shared_ptr<PixelSampler> create(double x, double y) override {

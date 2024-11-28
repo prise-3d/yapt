@@ -14,10 +14,12 @@
 
 class Camera {
 public:
+    virtual ~Camera() = default;
+
     double aspect_ratio = 1.0;  // Ratio of image width over height
-    int imageWidth = 100;  // Rendered image width in pixel count
-    int imageHeight;         // Rendered image height
-    int maxDepth = 10;   // Maximum number of ray bounces into scene
+    size_t imageWidth = 100;  // Rendered image width in pixel count
+    size_t imageHeight;         // Rendered image height
+    size_t maxDepth = 10;   // Maximum number of ray bounces into scene
     shared_ptr<SamplerFactory> pixelSamplerFactory;
     shared_ptr<AggregatorFactory> samplerAggregator;
     Color background;               // Scene background color
@@ -42,50 +44,55 @@ protected:
     Vec3 u, v, w;            // Camera frame basis vectors
     Vec3 defocusDiskU;       // Defocus disk horizontal radius
     Vec3 defocusDiskV;       // Defocus disk vertical radius
-    ImageData imageData;     // image output
+    ImageData imageData = ImageData();     // image output
 
     virtual void initialize();
     [[nodiscard]] Point3 defocusDiskSample() const;
-    virtual Ray getRay(double x, double y) const;
+    [[nodiscard]] virtual Ray getRay(double x, double y) const;
 };
 
 class ForwardCamera: public Camera {
 public:
-    virtual ~ForwardCamera() = default;
+    ~ForwardCamera() override = default;
 
-    virtual void render(const Hittable &world, const Hittable &lights);
-    virtual void renderLine(const Hittable &world, const Hittable &lights, int j);
+    void render(const Hittable &world, const Hittable &lights) override;
+    virtual void renderLine(const Hittable &world, const Hittable &lights, size_t j);
 
 protected:
 
     [[nodiscard]] virtual Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const;
-    virtual void renderPixel (const Hittable &world, const Hittable &lights, int row, int column);
+    virtual void renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column);
 };
 
 class ForwardParallelCamera: public ForwardCamera {
 public:
     void render(const Hittable &world, const Hittable &lights) override;
-    int linesPerBatch = 10;
+    int linesPerBatch = 2;
 };
 
-class TestCamera: public ForwardParallelCamera {
+class BiasedForwardParallelCamera: public ForwardParallelCamera {
+public:
+    void renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
+};
 
-    Ray getRay(double x, double y) const override {
+class TestCamera final : public ForwardParallelCamera {
+
+    [[nodiscard]] Ray getRay(const double x, const double y) const override {
         double ex, ey;
-        double dx = modf(x, &ex);
-        double dy = modf(y, &ey);
+        const double dx = modf(x, &ex);
+        const double dy = modf(y, &ey);
 
         return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
     }
 
-    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
+    [[nodiscard]] Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
         if (-r.origin().x() + r.origin().y() > 0) {
             return {0, 0, 0};
         } else return {1, 1, 1};
     }
 };
 
-class CartographyCamera: public ForwardCamera {
+class CartographyCamera final : public ForwardCamera {
 public:
     size_t pixel_x;
     size_t pixel_y;
@@ -95,7 +102,7 @@ public:
 
 
 protected:
-    void renderPixel(const Hittable &world, const Hittable &lights, int row, int column) override;
+    void renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
     void initialize() override;
 };
 #endif //YAPT_CAMERA_H

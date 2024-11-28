@@ -101,6 +101,8 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - strat => stratified sampling" << std::endl;
             std::cout << "                 - ppp   => Poisson Point Process sampling with margin" << std::endl;
             std::cout << "                 - sppp  => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl;
+            std::cout << "                 - cppp  => Constant Poisson Point Process sampling with margin" << std::endl;
+            std::cout << "                 - uni   => uniform sampling with margin" << std::endl;
             std::cout << " - aggregator => path aggregation method:" << std::endl;
             std::cout << "                 - mc   => Monte Carlo integration" << std::endl;
             std::cout << "                 - vor  => Voronoi aggregation (DEFAULT)" << std::endl;
@@ -117,6 +119,7 @@ int main(int argc, char* argv[]) {
             std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
             std::cout << " - cam        => camera type" << std::endl;
             std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
+            std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
             std::cout << "                 - test      => test camera" << std::endl;
             std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
             std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
@@ -151,6 +154,10 @@ int main(int argc, char* argv[]) {
         samplerFactory = std::make_shared<PPPSamplerFactory>(spp, confidence);
     } else if (sampler == "sppp") {
         samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(spp, confidence);
+    } else if (sampler == "cppp") {
+        samplerFactory = std::make_shared<CPPPSamplerFactory>(spp);
+    } else if (sampler == "uni") {
+        samplerFactory = std::make_shared<UniformSamplerFactory>(spp);
     }
 
     // AGGREGATOR FACTORY INIT
@@ -206,6 +213,8 @@ int main(int argc, char* argv[]) {
     }
     else if (cameraType == "pixel") {
         cam = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
+    } else if (cameraType == "biased") {
+        cam = std::make_shared<BiasedForwardParallelCamera>();
     } else {
         cam = std::make_shared<ForwardParallelCamera>();
     }

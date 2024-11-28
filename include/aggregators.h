@@ -93,7 +93,7 @@ private:
             Sample sample = samples[i];
             if (sample.dx > -.5 && sample.dx < .5 && sample.dy > -.5 && sample.dy < .5) {
                 found = true;
-                value_found = i;
+                value_found = static_cast<int>(i);
             }
             ++i;
             search = i < samples.size();
@@ -312,6 +312,35 @@ public:
             double weight = weights[i];
             color += weight * contributions[i] / total_weight;
         }
+
+        /* debug stuff here */
+        /* Color mcColor(0, 0, 0);
+        long d = lround(-2 + sqrt(4 + samples.size()));
+        for (int i = 0 ; i < d * d ; i++) {
+            mcColor += contributions[i];
+        }
+
+        mcColor /= (d * d);
+
+        if (!are_epsilon_equal(color, mcColor)) {
+            std::cout << mcColor << "  " << color << std::endl;
+            double sum = 0;
+            for (int i = 0 ; i < samples.size() ; i++) {
+                // std::cout << weights[i] << std::endl;
+                sum += weights[i];
+            }
+            std::cout << "sum = " << sum << std::endl;
+
+            for (size_t i = 0 ; i < samples.size() ; i++) {
+                std::cout << "sample " << i << " =\t" << samples[i]  << "  \t weight = " << weights[i] << std::endl;
+            }
+        }*/
+
+
+        // assert(are_epsilon_equal(color, mcColor));
+
+        /* non debug stuff here */
+
         return color;
     }
 

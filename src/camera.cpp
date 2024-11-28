@@ -15,16 +15,15 @@
 
 
 void Camera::initialize() {
-    imageHeight = static_cast<int>(imageWidth / aspect_ratio);
+    imageHeight = static_cast<size_t>(static_cast<double>(imageWidth) / aspect_ratio);
     imageHeight = (imageHeight < 1) ? 1 : imageHeight;
-    imageData.data = std::vector<double>(imageWidth * imageHeight * 3);
     center = lookFrom;
 
     // Determine viewport dimensions.
     const auto theta = degrees_to_radians(vfov);
     const auto h = tan(theta/2);
     const auto viewportHeight = 2 * h * focusDist;
-    const auto viewportWidth = viewportHeight * (static_cast<double>(imageWidth) / imageHeight);
+    const auto viewportWidth = viewportHeight * (static_cast<double>(imageWidth) / static_cast<double>(imageHeight));
 
     // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
     w = unit_vector(lookFrom - lookAt);
@@ -36,8 +35,8 @@ void Camera::initialize() {
     Vec3 viewportV = viewportHeight * -v;  // Vector down viewport vertical edge
 
     // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    pixel_delta_u = viewportU / imageWidth;
-    pixel_delta_v = viewportV / imageHeight;
+    pixel_delta_u = viewportU / static_cast<double>(imageWidth);
+    pixel_delta_v = viewportV / static_cast<double>(imageHeight);
 
     // Calculate the location of the upper left pixel.
     const auto viewportUpperLeft = center - (focusDist * w) - viewportU / 2 - viewportV / 2;
@@ -81,16 +80,16 @@ Point3 Camera::defocusDiskSample() const {
 }
 
 
-void ForwardCamera::renderLine(const Hittable &world, const Hittable &lights, int j) {
-    for (int column = 0; column < imageWidth; ++column) {
+void ForwardCamera::renderLine(const Hittable &world, const Hittable &lights, size_t j) {
+    for (size_t column = 0; column < imageWidth; ++column) {
         renderPixel(world, lights, j, column);
     }
 }
 
 
-void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, const int row, const int column) {
+void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, const size_t row, const size_t column) {
     const auto aggregator = samplerAggregator->create();
-    aggregator->sampleFrom(pixelSamplerFactory, column, row);
+    aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
     aggregator->traverse();
 
     while (aggregator-> hasNext()) {
@@ -99,7 +98,7 @@ void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, c
         Ray r = getRay(sample.x, sample.y);
 
         Path path;
-        const Color color = rayColor(r, maxDepth, world, lights);
+        const Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
         aggregator->insertContribution(color);
     }
 
@@ -173,7 +172,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
 
     std::queue<std::pair<int, int>> taskQueue;
 
-    for (int start_j = 0 ; start_j < imageHeight ; start_j += linesPerBatch) {
+    for (size_t start_j = 0 ; start_j < imageHeight ; start_j += linesPerBatch) {
         taskQueue.emplace(start_j, std::min(start_j + linesPerBatch - 1, imageHeight-1));
     }
     std::clog << std::endl;
@@ -237,15 +236,15 @@ void CartographyCamera::initialize() {
  * @param row
  * @param column
  */
-void CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights, const int row, const int column) {
+void CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights, const size_t row, const size_t column) {
     std::clog << "Rendering pixel @ " << column << ", " << row << std::endl;
     for (size_t y = 0 ; y < imageHeight ; ++y) {
-        const double dy = static_cast<double>(y) / imageHeight - .5;
+        const double dy = static_cast<double>(y) / static_cast<double>(imageHeight) - .5;
         for (size_t x = 0 ; x < imageWidth ; ++x) {
-            const double dx = static_cast<double>(x) / imageWidth - .5;
-            Ray r = getRay(dx + column, dy + row);
+            const double dx = static_cast<double>(x) / static_cast<double>(imageWidth) - .5;
+            Ray r = getRay(dx + static_cast<double>(column), dy + static_cast<double>(row));
 
-            Color color = rayColor(r, maxDepth, world, lights);
+            Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
 
             const size_t idx = 3 * (x + y * imageWidth);
 
@@ -256,5 +255,30 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
     }
 }
 
+void BiasedForwardParallelCamera::renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) {
+    const auto aggregator = samplerAggregator->create();
+    aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    aggregator->traverse();
 
+    while (aggregator-> hasNext()) {
+        Sample sample = aggregator->next();
 
+        Ray r = getRay(sample.x, sample.y);
+
+        size_t retries = 0;
+        Color color;
+        //Path path;
+        do {
+            color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+        } while (color.near_zero() && ++retries < 20);
+        aggregator->insertContribution(color);
+    }
+
+    const Color pixel_color = aggregator->aggregate();
+
+    size_t idx = 3 * (column + row * imageWidth);
+
+    imageData.data[idx++] = pixel_color.x();  // R
+    imageData.data[idx++] = pixel_color.y();  // G
+    imageData.data[idx]   = pixel_color.z();  // B
+}

@@ -9,8 +9,8 @@
 #include <vector>
 
 struct ImageData {
-    int width;
-    int height;
+    size_t width;
+    size_t height;
     std::vector<double> data;
 };
 
