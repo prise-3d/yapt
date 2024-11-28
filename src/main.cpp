@@ -144,20 +144,31 @@ int main(int argc, char* argv[]) {
     if (sampler == "rnd") {
         samplerFactory = std::make_shared<TrivialSamplerFactory>(spp);
     } else if (sampler == "strat") {
-        auto sqrtSpp = (std::size_t) sqrt(spp);
+        auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
         samplerFactory = std::make_shared<StratifiedSamplerFactory>(sqrtSpp);
         if ((sqrtSpp * sqrtSpp) < spp) {
             std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
         }
         spp = sqrtSpp * sqrtSpp;
+        std::cout << "done" << std::endl;
     } else if (sampler == "ppp") {
         samplerFactory = std::make_shared<PPPSamplerFactory>(spp, confidence);
     } else if (sampler == "sppp") {
         samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(spp, confidence);
     } else if (sampler == "cppp") {
-        samplerFactory = std::make_shared<CPPPSamplerFactory>(spp);
+        auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
+        samplerFactory = std::make_shared<CPPPSamplerFactory>(sqrtSpp);
+        if ((sqrtSpp * sqrtSpp) < spp) {
+            std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
+        }
+        spp = sqrtSpp * sqrtSpp;
     } else if (sampler == "uni") {
-        samplerFactory = std::make_shared<UniformSamplerFactory>(spp);
+        auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
+        samplerFactory = std::make_shared<UniformSamplerFactory>(sqrtSpp);
+        if ((sqrtSpp * sqrtSpp) < spp) {
+            std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
+        }
+        spp = sqrtSpp * sqrtSpp;
     }
 
     // AGGREGATOR FACTORY INIT

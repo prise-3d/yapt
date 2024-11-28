@@ -69,25 +69,25 @@ protected:
 
 class UniformSampler: public PixelSampler {
 public:
-    UniformSampler(double x, double y, const size_t intensity) :
+    UniformSampler(double x, double y, const size_t sqrtSpp) :
         PixelSampler(x,y),
         _dx(0),
         _dy(0),
         index(0),
-        intensity(intensity),
-        x_samples(intensity * intensity),
-        y_samples(intensity * intensity) {
+        sqrtSpp(sqrtSpp),
+        x_samples(sqrtSpp * sqrtSpp),
+        y_samples(sqrtSpp * sqrtSpp) {
 
-        total_samples_amount = intensity * intensity;
+        total_samples_amount = sqrtSpp * sqrtSpp;
 
-        const double n_steps = (static_cast<double>(intensity));
-        const double margin = 1./ (2 * static_cast<double>(intensity));
+        const double n_steps = (static_cast<double>(sqrtSpp));
+        const double margin = 1./ (2 * static_cast<double>(sqrtSpp));
         // inner part of the [0 ; 1] x [0 ; 1 ] square to sample
-        for (auto row = 0; row < intensity; ++row) {
+        for (auto row = 0; row < sqrtSpp; ++row) {
             const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
-            for (auto column = 0; column < intensity; ++column) {
-                x_samples[row * intensity + column] = margin + static_cast<double>(column) / n_steps - .5;
-                y_samples[row * intensity + column] = y_value;
+            for (auto column = 0; column < sqrtSpp; ++column) {
+                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5;
+                y_samples[row * sqrtSpp + column] = y_value;
             }
         }
     }
@@ -116,7 +116,7 @@ public:
     bool hasNext() override { return index < total_samples_amount; }
 
 private:
-    size_t intensity;
+    size_t sqrtSpp;
     std::size_t total_samples_amount = 0;
     std::size_t index;
     double _dx;
@@ -125,50 +125,62 @@ private:
     std::vector<double> y_samples;
 };
 
-
-
 class StratifiedSampler: public PixelSampler {
 public:
-    StratifiedSampler(double x, double y, int sqrtSpp): PixelSampler(x, y), sqrtSpp(sqrtSpp), _dx(0), _dy(0) { step = 1. / (sqrtSpp + 1);}
+    StratifiedSampler(double x, double y, const size_t sqrtSpp) :
+        PixelSampler(x,y),
+        _dx(0),
+        _dy(0),
+        index(0),
+        sqrtSpp(sqrtSpp),
+        x_samples(sqrtSpp * sqrtSpp),
+        y_samples(sqrtSpp * sqrtSpp) {
 
-    void begin() override {
-        internal_dx = 0;
-        internal_dy = 0;
-        step = 1. / (sqrtSpp);
+        total_samples_amount = sqrtSpp * sqrtSpp;
+
+        const double n_steps = (static_cast<double>(sqrtSpp));
+        const double margin = 1./ (2 * static_cast<double>(sqrtSpp));
+        // inner part of the [0 ; 1] x [0 ; 1 ] square to sample
+        for (auto row = 0; row < sqrtSpp; ++row) {
+            const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
+            for (auto column = 0; column < sqrtSpp; ++column) {
+                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + randomDouble(-margin, margin);
+                y_samples[row * sqrtSpp + column] = y_value + randomDouble(-margin, margin);
+            }
+        }
     }
 
-    bool hasNext() override {
-        return internal_dy < sqrtSpp;
+    void begin() override {
+        index = 0;
+    }
+
+    size_t sampleSize() override {
+        return total_samples_amount;
     }
 
     Sample get() override {
-        _dx = -.5 + step * (internal_dx + randomDouble());
-        _dy = -.5 + step * (internal_dy + randomDouble());
-        Sample p{
-                x + _dx,
-                y + _dy,
-                _dx,
-                _dy};
-        internal_dx++;
-        if (internal_dx >= sqrtSpp) {
-            internal_dx = 0;
-            internal_dy++;
-        }
+        _dx = x_samples[index];
+        _dy = y_samples[index];
+        Sample sample{
+            x + _dx,
+            y + _dy,
+            _dx,
+            _dy
+        };
+        ++index;
+        return sample;
+    };
 
-        return p;
-    }
+    bool hasNext() override { return index < total_samples_amount; }
 
-    std::size_t sampleSize() override {
-        return sqrtSpp * sqrtSpp;
-    }
-
-protected:
-    int sqrtSpp = 10;
-    double step;
-    int internal_dx = 0;
-    int internal_dy = 0;
+private:
+    size_t sqrtSpp;
+    std::size_t total_samples_amount = 0;
+    std::size_t index;
     double _dx;
     double _dy;
+    std::vector<double> x_samples;
+    std::vector<double> y_samples;
 };
 
 class SamplerFactory {
@@ -176,7 +188,6 @@ public:
     virtual ~SamplerFactory() = default;
 
     virtual shared_ptr<PixelSampler> create(double x, double y) = 0;
-
 };
 
 class TrivialSamplerFactory: public SamplerFactory {
