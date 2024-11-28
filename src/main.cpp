@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - cvor => Clipped Voronoi aggregation" << std::endl;
             std::cout << "                 - ivor => Inner Voronoi aggregation" << std::endl;
             std::cout << "                 - median => Median aggregation" << std::endl;
-            std::cout << "                 - mon => MoN (Meadian of meaNs) aggregation" << std::endl;
+            std::cout << "                 - mon => MoN (Median Of meaNs) aggregation" << std::endl;
             std::cout << "                 - winsor =>  Winsorization" << std::endl;
             std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
             std::cout << " - source     => Scene model to import" << std::endl;
