@@ -162,7 +162,6 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
     initialize();
 
     std::mutex queue_mutex;
-    std::condition_variable queue_cv;
 
     // Available threads
     if (numThreads <= 0) numThreads = std::thread::hardware_concurrency();
