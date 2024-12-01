@@ -97,18 +97,17 @@ void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, c
 
         Ray r = getRay(sample.x, sample.y);
 
-        Path path;
         const Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
         aggregator->insertContribution(color);
     }
 
     const Color pixel_color = aggregator->aggregate();
 
-    size_t idx = 3 * (column + row * imageWidth);
+    const size_t idx = 3 * (column + row * imageWidth);
 
-    imageData.data[idx++] = pixel_color.x();  // R
-    imageData.data[idx++] = pixel_color.y();  // G
-    imageData.data[idx]   = pixel_color.z();  // B
+    imageData.data[idx]     = pixel_color.x();  // R
+    imageData.data[idx + 1] = pixel_color.y();  // G
+    imageData.data[idx + 2] = pixel_color.z();  // B
 }
 
 
@@ -130,8 +129,6 @@ Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& wor
     // If the ray hits nothing, return the background color.
     if (!world.hit(r, Interval(0.001, infinity), rec))
         return background;
-
-    // path.append(rec);
 
     ScatterRecord scatterRecord;
     const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
@@ -266,7 +263,7 @@ void BiasedForwardParallelCamera::renderPixel(const Hittable &world, const Hitta
 
         size_t retries = 0;
         Color color;
-        //Path path;
+
         do {
             color = rayColor(r, static_cast<int>(maxDepth), world, lights);
         } while (color.near_zero() && ++retries < 20);
@@ -275,9 +272,9 @@ void BiasedForwardParallelCamera::renderPixel(const Hittable &world, const Hitta
 
     const Color pixel_color = aggregator->aggregate();
 
-    size_t idx = 3 * (column + row * imageWidth);
+    const size_t idx = 3 * (column + row * imageWidth);
 
-    imageData.data[idx++] = pixel_color.x();  // R
-    imageData.data[idx++] = pixel_color.y();  // G
-    imageData.data[idx]   = pixel_color.z();  // B
+    imageData.data[idx] = pixel_color.x();      // R
+    imageData.data[idx + 1] = pixel_color.y();  // G
+    imageData.data[idx + 2] = pixel_color.z();  // B
 }
