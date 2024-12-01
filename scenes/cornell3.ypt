@@ -1,0 +1,190 @@
+# YAPT scene file
+# this is a comment. Most things are comments
+# YAPT directives are two-lines constructs
+#
+# the first line declares the type and name of the entity to add to the engine
+# the second line specifies the entity to add to the engine
+# for instance:
+#
+# ---- example below
+# material: red
+# lambertian = .65, .05, .05
+# ---- example above
+#
+# declares a new material named "red"
+# as a lambertian material with an RGB albedo of (0.65, 0.05, 0.05)
+#
+#
+# type declarations are specified like this:
+# [type]:name
+#
+# YAPT types:
+#    material declares a new material
+#    object   declares a new object primitive
+#    scene    adds primitives to the scene
+#    lights   adds lights to the importance sampling system
+#
+# material specifications:
+# lambertian = r, g, b    declares a lambertian material and its RGB albedo
+# difflight = r, g, b     declares an emissive, diffuse material and its RGB albedo
+# metal = r, g, b         declares a metallic material and its RGB albedo
+# dielectric = r          declares a dielectric material and its refraction index r
+# isotropic = r, g, b     declares an isotropic participating media and its density
+# composite = n1 - n2 - r declares a composite material behaving like material with name n1 with probability r, n2 otherwise
+#
+# object specifications:
+# quad = x, y, z - ux, uy, uz - vx, vy, vz - mat   declares a quad ranging from (x, y, z) in the directions (ux, uy, uz) and (vx, vy, vz) using the material named mat
+# sphere = x, y, z - r - mat                       declares a sphere centered in (x, y, z) of radius r using the material named mat
+# box = ax, ay, az - bx, by, bz - mat              declares a box encompassing points (ax, ay, az) and (bx, by, bz) using the material named mat
+# rotate = axis, angle - name                      rotates the named object along the (axis=x, y or z) axis with a certain angle
+# translate = dx, dy, dz - name                    translates the named object
+#
+# scene specifications:
+# name1, name2, [...]      adds objects name1, name2, [...] to the scene
+# Note: emissive objects should be also added to the lights specification
+#
+# lights specifications:
+# name1, name2, [...]      adds (hopefully emissive) objects name1, name2, [...] to the engine importance sampling system
+
+
+material : red
+lambertian = .65, .05, .05
+
+material : orange
+lambertian = .65, .35, .05
+
+material : blue
+lambertian = .15, .15, .65
+
+material : pink
+lambertian = .75, .55, .6
+
+material : white
+lambertian = .73, .73, .73
+
+material : green
+lambertian = .12, .45, .15
+
+material : light
+difflight = 24, 24, 24
+
+material : metallic
+metal = .6, .6, .05, .05
+
+material : transp
+dielectric = 1.5
+
+material : iso
+isotropic = 1, 2, 3
+
+material : sphere_lamb
+lambertian = .67, .67, .05
+
+material : comp
+composite = sphere_lamb - metallic - 0.4
+
+object: left_wall
+quad = 555,0,0 - 0,0,555 - 0,555,0 - green
+
+object: right_wall
+quad = 0,0,555 - 0,0,-555 - 0,555,0 - red
+
+object: ceiling
+quad = 0,555,0 - 555,0,0 - 0,0,555 - white
+
+object: rear_wall
+quad = 0,0,555 - 555,0,0 - 0,0,-555 - white
+
+object: floor
+quad = 555,0,555 - -555,0,0 - 0,555,0 - white
+
+object: source1
+quad = 213,554,227 - 130,0,0 - 0,0,105 - light
+
+object: ball
+sphere = 190,90,190 - 90 - transp
+
+object: exc
+sphere = 350, 250, 330 - 65 - pink
+
+object: exc2
+sphere = 350, 130, 330 - 65 - blue
+
+object: box1
+box = 0,0,0 - 165,330,165 - white
+
+object: box1
+rotate = y, 15 - box1
+
+object: box1
+translate = 265, 0, 295 - box1
+
+object: box2
+box = 0,0,0 - 50, 100, 50 - orange
+
+object: box2
+rotate = y, 345 - box2
+
+object: box2
+translate = 400, 0, 60 - box2
+
+object: box3
+box = 0,0,0 - 40, 100, 40 - blue
+
+# object: box3
+# rotate = y, 30 - box3
+
+object: box3
+translate = 40, 0, 400 - box3
+
+object: leftsphere1
+sphere = 500, 200, 200 - 30 - red
+
+object: leftsphere2
+sphere = 500, 300, 200 - 30 - orange
+
+object: leftsphere3
+sphere = 500, 400, 200 - 30 - blue
+
+object: leftsphere4
+sphere = 500, 100, 200 - 30 - white
+
+object: box4
+box = 0,0,0 - 40, 100, 40 - red
+
+object: box4
+translate = 500, 200, 200 - box4
+
+object: box5
+box = 0,0,0 - 40, 100, 40 - green
+
+object: box5
+translate = 15, 200, 200 - box5
+
+object: box6
+box = 0,0,0 - 150, 150, 40 - blue
+
+object: box6
+rotate = y, 12 - box6
+
+object: box6
+translate = 150, 200, 500 - box6
+
+object: box7
+box = 0,0,0 - 555, 40, 40 - pink
+
+object: box7
+translate = 0, 516, 500 - box7
+
+object: box8
+box = 0,0,0 - 240, 40, 40 - green
+
+object: box8
+translate = 140, 400, 500 - box8
+
+
+scene:main
+box1, box2, box3, leftsphere1, leftsphere2, leftsphere3, leftsphere4, box5, box6, box7, box8, exc, exc2, left_wall, right_wall, ceiling, ball, source1, floor, rear_wall
+
+lights:main
+source1, ball
