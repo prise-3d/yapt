@@ -49,11 +49,11 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
             std::clog << "found: Scene " << matches[1] << std::endl;
             std::clog << "hittables found so far..." << std::endl;
             for (const auto& pair : hittables) {
-                std::cout << " - key: " << pair.first << ", value: " << pair.second << std::endl;
+                std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
             }
-            std::clog << "materials found so far..." << std::endl;
+               std::clog << "materials found so far..." << std::endl;
             for (const auto& pair : materials) {
-                std::cout << " - key: " << pair.first << ", value: " << pair.second << std::endl;
+                std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
             }
 
             scene->add(loadScene(file));

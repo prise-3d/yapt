@@ -29,6 +29,8 @@ int main(int argc, char* argv[]) {
     bool winClip = false;
     double winRate = .05;
 
+    bool silent = false;
+
     std::string pathprefix = "path=";
     std::string sppprefix = "spp=";
     std::string samplerprefix = "sampler=";
@@ -43,11 +45,12 @@ int main(int argc, char* argv[]) {
     std::string monsizeprefix = "monsize=";
     std::string winclipprefix = "winclip=";
     std::string winrateprefix = "winrate=";
+    std::string silentprefix = "silent";
 
     std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
     std::smatch matches;
 
-    for (int i = 0 ; i < argc ; i++) {
+    for (int i = 1 ; i < argc ; i++) {
         std::string parameter(argv[i]);
         if (parameter.rfind(sppprefix, 0) == 0) {
             spp = std::stoi(parameter.substr(sppprefix.size()));
@@ -92,6 +95,9 @@ int main(int argc, char* argv[]) {
             std::string b = parameter.substr(winclipprefix.size());
             winClip = (b == "true");
         }
+        else if (parameter.rfind(silentprefix, 0) == 0) {
+            silent = true;
+        }
         else if (parameter.rfind("help", 0) == 0) {
             std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
             std::cout << " - path       => path to render output (optional)" << std::endl;
@@ -129,14 +135,16 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         if (std::regex_match(parameter, matches, coords)) {
-            std::cout << parameter << " match" << std::endl;
             cameraType = "pixel";
             pixel_x = std::stoi(matches[1]);
             pixel_y = std::stoi(matches[2]);
-        } else {
-            std::cout << parameter << " => no match" << std::endl;
         }
     }
+
+    if (silent) {
+        freopen("/dev/null", "w", stderr);
+    }
+
 
     std::shared_ptr<SamplerFactory> samplerFactory;
     std::shared_ptr<AggregatorFactory> aggregatorFactory;
@@ -151,7 +159,6 @@ int main(int argc, char* argv[]) {
             std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
         }
         spp = sqrtSpp * sqrtSpp;
-        std::cout << "done" << std::endl;
     } else if (sampler == "cstrat") {
         auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
         samplerFactory = std::make_shared<ClippedStratifiedSamplerFactory>(sqrtSpp);
@@ -159,7 +166,6 @@ int main(int argc, char* argv[]) {
             std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
         }
         spp = sqrtSpp * sqrtSpp;
-        std::cout << "done" << std::endl;
     } else if (sampler == "ppp") {
         samplerFactory = std::make_shared<PPPSamplerFactory>(spp, confidence);
     } else if (sampler == "sppp") {
@@ -211,19 +217,19 @@ int main(int argc, char* argv[]) {
         path /= filename;
     }
 
-    std::cout << "path=       " << path        << std::endl;
-    std::cout << "spp=        " << spp         << std::endl;
-    std::cout << "sampler=    " << sampler     << std::endl;
-    std::cout << "aggregator= " << aggregator  << std::endl;
-    std::cout << "confidence= " << confidence  << std::endl;
-    std::cout << "maxdepth=   " << maxDepth    << std::endl;
-    std::cout << "source=     " << source      << std::endl;
-    std::cout << "dir=        " << dir         << std::endl;
-    std::cout << "threads=    " << numThreads  << std::endl;
-    std::cout << "width=      " << width       << std::endl;
-    std::cout << "monsize=    " << monSize     << std::endl;
-    std::cout << "winrate=    " << winRate     << std::endl;
-    std::cout << "winclip=    " << winClip     << std::endl;
+    std::clog << "path=       " << path        << std::endl;
+    std::clog << "spp=        " << spp         << std::endl;
+    std::clog << "sampler=    " << sampler     << std::endl;
+    std::clog << "aggregator= " << aggregator  << std::endl;
+    std::clog << "confidence= " << confidence  << std::endl;
+    std::clog << "maxdepth=   " << maxDepth    << std::endl;
+    std::clog << "source=     " << source      << std::endl;
+    std::clog << "dir=        " << dir         << std::endl;
+    std::clog << "threads=    " << numThreads  << std::endl;
+    std::clog << "width=      " << width       << std::endl;
+    std::clog << "monsize=    " << monSize     << std::endl;
+    std::clog << "winrate=    " << winRate     << std::endl;
+    std::clog << "winclip=    " << winClip     << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -264,20 +270,22 @@ int main(int argc, char* argv[]) {
     if (source.extension() == ".ypt") {
         YaptSceneLoader loader;
         loader.load(source, scene, lights, cam);
+        if (silent) {
+            freopen("/dev/tty", "w", stderr);
+        }
         cam->render(*scene, *lights);
     } else if (source.extension() == ".obj") {
         cam->background = Color(1., .5, .5);
         cam->render(*scene, *lights);
     } else return -1;
 
+
     std::shared_ptr<ImageExporter> exporter;
     std::string extension = path.extension();
 
     if (extension == ".exr") {
-        std::clog << "Exporting to EXR format" << std::endl;
         exporter = make_shared<EXRImageExporter>(cam->data());
     } else if (extension == ".png") {
-        std::clog << "Exporting to PNG format" << std::endl;
         exporter = make_shared<PNGImageExporter>(cam->data());
     }
 
@@ -290,5 +298,5 @@ int main(int argc, char* argv[]) {
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
-    std::clog << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
+    std::cout << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
 }

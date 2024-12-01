@@ -167,7 +167,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
     // Available threads
     if (numThreads <= 0) numThreads = std::thread::hardware_concurrency();
 
-    std::clog << "rendering using " << numThreads << " threads" << std::endl;
+    std::cout << "rendering using " << numThreads << " threads" << std::endl;
     std::vector<std::thread> threads(numThreads);
 
     std::queue<std::pair<int, int>> taskQueue;
@@ -195,7 +195,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
                 remainingTasks = taskQueue.size();
             }
 
-            std::clog << "\rTasks remaining: " << remainingTasks << "   " << std::flush;
+            std::cout << "\rTasks remaining: " << remainingTasks << "   " << std::flush;
 
             const int start_j = task.first;
             const int end_j = task.second;
