@@ -231,8 +231,6 @@ int main(int argc, char* argv[]) {
     std::clog << "winrate=    " << winRate     << std::endl;
     std::clog << "winclip=    " << winClip     << std::endl;
 
-    auto start = std::chrono::high_resolution_clock::now();
-
     std::shared_ptr<Camera> cam = std::make_shared<ForwardParallelCamera>();
     if (cameraType == "test") {
         cam = std::make_shared<TestCamera>();
@@ -264,6 +262,8 @@ int main(int argc, char* argv[]) {
     shared_ptr scene = make_shared<HittableList>();
     shared_ptr lights = make_shared<HittableList>();
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     if (cameraType == "test") {
         test(cam);
     } else
@@ -277,26 +277,29 @@ int main(int argc, char* argv[]) {
     } else if (source.extension() == ".obj") {
         cam->background = Color(1., .5, .5);
         cam->render(*scene, *lights);
-    } else return -1;
+    } else {
+        std::cerr << "Unrecognized source extension: " << source.extension() << std::endl;
+        return -1;
+    }
 
+    auto end = std::chrono::high_resolution_clock::now();
+    auto render_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
 
     std::shared_ptr<ImageExporter> exporter;
-    std::string extension = path.extension();
+    std::string destination_extension = path.extension();
 
-    if (extension == ".exr") {
-        exporter = make_shared<EXRImageExporter>(cam->data());
-    } else if (extension == ".png") {
+    if (destination_extension == ".exr") {
+        exporter = make_shared<EXRImageExporter>(cam->data(), static_cast<size_t>(render_time.count()));
+    } else if (destination_extension == ".png") {
         exporter = make_shared<PNGImageExporter>(cam->data());
     }
 
     if (!exporter) {
-        std::cerr << "Unrecognized file extension: \"" << extension << "\"." << std::endl << "Terminating." << std::endl;
+        std::cerr << "Unrecognized destination extension: \"" << destination_extension << "\"." << std::endl << "Terminating." << std::endl;
         return 1;
     }
 
     exporter->write(path);
 
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
-    std::cout << "Rendering duration: " << double(duration.count()) / 1000. << " s" << std::endl;
+    std::cout << "Rendering duration: " << double(render_time.count()) / 1000. << " s" << std::endl;
 }

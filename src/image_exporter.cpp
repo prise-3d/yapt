@@ -9,8 +9,8 @@
 #include <vector>
 #include <ImfRgbaFile.h>
 #include <ImfArray.h>
-
-
+#include <ImfHeader.h>
+#include <ImfIntAttribute.h>
 
 using std::shared_ptr;
 
@@ -96,7 +96,14 @@ void EXRImageExporter::write(std::string fileName) {
     }
 
     try {
-        Imf::RgbaOutputFile file (fileName.c_str(), width, height, Imf::WRITE_RGBA);
+        Imath_3_1::Box2i dataWindow(Imath_3_1::V2i(0, 0), Imath_3_1::V2i(width - 1, height - 1));
+        Imath_3_1::Box2i displayWindow(Imath_3_1::V2i(0, 0), Imath_3_1::V2i(width - 1, height - 1));
+
+        Imf_3_2::Header header(displayWindow, dataWindow);
+
+        header.insert("render_time", Imf_3_2::IntAttribute(render_time));
+
+        Imf::RgbaOutputFile file (fileName.c_str(), header);
         file.setFrameBuffer (&pixels[0][0], 1, width);
         file.writePixels (height);
     } catch (const std::exception &e) {

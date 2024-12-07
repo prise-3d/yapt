@@ -29,10 +29,12 @@ protected:
 class EXRImageExporter: public ImageExporter {
 public:
     explicit EXRImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
+    explicit EXRImageExporter(shared_ptr<ImageData> imageData, size_t render_time): imageData(imageData), render_time(render_time) {}
     void write(std::string fileName) override;
 
 protected:
     shared_ptr<ImageData> imageData;
+    size_t render_time = 0;
 };
 
 #endif //YAPT_IMAGE_EXPORTER_H

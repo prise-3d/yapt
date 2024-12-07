@@ -67,7 +67,7 @@ protected:
 class ForwardParallelCamera: public ForwardCamera {
 public:
     void render(const Hittable &world, const Hittable &lights) override;
-    int linesPerBatch = 2;
+    int linesPerBatch = 1;
 };
 
 class BiasedForwardParallelCamera: public ForwardParallelCamera {
