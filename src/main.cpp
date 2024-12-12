@@ -111,12 +111,13 @@ int main(int argc, char* argv[]) {
             std::cout << "                 - cppp   => Constant Poisson Point Process sampling with margin" << std::endl;
             std::cout << "                 - uni    => uniform sampling with margin" << std::endl;
             std::cout << " - aggregator => path aggregation method:" << std::endl;
-            std::cout << "                 - mc   => Monte Carlo integration" << std::endl;
-            std::cout << "                 - vor  => Voronoi aggregation (DEFAULT)" << std::endl;
-            std::cout << "                 - cvor => Clipped Voronoi aggregation" << std::endl;
-            std::cout << "                 - ivor => Inner Voronoi aggregation" << std::endl;
+            std::cout << "                 - mc     => Monte Carlo integration" << std::endl;
+            std::cout << "                 - fmc    => Filtered Monte Carlo integration" << std::endl;
+            std::cout << "                 - vor    => Voronoi aggregation (DEFAULT)" << std::endl;
+            std::cout << "                 - cvor   => Clipped Voronoi aggregation" << std::endl;
+            std::cout << "                 - ivor   => Inner Voronoi aggregation" << std::endl;
             std::cout << "                 - median => Median aggregation" << std::endl;
-            std::cout << "                 - mon => MoN (Median Of meaNs) aggregation" << std::endl;
+            std::cout << "                 - mon    => MoN (Median Of meaNs) aggregation" << std::endl;
             std::cout << "                 - winsor =>  Winsorization" << std::endl;
             std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
             std::cout << " - source     => Scene model to import" << std::endl;
@@ -189,6 +190,8 @@ int main(int argc, char* argv[]) {
     // AGGREGATOR FACTORY INIT
     if (aggregator == "mc") {
         aggregatorFactory = std::make_shared<MCAggregatorFactory>();
+    } else if (aggregator == "fmc") {
+        aggregatorFactory = std::make_shared<FilteringMCAggregatorFactory>();
     } else if (aggregator == "vor") {
         aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
     } else if (aggregator == "cvor") {

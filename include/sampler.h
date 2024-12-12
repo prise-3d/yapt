@@ -351,6 +351,7 @@ public:
         total_samples_amount = intensity * (intensity + 4);
 
         const double n_steps = (static_cast<double>(intensity));
+
         const double margin = 1./ (2 * static_cast<double>(intensity));
         // inner part of the [0 ; 1] x [0 ; 1 ] square to sample
         for (auto row = 0; row < intensity; ++row) {
@@ -363,17 +364,19 @@ public:
 
         size_t pos = intensity * intensity;
         for (auto t = 0 ; t < intensity; ++t) {
+            const auto dt = static_cast<double>(t);
             // upper and lower line
-            x_samples[pos    ] =  margin + static_cast<double>(t) / n_steps - .5;
-            x_samples[pos + 1] =  margin + static_cast<double>(t) / n_steps - .5;
+
+            x_samples[pos    ] =  margin + dt / n_steps - .5;
+            x_samples[pos + 1] =  margin + dt / n_steps - .5;
             y_samples[pos    ] = -.5 - margin;
             y_samples[pos + 1] =  .5 + margin;
 
             // left / right columns
             x_samples[pos + 2] = -margin -.5;
             x_samples[pos + 3] = margin +  .5;
-            y_samples[pos + 2] = margin + static_cast<double>(t) / n_steps -.5;
-            y_samples[pos + 3] = margin + static_cast<double>(t) / n_steps -.5;
+            y_samples[pos + 2] = margin + dt / n_steps - .5;
+            y_samples[pos + 3] = margin + dt / n_steps - .5;
             pos += 4;
         }
     }
