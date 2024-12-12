@@ -29,6 +29,9 @@ int main(int argc, char* argv[]) {
     bool winClip = false;
     double winRate = .05;
 
+    const auto now = std::chrono::high_resolution_clock::now();
+    auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+
     bool silent = false;
 
     std::string pathprefix = "path=";
@@ -46,6 +49,7 @@ int main(int argc, char* argv[]) {
     std::string winclipprefix = "winclip=";
     std::string winrateprefix = "winrate=";
     std::string silentprefix = "silent";
+    std::string seedprefix = "seed";
 
     std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
     std::smatch matches;
@@ -98,6 +102,9 @@ int main(int argc, char* argv[]) {
         else if (parameter.rfind(silentprefix, 0) == 0) {
             silent = true;
         }
+        else if (parameter.rfind(seedprefix, 0) == 0) {
+            seed = std::stol(parameter.substr(widthprefix.size()));
+        }
         else if (parameter.rfind("help", 0) == 0) {
             std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
             std::cout << " - path       => path to render output (optional)" << std::endl;
@@ -133,6 +140,7 @@ int main(int argc, char* argv[]) {
             std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
             std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
             std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
+            std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
             return 0;
         }
         if (std::regex_match(parameter, matches, coords)) {
@@ -233,6 +241,7 @@ int main(int argc, char* argv[]) {
     std::clog << "monsize=    " << monSize     << std::endl;
     std::clog << "winrate=    " << winRate     << std::endl;
     std::clog << "winclip=    " << winClip     << std::endl;
+    std::clog << "seed=       " << seed        << std::endl;
 
     std::shared_ptr<Camera> cam = std::make_shared<ForwardParallelCamera>();
     if (cameraType == "test") {
@@ -259,6 +268,7 @@ int main(int argc, char* argv[]) {
     cam->lookAt         = Point3(278, 278, 0);
     cam->vup            = Vec3(0, 1, 0);
     cam->defocusAngle   = 0;
+    cam->seed           = seed;
     if (cam->imageWidth == 0)
         cam->imageWidth = 900;
 

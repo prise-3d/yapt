@@ -33,6 +33,8 @@ public:
     double defocusAngle = 0;  // Variation angle of rays through each pixel
     double focusDist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
+    long seed = 0;
+
     virtual void render(const Hittable &world, const Hittable &lights) = 0;
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
 

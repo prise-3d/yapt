@@ -175,9 +175,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
 
     // Here we declare a function to process a task (render a few lines of the image)
     auto processSegment = [&]() {
-        const auto now = std::chrono::high_resolution_clock::now();
-        const auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-        randomSeed(seed);
+
         while (true) {
             std::pair<int, int> task;
             size_t remainingTasks;
@@ -197,6 +195,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
             const int end_j = task.second;
 
             for (int j = start_j; j <= end_j; ++j) {
+                randomSeed(seed + j);
                 renderLine(world, lights, j);
             }
         }
