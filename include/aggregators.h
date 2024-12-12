@@ -114,38 +114,38 @@ protected:
  * This aggregator is a standard Monte Carlo aggregator which filters
  * samples outside the sampled unit square out
  */
-class FilteringMCAggregator: public MCSampleAggregator {
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
-        auto pixelSampler = factory->create(x, y);
-        pixelSampler->begin();
-        const auto size = pixelSampler->sampleSize();
-        auto temp_samples = std::vector<Sample>(size);
-        auto is_sample_relevant = std::vector<bool>(size);
-        size_t n_relevant_samples = 0;
-
-        std::size_t i = 0;
-
-        // we collect samples from the sampler
-        for (; pixelSampler->hasNext() ; i++) {
-            temp_samples[i] = pixelSampler->get();
-            // we check if the sample is relevant or not, and flag it in the is_sample_relevant vector
-            if (temp_samples[i].dx >= -.5 && temp_samples[i].dy >= -.5 && temp_samples[i].dx < .5 && temp_samples[i].dy < .5) {
-                ++n_relevant_samples;
-                is_sample_relevant[i] = true;
-            } else is_sample_relevant[i] = false;
-        }
-
-        // then, we initialize samples (the member variable used by this object)
-        contributions = std::vector<Color>(n_relevant_samples);
-        size_t j = 0;
-        samples = std::vector<Sample>(n_relevant_samples);
-        for (i = 0 ; i < n_relevant_samples ; i++) {
-            if (is_sample_relevant[i]) samples[j++] = temp_samples[i];
-        }
-
-        contributions_index = 0;
-    }
-};
+// class FilteringMCAggregator: public MCSampleAggregator {
+//     void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
+//         auto pixelSampler = factory->create(x, y);
+//         pixelSampler->begin();
+//         const auto size = pixelSampler->sampleSize();
+//         auto temp_samples = std::vector<Sample>(size);
+//         auto is_sample_relevant = std::vector<bool>(size);
+//         size_t n_relevant_samples = 0;
+//
+//         std::size_t i = 0;
+//
+//         // we collect samples from the sampler
+//         for (; pixelSampler->hasNext() ; i++) {
+//             temp_samples[i] = pixelSampler->get();
+//             // we check if the sample is relevant or not, and flag it in the is_sample_relevant vector
+//             if (temp_samples[i].dx >= -.5 && temp_samples[i].dy >= -.5 && temp_samples[i].dx < .5 && temp_samples[i].dy < .5) {
+//                 ++n_relevant_samples;
+//                 is_sample_relevant[i] = true;
+//             } else is_sample_relevant[i] = false;
+//         }
+//
+//         // then, we initialize samples (the member variable used by this object)
+//         contributions = std::vector<Color>(n_relevant_samples);
+//         size_t j = 0;
+//         samples = std::vector<Sample>(n_relevant_samples);
+//         for (i = 0 ; i < n_relevant_samples ; i++) {
+//             if (is_sample_relevant[i]) samples[j++] = temp_samples[i];
+//         }
+//
+//         contributions_index = 0;
+//     }
+// };
 
 #include <cassert>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -306,7 +306,7 @@ public:
 
             for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() && !isInvalid ; ++vertex) {
                 Point site = vertex->point();
-                if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
+                if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
                 Face_handle face = voronoi.dual(vertex);
 
                 if (face->is_unbounded()) {
@@ -322,7 +322,7 @@ public:
         double total_weight = 0.;
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
             Point site = vertex->point();
-            if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
+            if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
 
             Face_handle face = voronoi.dual(vertex);
 
@@ -347,11 +347,11 @@ public:
 
         // And finally, we weight the samples
         for (int i = 0 ; i < samples.size() ; i++) {
-            double weight = weights[i];
-            color += weight * contributions[i] / total_weight;
+            const double weight = weights[i];
+            color += weight * contributions[i];
         }
 
-        return color;
+        return color / total_weight;
     }
 
     void insertContribution(Color color) override {
@@ -414,6 +414,23 @@ protected:
     int current_index = 0;
     std::size_t contributions_index;
     bool can_traverse = false;
+};
+
+
+class FilteringMCAggregator: public VoronoiAggregator {
+    Color aggregate() override {
+        Color color(0, 0, 0);
+        size_t n_relevant_samples = 0;
+        // And finally, we weight the samples
+        for (int i = 0 ; i < samples.size() ; i++) {
+            const auto sample = samples[i];
+            if (sample.dx < -.5 || sample.dx >= .5 || sample.dy < -.5 || sample.dy >= .5) continue;
+            color += contributions[i];
+            ++n_relevant_samples;
+        }
+
+        return color / static_cast<double>(n_relevant_samples);
+    }
 };
 
 class ClippedVoronoiAggregator: public VoronoiAggregator {
@@ -500,7 +517,7 @@ public:
         double total_weight = 0.;
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
             Point site = vertex->point();
-            if (site.x() < -.5 || site.x() > .5 || site.y() < -.5 || site.y() > .5) continue;
+            if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
 
             Face_handle face = voronoi.dual(vertex);
 
@@ -514,7 +531,7 @@ public:
             bool valid = true;
             do {
                 Point p = halfEdge->source()->point();
-                if (p.x() < -.5 || p.x() > .5 || p.y() < -.5 || p.y() > .5) valid = false;
+                if (p.x() < -.5 || p.x() >= .5 || p.y() < -.5 || p.y() >= .5) valid = false;
                 polygon.push_back(p);
             } while (valid && ++halfEdge != face->ccb());
             if (!valid) continue;
