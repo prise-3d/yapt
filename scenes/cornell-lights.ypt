@@ -1,0 +1,230 @@
+# YAPT scene file
+# this is a comment. Most things are comments
+# YAPT directives are two-lines constructs
+#
+# the first line declares the type and name of the entity to add to the engine
+# the second line specifies the entity to add to the engine
+# for instance:
+#
+# ---- example below
+# material: red
+# lambertian = .65, .05, .05
+# ---- example above
+#
+# declares a new material named "red"
+# as a lambertian material with an RGB albedo of (0.65, 0.05, 0.05)
+#
+#
+# type declarations are specified like this:
+# [type]:name
+#
+# YAPT types:
+#    material declares a new material
+#    object   declares a new object primitive
+#    scene    adds primitives to the scene
+#    lights   adds lights to the importance sampling system
+#
+# material specifications:
+# lambertian = r, g, b    declares a lambertian material and its RGB albedo
+# difflight = r, g, b     declares an emissive, diffuse material and its RGB albedo
+# metal = r, g, b         declares a metallic material and its RGB albedo
+# dielectric = r          declares a dielectric material and its refraction index r
+# isotropic = r, g, b     declares an isotropic participating media and its density
+# composite = n1 - n2 - r declares a composite material behaving like material with name n1 with probability r, n2 otherwise
+#
+# object specifications:
+# quad = x, y, z - ux, uy, uz - vx, vy, vz - mat   declares a quad ranging from (x, y, z) in the directions (ux, uy, uz) and (vx, vy, vz) using the material named mat
+# sphere = x, y, z - r - mat                       declares a sphere centered in (x, y, z) of radius r using the material named mat
+# box = ax, ay, az - bx, by, bz - mat              declares a box encompassing points (ax, ay, az) and (bx, by, bz) using the material named mat
+# rotate = axis, angle - name                      rotates the named object along the (axis=x, y or z) axis with a certain angle
+# translate = dx, dy, dz - name                    translates the named object
+#
+# scene specifications:
+# name1, name2, [...]      adds objects name1, name2, [...] to the scene
+# Note: emissive objects should be also added to the lights specification
+#
+# lights specifications:
+# name1, name2, [...]      adds (hopefully emissive) objects name1, name2, [...] to the engine importance sampling system
+
+
+material : red
+lambertian = .65, .05, .05
+
+material : white
+lambertian = .73, .73, .73
+
+material : green
+lambertian = .12, .45, .15
+
+material : light_blue1
+difflight = 1, 1.5, 7
+
+material : light_blue2
+difflight = 1.5, 2, 7.5
+
+material : light_blue3
+difflight = 2.5, 3, 8
+
+material : light_purple
+difflight = 5.5, 1.6, 6.2
+
+material : light_orange
+difflight = 6, 5, .7
+
+material : light_white
+difflight = 10, 10, 10
+
+material : light_yellow
+difflight = 6, 6, 0
+
+material : light_red
+difflight = 6, .5, 0.3
+
+material : light_red2
+difflight = 9, 1.5, 0.3
+
+material : metallic
+metal = .6, .6, .05, .05
+
+material : transp
+dielectric = 0.5
+
+material : iso
+isotropic = 1, 2, 3
+
+material : sphere_lamb
+lambertian = .67, .67, .05
+
+material : comp
+composite = sphere_lamb - metallic - 0.4
+
+object: left_wall
+quad = 555,0,0 - 0,0,555 - 0,555,0 - green
+
+object: right_wall
+quad = 0,0,555 - 0,0,-555 - 0,555,0 - red
+
+object: ceiling
+quad = 0,555,0 - 555,0,0 - 0,0,555 - white
+
+object: rear_wall
+quad = 0,0,555 - 555,0,0 - 0,0,-555 - white
+
+object: floor
+quad = 555,0,555 - -555,0,0 - 0,555,0 - white
+
+# LIGHT SOURCES
+
+object: sphere_source1
+sphere = 180, 230, 90 - 5 - light_blue1
+
+object: sphere_source2
+sphere = 450, 30, 102 - 5 - light_blue2
+
+object: sphere_source3
+sphere = 110, 305, 250 - 5 - light_blue3
+
+object: sphere_source4
+sphere = 150, 405, 230 - 5 - light_purple
+
+object: sphere_source5
+sphere = 50, 435, 150 - 5 - light_red
+
+object: sphere_source6
+sphere = 400, 445, 240 - 5 - light_red
+
+object: sphere_source7
+sphere = 120, 475, 322 - 5 - light_yellow
+
+object: sphere_source8
+sphere = 420, 425, 340 - 5 - light_purple
+
+object: sphere_source9
+sphere = 320, 325, 220 - 5 - light_yellow
+
+object: sphere_source10
+sphere = 530, 14, 17 - 5 - light_purple
+
+object: sphere_source11
+sphere = 27, 26, 37 - 5 - light_yellow
+
+object: sphere_source12
+sphere = 25, 16, 540 - 5 - light_yellow
+
+object: sphere_source13
+sphere = 532, 40, 520 - 5 - light_red2
+
+object: sphere_source14
+sphere = 200, 100, 14 - 5 - light_red2
+
+object: sphere_source15
+sphere = 510, 520, 92 - 5 - light_yellow
+
+object: sphere_source16
+sphere = 227, 227, -5 - 5 - light_red2
+
+object: sphere_source17
+sphere = 427, 257, -5 - 5 - light_purple
+
+object: sphere_source18
+sphere = 407, 207, 76 - 5 - light_red
+
+object: sphere_source19
+sphere = 367, 167, 91 - 5 - light_yellow
+
+object: sphere_source20
+sphere = 211, 20, 95 - 5 - light_red2
+
+# TOP SOURCES
+
+object: source1
+quad = 213,554,227 - 40,0,0 - 0,0,25 - light_white
+
+#LEFT SIDE SOURCES
+
+object: source_l2
+quad = 554,280,227 - 0,0,25 - 0,25,0 - light_white
+
+object: source_l3
+quad = 554,220,227 - 0,0,25 - 0,25,0 - light_yellow
+
+object: source_l4
+quad = 554,160,227 - 0,0,25 - 0,25,0 - light_orange
+
+object: source_l5
+quad = 554,100,227 - 0,0,25 - 0,25,0 - light_red
+
+#RIGHT SIDE SOURCES
+
+object: source4
+quad = 1,192,227 - 0,25,0 - 0,0,25 - light_red
+
+object: source5
+quad = 1,262,227 - 0,25,0 - 0,0,25 - light_white
+
+object: source6
+quad = 1,142,227 - 0,25,0 - 0,0,25 - light_yellow
+
+object: source7
+quad = 1,92,227 - 0,25,0 - 0,0,25 - light_purple
+
+# ITEMS
+
+object: ball
+sphere = 190, 110, 190 - 90 - metallic
+
+object: box1
+box = 0,0,0 - 165,330,165 - white
+
+object: box1
+rotate = y, 15 - box1
+
+object: box1
+translate = 265, 0, 295 - box1
+
+scene:main
+box1, left_wall, right_wall, ceiling, ball, floor, rear_wall
+
+lights:main
+source1, source_l2, source_l3, source_l4, source_l5, source4, source5, source6, source7, sphere_source1, sphere_source2, sphere_source3, sphere_source4, sphere_source5, sphere_source6, sphere_source7, sphere_source8, sphere_source9, sphere_source10, sphere_source11, sphere_source12, sphere_source13, sphere_source15, sphere_source16, sphere_source17, sphere_source18, sphere_source19, sphere_source20
+#
