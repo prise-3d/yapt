@@ -63,7 +63,8 @@ public:
 protected:
 
     [[nodiscard]] virtual Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const;
-    virtual void renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column);
+    virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+                                                          size_t column);
 };
 
 class ForwardParallelCamera: public ForwardCamera {
@@ -74,7 +75,8 @@ public:
 
 class BiasedForwardParallelCamera: public ForwardParallelCamera {
 public:
-    void renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
+    std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+                                                  size_t column) override;
 };
 
 class TestCamera final : public ForwardParallelCamera {
@@ -104,7 +106,8 @@ public:
 
 
 protected:
-    void renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
+    std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+                                                  size_t column) override;
     void initialize() override;
 };
 #endif //YAPT_CAMERA_H

@@ -93,7 +93,8 @@ inline uint32_t cheap_hash(const uint32_t seed, const uint32_t x, const uint32_t
     return h;
 }
 
-void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, const size_t row, const size_t column) {
+std::shared_ptr<SampleAggregator> ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights,
+                                                             const size_t row, const size_t column) {
     randomSeed(cheap_hash(seed, row, column));
     const auto aggregator = samplerAggregator->create();
     aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
@@ -115,6 +116,8 @@ void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, c
     imageData.data[idx]     = pixel_color.x();  // R
     imageData.data[idx + 1] = pixel_color.y();  // G
     imageData.data[idx + 2] = pixel_color.z();  // B
+
+    return aggregator;
 }
 
 
@@ -237,7 +240,8 @@ void CartographyCamera::initialize() {
  * @param row
  * @param column
  */
-void CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights, const size_t row, const size_t column) {
+std::shared_ptr<SampleAggregator> CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights,
+                                                                 const size_t row, const size_t column) {
     std::clog << "Rendering pixel @ " << column << ", " << row << std::endl;
     for (size_t y = 0 ; y < imageHeight ; ++y) {
         const double dy = static_cast<double>(y) / static_cast<double>(imageHeight) - .5;
@@ -254,9 +258,12 @@ void CartographyCamera::renderPixel(const Hittable &world, const Hittable &light
             imageData.data[idx + 2] = color.z();  // B
         }
     }
+
+    return nullptr;
 }
 
-void BiasedForwardParallelCamera::renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) {
+std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::renderPixel(
+    const Hittable &world, const Hittable &lights, size_t row, size_t column) {
     const auto aggregator = samplerAggregator->create();
     aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
     aggregator->traverse();
@@ -282,4 +289,6 @@ void BiasedForwardParallelCamera::renderPixel(const Hittable &world, const Hitta
     imageData.data[idx] = pixel_color.x();      // R
     imageData.data[idx + 1] = pixel_color.y();  // G
     imageData.data[idx + 2] = pixel_color.z();  // B
+
+    return aggregator;
 }

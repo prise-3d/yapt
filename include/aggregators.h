@@ -30,9 +30,9 @@ public:
     }
 
     void sampleFrom(std::shared_ptr<SamplerFactory> factory, const double x, const double y) override {
-        auto pixelSampler = factory->create(x, y);
+        const auto pixelSampler = factory->create(x, y);
         pixelSampler->begin();
-        std::size_t size = pixelSampler->sampleSize();
+        const std::size_t size = pixelSampler->sampleSize();
         samples = std::vector<Sample>(size);
         contributions = std::vector<Color>(size);
 
@@ -109,43 +109,6 @@ protected:
     int current_index;
     bool can_traverse;
 };
-
-/**
- * This aggregator is a standard Monte Carlo aggregator which filters
- * samples outside the sampled unit square out
- */
-// class FilteringMCAggregator: public MCSampleAggregator {
-//     void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
-//         auto pixelSampler = factory->create(x, y);
-//         pixelSampler->begin();
-//         const auto size = pixelSampler->sampleSize();
-//         auto temp_samples = std::vector<Sample>(size);
-//         auto is_sample_relevant = std::vector<bool>(size);
-//         size_t n_relevant_samples = 0;
-//
-//         std::size_t i = 0;
-//
-//         // we collect samples from the sampler
-//         for (; pixelSampler->hasNext() ; i++) {
-//             temp_samples[i] = pixelSampler->get();
-//             // we check if the sample is relevant or not, and flag it in the is_sample_relevant vector
-//             if (temp_samples[i].dx >= -.5 && temp_samples[i].dy >= -.5 && temp_samples[i].dx < .5 && temp_samples[i].dy < .5) {
-//                 ++n_relevant_samples;
-//                 is_sample_relevant[i] = true;
-//             } else is_sample_relevant[i] = false;
-//         }
-//
-//         // then, we initialize samples (the member variable used by this object)
-//         contributions = std::vector<Color>(n_relevant_samples);
-//         size_t j = 0;
-//         samples = std::vector<Sample>(n_relevant_samples);
-//         for (i = 0 ; i < n_relevant_samples ; i++) {
-//             if (is_sample_relevant[i]) samples[j++] = temp_samples[i];
-//         }
-//
-//         contributions_index = 0;
-//     }
-// };
 
 #include <cassert>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
