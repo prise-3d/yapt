@@ -18,12 +18,15 @@
 #endif //PARSER_H
 
 class Parser {
-    public:
-    Parser() = default;
-    ~Parser() = default;
 
+protected:
+    std::shared_ptr<Camera> camera = std::make_shared<ForwardParallelCamera>();
+    std::shared_ptr<HittableList> content = make_shared<HittableList>();
+    std::shared_ptr<HittableList> lights = make_shared<HittableList>();
+    std::shared_ptr<SamplerFactory> samplerFactory;
+    std::shared_ptr<AggregatorFactory> aggregatorFactory;
     std::filesystem::path source = "../scenes/cornell.ypt";
-    std::string cameraType = "vor";
+    std::string cameraType = "std";
     std::string aggregator = "vor";
     std::string sampler = "sppp";
     std::size_t spp = 500;
@@ -43,6 +46,18 @@ class Parser {
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
     std::chrono::duration<long, std::ratio<1, 1000>> render_time;
+
+    public:
+    Parser() = default;
+    ~Parser() = default;
+
+    shared_ptr<Camera> getCamera() { return camera; }
+    shared_ptr<HittableList> getContent() { return content; }
+    shared_ptr<HittableList> getLights() { return lights; }
+    shared_ptr<SamplerFactory> getSamplerFactory() { return samplerFactory; }
+    shared_ptr<AggregatorFactory> getAggregatorFactory() { return aggregatorFactory; }
+
+    long getSeed() const { return seed; }
 
     void start_timer() {
         start = std::chrono::system_clock::now();
@@ -170,8 +185,7 @@ class Parser {
             freopen("/dev/null", "w", stderr);
         }
 
-        std::shared_ptr<SamplerFactory> samplerFactory;
-        std::shared_ptr<AggregatorFactory> aggregatorFactory;
+
 
         // SAMPLER FACTORY INIT
         if (sampler == "rnd") {
@@ -229,50 +243,49 @@ class Parser {
             aggregatorFactory = std::make_shared<WinsorAggregatorFactory>(winRate, winClip);
         }
 
-        std::shared_ptr<Camera> cam = std::make_shared<ForwardParallelCamera>();
+
 
         if (cameraType == "pixel") {
-            cam = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
+            camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
         } else if (cameraType == "biased") {
-            cam = std::make_shared<BiasedForwardParallelCamera>();
+            camera = std::make_shared<BiasedForwardParallelCamera>();
         } else {
-            cam = std::make_shared<ForwardParallelCamera>();
+            camera = std::make_shared<ForwardParallelCamera>();
         }
 
         if (width == 0) width = 900;
 
-        cam->numThreads = numThreads;
-        cam->maxDepth = maxDepth;
-        cam->samplerAggregator = aggregatorFactory;
-        cam->pixelSamplerFactory = samplerFactory;
-        cam->imageWidth = width;
+        camera->numThreads = numThreads;
+        camera->maxDepth = maxDepth;
+        camera->samplerAggregator = aggregatorFactory;
+        camera->pixelSamplerFactory = samplerFactory;
+        camera->imageWidth = width;
 
-        cam->aspect_ratio   = 1.0;
-        cam->background = Color(0, 0, 0);
-        cam->vfov           = 40;
-        cam->lookFrom       = Point3(278, 278, -800);
-        cam->lookAt         = Point3(278, 278, 0);
-        cam->vup            = Vec3(0, 1, 0);
-        cam->defocusAngle   = 0;
-        cam->seed           = seed;
+        camera->aspect_ratio   = 1.0;
+        camera->background = Color(0, 0, 0);
+        camera->vfov           = 40;
+        camera->lookFrom       = Point3(278, 278, -800);
+        camera->lookAt         = Point3(278, 278, 0);
+        camera->vup            = Vec3(0, 1, 0);
+        camera->defocusAngle   = 0;
+        camera->seed           = seed;
 
-        auto content = make_shared<HittableList>();
-        auto lights = make_shared<HittableList>();
+
 
         if (source.extension() == ".ypt") {
             YaptSceneLoader loader;
-            loader.load(source, content, lights, cam);
+            loader.load(source, content, lights, camera);
             if (silent) {
                 freopen("/dev/tty", "w", stderr);
             }
         } else if (source.extension() == ".obj") {
-            cam->background = Color(1., .5, .5);
+            camera->background = Color(1., .5, .5);
         } else {
             std::cerr << "Unrecognized source extension: " << source.extension() << std::endl;
             return false;
         }
 
-        scene.camera = cam;
+        scene.camera = camera;
         scene.lights = lights;
         scene.content = content;
 
@@ -334,4 +347,6 @@ class Parser {
 
         return true;
     }
+
+
 };
