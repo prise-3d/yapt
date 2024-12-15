@@ -61,16 +61,16 @@ protected:
     std::size_t getWidth() const { return width; }
     std::size_t getSPP() const { return spp; }
 
-    void start_timer() {
+    void startTimer() {
         start = std::chrono::system_clock::now();
     }
 
-    void stop_timer() {
+    void stopTimer() {
         end = std::chrono::high_resolution_clock::now();
         render_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     }
 
-    bool parse_scene(int argc, char* argv[], Scene& scene) {
+    bool parseScene(int argc, char* argv[], Scene& scene) {
         seed = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
         const std::string sppprefix = "spp=";
@@ -294,7 +294,7 @@ protected:
         return true;
     }
 
-    bool export_image(const int argc, char* argv[], const Scene& scene) const {
+    bool exportImage(const int argc, char* argv[], const Scene& scene) const {
 
         std::filesystem::path dir;
         std::filesystem::path path;

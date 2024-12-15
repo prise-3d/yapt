@@ -9,11 +9,11 @@ int main(const int argc, char* argv[]) {
     Scene scene;
 
     // load the scene description and camera
-    parser.parse_scene(argc, argv, scene);
+    parser.parseScene(argc, argv, scene);
 
-    parser.start_timer();
+    parser.startTimer();
     scene.camera->render(*scene.content, *scene.lights);
-    parser.stop_timer();
+    parser.stopTimer();
 
-    parser.export_image(argc, argv, scene);
+    parser.exportImage(argc, argv, scene);
 }
