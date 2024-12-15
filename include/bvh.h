@@ -2,8 +2,6 @@
 // Created by franck on 09/06/24.
 //
 
-#ifndef YAPT_BVH_H
-#define YAPT_BVH_H
 #ifndef BVH_H
 #define BVH_H
 
@@ -91,4 +89,3 @@ private:
 };
 
 #endif
-#endif //YAPT_BVH_H

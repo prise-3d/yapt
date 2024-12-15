@@ -6,7 +6,7 @@
 #define PARSER_H
 
 
-#include "scene.h"
+
 #include "yapt.h"
 
 #include <filesystem>
@@ -14,8 +14,8 @@
 
 #include "image_exporter.h"
 #include "sceneloader.h"
+#include "scene.h"
 
-#endif //PARSER_H
 
 class Parser {
 
@@ -349,6 +349,5 @@ protected:
 
         return true;
     }
-
-
 };
+#endif //PARSER_H

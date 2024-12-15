@@ -47,11 +47,11 @@ public:
     Color aggregate() override {
         Vec3 v(0, 0,0);
 
-        for (auto & color : contributions) {
+        for (const auto & color : contributions) {
             v += color;
         }
 
-        return v / (double)samples.size();
+        return v / static_cast<double>(samples.size());
     }
 
     void insertContribution(Color color) override {
