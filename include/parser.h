@@ -29,7 +29,7 @@ protected:
     std::string cameraType = "std";
     std::string aggregator = "vor";
     std::string sampler = "sppp";
-    std::size_t spp = 500;
+    std::size_t spp = 100;
     double confidence = .999;
     std::size_t maxDepth = 25;
     std::size_t numThreads = 0;
@@ -58,6 +58,8 @@ protected:
     shared_ptr<AggregatorFactory> getAggregatorFactory() { return aggregatorFactory; }
 
     long getSeed() const { return seed; }
+    std::size_t getWidth() const { return width; }
+    std::size_t getSPP() const { return spp; }
 
     void start_timer() {
         start = std::chrono::system_clock::now();
