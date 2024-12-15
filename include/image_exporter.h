@@ -10,26 +10,40 @@
 #include "image_data.h"
 #include <memory>
 
+#include "camera.h"
+
 class ImageExporter {
 public:
-    virtual ~ImageExporter() = default;
+    ImageExporter(): renderTime(0) {}
 
+    void setRenderTime(const std::size_t renderTime) {
+        this->renderTime = renderTime;
+    }
+
+    std::size_t getRenderTime() const{
+        return renderTime;
+    }
+
+    virtual ~ImageExporter() = default;
     virtual void write(std::string path) = 0;
+
+protected:
+    std::size_t renderTime;
 };
 
-class PNGImageExporter: public ImageExporter {
+class PNGImageExporter final : public ImageExporter {
 public:
-    explicit PNGImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
+    explicit PNGImageExporter(const shared_ptr<ImageData> imageData): imageData(imageData) {}
+
     virtual void write(std::string fileName) override;
 
 protected:
     shared_ptr<ImageData> imageData;
 };
 
-class EXRImageExporter: public ImageExporter {
+class EXRImageExporter final : public ImageExporter {
 public:
-    explicit EXRImageExporter(shared_ptr<ImageData> imageData): imageData(imageData) {}
-    explicit EXRImageExporter(shared_ptr<ImageData> imageData, size_t render_time): imageData(imageData), render_time(render_time) {}
+    explicit EXRImageExporter(const shared_ptr<ImageData> imageData): imageData(imageData) {}
     void write(std::string fileName) override;
 
 protected:

@@ -70,8 +70,7 @@ void PNGImageExporter::write(std::string fileName) {
         value = linearToGamma(value);
         // Translate the [0,1] component values to the byte range [0,255].
         static const Interval intensity(0.000, 0.999);
-        int b = int(256 * intensity.clamp(value));
-        png_data[i] = b;
+        png_data[i] = static_cast<int>(256 * intensity.clamp(value));
     }
     if (write_png(fileName, png_data, imageData->width, imageData->height)) {
         std::clog << "Image successfully written to " << fileName << std::endl;
@@ -82,22 +81,22 @@ void PNGImageExporter::write(std::string fileName) {
 
 void EXRImageExporter::write(std::string fileName) {
 
-    int width = imageData->width;
-    int height = imageData->height;
+    const int width = imageData->width;
+    const int height = imageData->height;
 
     Imf::Array2D<Imf::Rgba> pixels(width, height);
-    for (int y=0; y<height; y++) {
-        for (int x=0; x<width; x++) {
-            double r = imageData->data[3*(y * width + x)];
-            double g = imageData->data[3*(y * width + x) + 1];
-            double b = imageData->data[3*(y * width + x) + 2];
+    for (int y = 0; y<height; y++) {
+        for (int x = 0; x<width; x++) {
+            const double r = imageData->data[3*(y * width + x)];
+            const double g = imageData->data[3*(y * width + x) + 1];
+            const double b = imageData->data[3*(y * width + x) + 2];
             pixels[y][x] = Imf::Rgba(r, g, b);
         }
     }
 
     try {
-        Imath_3_1::Box2i dataWindow(Imath_3_1::V2i(0, 0), Imath_3_1::V2i(width - 1, height - 1));
-        Imath_3_1::Box2i displayWindow(Imath_3_1::V2i(0, 0), Imath_3_1::V2i(width - 1, height - 1));
+        const Imath_3_1::Box2i dataWindow(Imath_3_1::V2i(0, 0), Imath_3_1::V2i(width - 1, height - 1));
+        const Imath_3_1::Box2i displayWindow(Imath_3_1::V2i(0, 0), Imath_3_1::V2i(width - 1, height - 1));
 
         Imf_3_2::Header header(displayWindow, dataWindow);
 

@@ -89,6 +89,8 @@ add_executable(yapt ${SOURCES}
         include/path.h
         src/sceneloader.cpp
         src/path.cpp
+        include/parser.h
+        include/scene.h
 )
 
 find_package(Threads REQUIRED)
@@ -229,6 +231,8 @@ add_executable(qtvor ${SOURCES}
         src/sceneloader.cpp
         src/path.cpp
         src/qtvor.cpp
+        include/parser.h
+        include/scene.h
 )
 
 target_link_libraries(qtvor
