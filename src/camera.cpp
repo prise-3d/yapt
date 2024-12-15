@@ -86,8 +86,15 @@ void ForwardCamera::renderLine(const Hittable &world, const Hittable &lights, si
     }
 }
 
+inline uint32_t cheap_hash(const uint32_t seed, const uint32_t x, const uint32_t y) {
+    uint32_t h = seed;
+    h ^= (x + 0x9e3779b9) + (h << 6) + (h >> 2);
+    h ^= (y + 0x9e3779b9) + (h << 6) + (h >> 2);
+    return h;
+}
 
 void ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights, const size_t row, const size_t column) {
+    randomSeed(cheap_hash(seed, row, column));
     const auto aggregator = samplerAggregator->create();
     aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
     aggregator->traverse();
@@ -195,7 +202,6 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
             const int end_j = task.second;
 
             for (int j = start_j; j <= end_j; ++j) {
-                randomSeed(seed + j);
                 renderLine(world, lights, j);
             }
         }

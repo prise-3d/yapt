@@ -29,7 +29,7 @@ public:
     virtual Sample get() = 0;
     virtual std::size_t sampleSize() = 0;
 
-protected:
+public:
     double x;
     double y;
 };
@@ -453,12 +453,6 @@ protected:
     std::size_t intensity;
 };
 
-
-
-
-/**
- * TODO: FIXME
-  */
 class SkewedPPPSampler : public PixelSampler {
 public:
     SkewedPPPSampler(double x, double y, std::size_t number_of_samples, double intensity, double confidence) :
@@ -482,8 +476,13 @@ public:
             _dx = randomDouble() - .5;
             _dy = randomDouble() - .5;
         } else {
-            _dx = randomDouble(.5, .5 + epsilon_margin);
-            _dy = randomDouble(.5, .5 + epsilon_margin);
+            if (randomDouble() < .5) {
+                _dx = randomDouble(-.5 - epsilon_margin, .5 + epsilon_margin);
+                _dy = randomDouble(.5, .5 + epsilon_margin);
+            } else {
+                _dx = randomDouble(.5, .5 + epsilon_margin);
+                _dy = randomDouble(-.5 - epsilon_margin, .5 + epsilon_margin);
+            }
 
             if (randomDouble() < .5) _dx = -_dx;
             if (randomDouble() < .5) _dy = -_dy;
@@ -528,7 +527,6 @@ public:
 
     shared_ptr<PixelSampler> create(double x, double y) override {
         return make_shared<SkewedPPPSampler>(x, y, number_of_samples, skewed_intensity, confidence);
-        // return make_shared<PPPSampler>(x, y, skewed_intensity, confidence);
     }
 
 protected:
