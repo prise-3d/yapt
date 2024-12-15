@@ -3,9 +3,7 @@ project(yapt)
 
 set(CMAKE_CXX_STANDARD 17)
 
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif ()
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
@@ -94,7 +92,14 @@ add_executable(yapt ${SOURCES}
 )
 
 find_package(Threads REQUIRED)
-target_link_libraries(yapt ${PNG_LIBRARIES} Threads::Threads assimp CGAL::CGAL CGAL::CGAL_Core OpenEXR::OpenEXR)
+target_link_libraries(yapt
+        ${PNG_LIBRARIES}
+        Threads::Threads
+        assimp
+        CGAL::CGAL
+        CGAL::CGAL_Core
+        OpenEXR::OpenEXR
+)
 
 
 add_custom_target(clean-all
@@ -163,10 +168,78 @@ add_executable(tests ${TEST_SOURCES}
 )
 
 # Link external libraries to tests executable if needed
-target_link_libraries(tests ${PNG_LIBRARIES} CGAL::CGAL CGAL::CGAL_Core Threads::Threads)
+target_link_libraries(tests
+        ${PNG_LIBRARIES}
+        CGAL::CGAL
+        CGAL::CGAL_Core
+        Threads::Threads
+)
 
 # Enable testing
 enable_testing()
 
 # Add tests to CTest
 add_test(NAME doctest COMMAND tests)
+
+find_package(Qt6 COMPONENTS Core Widgets Gui REQUIRED)
+
+add_executable(qtvor ${SOURCES}
+        src/qtvor.cpp
+        src/stb_image.cpp
+        include/Vec3.h
+        include/ray.h
+        include/hittable.h
+        include/sphere.h
+        src/Vec3.cpp
+        src/ray.cpp
+        include/hittable_list.h
+        src/hittable_list.cpp
+        include/yapt.h
+        include/constants.h
+        src/color.cpp
+        include/interval.h
+        src/interval.cpp
+        include/camera.h
+        src/camera.cpp
+        include/utils.h
+        include/material.h
+        src/material.cpp
+        include/aabb.h
+        include/bvh.h
+        include/texture.h
+        include/external/stb_image.h
+        include/rtw_stb_image.h
+        src/aabb.cpp
+        include/perlin.h
+        include/quad.h
+        include/constant_medium.h
+        include/onb.h
+        include/pdf.h
+        include/image_exporter.h
+        src/image_exporter.cpp
+        include/image_data.h
+        include/sampler.h
+        include/triangle.h
+        src/demo.cpp
+        include/demo.h
+        include/importer.h
+        include/aggregators.h
+        include/sceneloader.h
+        include/path.h
+        src/sceneloader.cpp
+        src/path.cpp
+        src/qtvor.cpp
+)
+
+target_link_libraries(qtvor
+        CGAL::CGAL
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Gui
+        ${PNG_LIBRARIES}
+        Threads::Threads
+        assimp
+        CGAL::CGAL
+        CGAL::CGAL_Core
+        OpenEXR::OpenEXR
+)
