@@ -50,14 +50,14 @@ protected:
     }
 
     void mouseReleaseEvent(QMouseEvent* event) override {
+        QGraphicsView::mouseReleaseEvent(event);
         if (event->button() == Qt::LeftButton) {
             viewport()->setCursor(Qt::ArrowCursor);
         }
-        QGraphicsView::mouseReleaseEvent(event);
     }
 
     void mouseMoveEvent(QMouseEvent* event) override {
-        viewport()->setCursor(Qt::ArrowCursor);
+        // viewport()->setCursor(Qt::ArrowCursor);
         QGraphicsView::mouseMoveEvent(event);
     }
 
