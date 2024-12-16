@@ -57,7 +57,6 @@ protected:
     }
 
     void mouseMoveEvent(QMouseEvent* event) override {
-        // viewport()->setCursor(Qt::ArrowCursor);
         QGraphicsView::mouseMoveEvent(event);
     }
 
@@ -120,6 +119,12 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
     auto delaunay = aggregator->delaunay;
     auto voronoi = aggregator->voronoi;
 
+    QPen voronoiPen(Qt::blue);
+    voronoiPen.setWidthF(.0015);
+
+    QPen pointPen(Qt::red);
+    pointPen.setWidthF(.0025);
+
     for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
         constexpr qreal ellipse_diameter = .003;
         Point &site = vertex->point();
@@ -139,11 +144,6 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
 
         auto qPolygon = QPolygonF(QVector<QPointF>(polygon.begin(), polygon.end()));
 
-        QColor color = QColor::fromRgb(100, 150, 200, 128);
-
-        QPen voronoiPen(Qt::blue);
-        voronoiPen.setWidthF(.0015);
-
         auto *cellItem = new VoronoiCellItem(
             qPolygon, QBrush(toQColor(aggregator->contributions[aggregator->pointToIndex[site]])),
             QPointF(site.x(), site.y()),
@@ -152,15 +152,12 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
         qScene->addItem(cellItem);
     }
 
-    QPen pointPen(Qt::red);
-    pointPen.setWidthF(.0025);
-
     qScene->addRect(-.5, -.5, (1.), (1.), pointPen);
 
     QGraphicsView *popupView = new ZoomableGraphicsView();
     popupView->setScene(qScene);
     popupView->setRenderHint(QPainter::Antialiasing);
-    popupView->setWindowTitle("Voronoi");
+    popupView->setWindowTitle(QString("Voronoi (%1; %2)").arg(x).arg(y));
     popupView->resize(800, 800);
     popupView->setAttribute(Qt::WA_DeleteOnClose);
     popupView->fitInView(QRectF(-0.55, -0.55, 1.1, 1.1), Qt::KeepAspectRatio);
@@ -242,7 +239,6 @@ int main(int argc, char **argv) {
     QApplication app(argc, argv);
 
     ImageData imageData = *yaptScene.camera->data();
-
     QImage image = convertToQImage(imageData);
 
     QGraphicsScene scene;
