@@ -233,7 +233,7 @@ typedef K::Segment_2 Segment;
 int main(int argc, char **argv) {
     Parser parser;
     Scene yaptScene;
-    parser.parseScene(argc, argv, yaptScene);
+    if (!parser.parseScene(argc, argv, yaptScene)) return 0;
 
     yaptScene.camera->render(*yaptScene.content, *yaptScene.lights);
 
