@@ -130,12 +130,6 @@ typedef Voronoi::Face_handle Face_handle;
 typedef Voronoi::Ccb_halfedge_circulator Ccb_halfedge_circulator;
 typedef CGAL::Polygon_2<K> Polygon;
 
-struct VertexHandleHash {
-    std::size_t operator()(const Delaunay::Vertex_handle& vh) const {
-        return std::hash<void*>()(&(*vh));
-    }
-};
-
 class MedianAggregator: public MCSampleAggregator {
 public:
     MedianAggregator() = default;
@@ -256,19 +250,20 @@ public:
 
             // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
             // a correspondence by hand to be able to map sites to weights and thus sites to samples
-            vertexToIndex.clear();
+            pointToIndex.clear();
 
             // here we populate the Delaunay triangulation and the vertex -> index mapping
             for (i = 0 ; i < samples.size() ; i++) {
                 Sample sample = samples[i];
+                Point p(sample.dx, sample.dy);
                 Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
-                vertexToIndex[vertexHandle] = i;
+                pointToIndex[p] = i;
             }
 
             voronoi = Voronoi(delaunay);
 
             for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() && !isInvalid ; ++vertex) {
-                Point site = vertex->point();
+                Point &site = vertex->point();
                 if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
                 Face_handle face = voronoi.dual(vertex);
 
@@ -284,7 +279,7 @@ public:
         weights = std::vector<double>(samples.size());
         double total_weight = 0.;
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
-            Point site = vertex->point();
+            Point &site = vertex->point();
             if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
 
             Face_handle face = voronoi.dual(vertex);
@@ -299,7 +294,7 @@ public:
                 polygon.push_back(p);
             } while (++halfEdge != face->ccb());
 
-            std::size_t pointIndex = vertexToIndex[vertex];
+            std::size_t pointIndex = pointToIndex[vertex->point()];
             double area = polygon.area();
             if (area < 0) area = -area;
             weights[pointIndex] = area;
@@ -348,7 +343,7 @@ public:
     }
 
     std::vector<Color> contributions;
-    std::unordered_map<Delaunay::Vertex_handle, std::size_t, VertexHandleHash> vertexToIndex;
+    std::unordered_map<Point, std::size_t> pointToIndex;
     Voronoi voronoi;
     Delaunay delaunay;
     std::vector<Sample> samples;
@@ -428,13 +423,14 @@ public:
 
         // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
         // a correspondence by hand to be able to map sites to weights and thus sites to samples
-        vertexToIndex.clear();
+        pointToIndex.clear();
 
         // here we populate the Delaunay triangulation and the vertex -> index mapping
         for (i = 0 ; i < samples.size() ; i++) {
             Sample sample = samples[i];
-            Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
-            vertexToIndex[vertexHandle] = i;
+            Point p(sample.dx, sample.dy);
+            delaunay.insert(p);
+            pointToIndex[p] = i;
         }
 
         voronoi = Voronoi(delaunay);
@@ -462,13 +458,14 @@ public:
 
         // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
         // a correspondence by hand to be able to map sites to weights and thus sites to samples
-        vertexToIndex.clear();
+        pointToIndex.clear();
 
         // here we populate the Delaunay triangulation and the vertex -> index mapping
         for (int i = 0 ; i < samples.size() ; i++) {
             Sample sample = samples[i];
-            Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
-            vertexToIndex[vertexHandle] = i;
+            Point p(sample.dx, sample.dy);
+            Delaunay::Vertex_handle vertexHandle = delaunay.insert(p);
+            pointToIndex[p] = i;
         }
 
         voronoi = Voronoi(delaunay);
@@ -499,8 +496,9 @@ public:
                 polygon.push_back(p);
             } while (valid && ++halfEdge != face->ccb());
             if (!valid) continue;
-            std::size_t pointIndex = vertexToIndex[vertex];
+            std::size_t pointIndex = pointToIndex[vertex->point()];
             double area = polygon.area();
+
             if (area < 0) area = -area;
             weights[pointIndex] = area;
             total_weight += area;

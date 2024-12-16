@@ -9,7 +9,7 @@ int main(const int argc, char* argv[]) {
     Scene scene;
 
     // load the scene description and camera
-    parser.parseScene(argc, argv, scene);
+    if (!parser.parseScene(argc, argv, scene)) return 0;
 
     parser.startTimer();
     scene.camera->render(*scene.content, *scene.lights);

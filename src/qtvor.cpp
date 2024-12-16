@@ -15,8 +15,22 @@
 #include <QWheelEvent>
 
 
-double tonemap(double value) {
-    return value / (1.0 + value); // Compression logarithmique
+
+inline QColor toQColor(const double r, const double g, const double b) {
+    static const Interval intensity(0.000, 0.999);
+    const double rr = linearToGamma(r);
+    const double gg = linearToGamma(g);
+    const double bb = linearToGamma(b);
+
+    const int ir = static_cast<int>(256 * intensity.clamp(rr));
+    const int ig = static_cast<int>(256 * intensity.clamp(gg));
+    const int ib = static_cast<int>(256 * intensity.clamp(bb));
+
+    return {ir, ig, ib};
+}
+
+inline QColor toQColor(const Color &color) {
+    return toQColor(color.x(), color.y(), color.z());
 }
 
 class ZoomableGraphicsView : public QGraphicsView {
@@ -33,6 +47,18 @@ protected:
         } else {
             scale(1.0 / scaleFactor, 1.0 / scaleFactor);
         }
+    }
+
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        if (event->button() == Qt::LeftButton) {
+            viewport()->setCursor(Qt::ArrowCursor);
+        }
+        QGraphicsView::mouseReleaseEvent(event);
+    }
+
+    void mouseMoveEvent(QMouseEvent* event) override {
+        viewport()->setCursor(Qt::ArrowCursor);
+        QGraphicsView::mouseMoveEvent(event);
     }
 
     double scaleFactor;
@@ -96,7 +122,7 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
 
     for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
         constexpr qreal ellipse_diameter = .003;
-        Point site = vertex->point();
+        Point &site = vertex->point();
         if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
 
         Face_handle face = voronoi.dual(vertex);
@@ -119,7 +145,7 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
         voronoiPen.setWidthF(.0015);
 
         auto *cellItem = new VoronoiCellItem(
-            qPolygon, QBrush(color),
+            qPolygon, QBrush(toQColor(aggregator->contributions[aggregator->pointToIndex[site]])),
             QPointF(site.x(), site.y()),
             ellipse_diameter);
         cellItem->setPen(voronoiPen);
@@ -135,9 +161,11 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
     popupView->setScene(qScene);
     popupView->setRenderHint(QPainter::Antialiasing);
     popupView->setWindowTitle("Voronoi");
-    popupView->resize(600, 600);
+    popupView->resize(800, 800);
     popupView->setAttribute(Qt::WA_DeleteOnClose);
-    popupView->fitInView(QRectF(-0.6, -0.6, 1.2, 1.2), Qt::KeepAspectRatio);
+    popupView->fitInView(QRectF(-0.55, -0.55, 1.1, 1.1), Qt::KeepAspectRatio);
+    popupView->setDragMode(QGraphicsView::ScrollHandDrag);
+    popupView->viewport()->setCursor(Qt::ArrowCursor);
     popupView->show();
 }
 
@@ -162,19 +190,18 @@ protected:
 
                     if (x >= 0 && y >= 0 && x < pixmapItem->pixmap().width() && y < pixmapItem->pixmap().height()) {
                         displayVoronoi(yaptScene, x, y);
-                    } else {
                     }
+
                     return;
                 }
             }
         }
 
-        QGraphicsView::mousePressEvent(event);
+        ZoomableGraphicsView::mousePressEvent(event);
     }
 
     Scene yaptScene;
 };
-
 
 QImage convertToQImage(const ImageData &imageData) {
     QImage image(static_cast<int>(imageData.width), static_cast<int>(imageData.height), QImage::Format_RGB32);
@@ -185,17 +212,12 @@ QImage convertToQImage(const ImageData &imageData) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             size_t index = 3 * (y * imageData.width + x);
-            static const Interval intensity(0.000, 0.999);
+            auto color = toQColor(
+                imageData.data[index],
+                imageData.data[index + 1],
+                imageData.data[index + 2]
+            );
 
-            double r = tonemap(imageData.data[index]);
-            double g = tonemap(imageData.data[index + 1]);
-            double b = tonemap(imageData.data[index + 2]);
-
-            int ir = static_cast<int>(256 * intensity.clamp(r));
-            int ig = static_cast<int>(256 * intensity.clamp(g));
-            int ib = static_cast<int>(256 * intensity.clamp(b));
-
-            QColor color(ir, ig, ib);
             image.setPixel(x, y, color.rgb());
         }
     }
@@ -229,10 +251,12 @@ int main(int argc, char **argv) {
 
     ZoomableImageView view(yaptScene, nullptr);
     view.setDragMode(QGraphicsView::ScrollHandDrag);
+    view.viewport()->setCursor(Qt::ArrowCursor);
     view.setScene(&scene);
     view.setRenderHint(QPainter::Antialiasing);
     view.setWindowTitle("Image Display");
-    view.resize(600, 600);
+    view.resize(800, 800);
+    view.fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
     view.show();
 
     return app.exec();
