@@ -86,16 +86,16 @@ void ForwardCamera::renderLine(const Hittable &world, const Hittable &lights, si
     }
 }
 
-inline uint32_t cheap_hash(const uint32_t seed, const uint32_t x, const uint32_t y) {
-    uint32_t h = seed;
-    h ^= (x + 0x9e3779b9) + (h << 6) + (h >> 2);
-    h ^= (y + 0x9e3779b9) + (h << 6) + (h >> 2);
-    return h;
+inline uint64_t combine(const uint32_t seed, const uint32_t x, const uint32_t y) {
+    auto combined = static_cast<uint64_t>(seed);
+    combined = (combined << 32) | ((static_cast<uint64_t>(x & 0xFFFF) << 16) | (y & 0xFFFF));
+    return combined;
 }
 
 std::shared_ptr<SampleAggregator> ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights,
                                                              const size_t row, const size_t column) {
-    randomSeed(cheap_hash(seed, row, column));
+    randomSeed(combine(seed, row, column));
+
     const auto aggregator = samplerAggregator->create();
     aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
     aggregator->traverse();

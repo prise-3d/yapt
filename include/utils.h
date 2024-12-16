@@ -8,8 +8,8 @@
 #include "constants.h"
 #include <random>
 
-inline std::mt19937& threadGenerator() {
-    thread_local std::mt19937 generator(std::random_device{}());
+inline std::mt19937_64& threadGenerator() {
+    thread_local std::mt19937_64 generator(std::random_device{}());
     return generator;
 }
 
@@ -32,7 +32,7 @@ private:
     std::poisson_distribution<> distribution;
 };
 
-inline void randomSeed(unsigned seed) {
+inline void randomSeed(uint64_t seed) {
     threadGenerator().seed(seed);
 }
 
