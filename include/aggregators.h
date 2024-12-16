@@ -347,6 +347,13 @@ public:
         }
     }
 
+    std::vector<Color> contributions;
+    std::unordered_map<Delaunay::Vertex_handle, std::size_t, VertexHandleHash> vertexToIndex;
+    Voronoi voronoi;
+    Delaunay delaunay;
+    std::vector<Sample> samples;
+    std::vector<double> weights;
+
 protected:
     int nextIndexFrom(const std::size_t start) const {
         size_t i = start + 1;
@@ -367,12 +374,6 @@ protected:
         return value_found;
     }
 
-    std::vector<Sample> samples;
-    std::vector<double> weights;
-    std::vector<Color> contributions;
-    std::unordered_map<Delaunay::Vertex_handle, std::size_t, VertexHandleHash> vertexToIndex;
-    Voronoi voronoi;
-    Delaunay delaunay;
 
     int current_index = 0;
     std::size_t contributions_index;

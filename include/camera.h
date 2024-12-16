@@ -37,6 +37,8 @@ public:
 
     virtual void render(const Hittable &world, const Hittable &lights) = 0;
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
+    virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+                                                          size_t column) = 0;
 
 protected:
     Point3 center;           // Camera center
@@ -59,12 +61,12 @@ public:
 
     void render(const Hittable &world, const Hittable &lights) override;
     virtual void renderLine(const Hittable &world, const Hittable &lights, size_t j);
+    virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+                                                          size_t column) override;
 
 protected:
 
     [[nodiscard]] virtual Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const;
-    virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
-                                                          size_t column);
 };
 
 class ForwardParallelCamera: public ForwardCamera {
@@ -103,11 +105,10 @@ public:
 
     CartographyCamera(size_t pixel_x, size_t pixel_y);
     void render(const Hittable &world, const Hittable &lights) override;
-
-
-protected:
     std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
                                                   size_t column) override;
+
+protected:
     void initialize() override;
 };
 #endif //YAPT_CAMERA_H

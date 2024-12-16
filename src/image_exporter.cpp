@@ -85,8 +85,8 @@ void EXRImageExporter::write(std::string fileName) {
     const int height = imageData->height;
 
     Imf::Array2D<Imf::Rgba> pixels(width, height);
-    for (int y = 0; y<height; y++) {
-        for (int x = 0; x<width; x++) {
+    for (int y = 0 ; y < height ; y++) {
+        for (int x = 0 ; x < width ; x++) {
             const double r = imageData->data[3*(y * width + x)];
             const double g = imageData->data[3*(y * width + x) + 1];
             const double b = imageData->data[3*(y * width + x) + 2];
