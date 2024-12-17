@@ -233,6 +233,10 @@ add_executable(qtvor ${SOURCES}
         src/qtvor.cpp
         include/parser.h
         include/scene.h
+        include/qtvor/zoomablegraphicsview.h
+        include/qtvor/voronoicellitem.h
+        include/qtvor/zoomableimageview.h
+        include/qtvor/utils.h
 )
 
 target_link_libraries(qtvor
