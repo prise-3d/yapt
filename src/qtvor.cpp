@@ -88,6 +88,14 @@ protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override {
         setBrush(QBrush(Qt::yellow));
         QGraphicsPolygonItem::hoverEnterEvent(event);
+
+        auto views = scene()->views();
+        if (!views.isEmpty()) {
+            QGraphicsView *view = views.first();
+            if (view) {
+                view->setWindowTitle(QString("Voronoi Cell - site = (%1, %2)").arg(sitePoint.x()).arg(sitePoint.y()));
+            }
+        }
     }
 
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override {
@@ -128,7 +136,18 @@ void displayVoronoi(Scene yaptScene, int x, int y) {
     for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
         constexpr qreal ellipse_diameter = .003;
         Point &site = vertex->point();
-        if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
+        if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) {
+            auto ellipseItem = new QGraphicsEllipseItem(site.x() - ellipse_diameter / 2,
+                                       site.y() - ellipse_diameter / 2,
+                                       ellipse_diameter,
+                                       ellipse_diameter);
+
+            ellipseItem->setBrush(QBrush(Qt::darkRed));
+            ellipseItem->setPen(QPen(Qt::NoPen));
+            qScene->addItem(ellipseItem);
+
+            continue;
+        }
 
         Face_handle face = voronoi.dual(vertex);
 
@@ -170,6 +189,8 @@ class ZoomableImageView : public ZoomableGraphicsView {
 public:
     explicit ZoomableImageView(Scene yaptScene, QWidget *parent = nullptr): ZoomableGraphicsView(parent),
                                                                             yaptScene(yaptScene) {
+        setMouseTracking(true);
+        viewport()->installEventFilter(this);
     }
 
 protected:
@@ -195,6 +216,35 @@ protected:
         }
 
         ZoomableGraphicsView::mousePressEvent(event);
+    }
+
+    bool eventFilter(QObject *obj, QEvent *event) override {
+        if (obj == viewport() && event->type() == QEvent::MouseMove) {
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+            QPointF scenePos = mapToScene(mouseEvent->pos());
+            updateWindowTitleWithCoordinates(scenePos);
+        }
+        return ZoomableGraphicsView::eventFilter(obj, event);
+    }
+
+    void updateWindowTitleWithCoordinates(const QPointF &scenePos) {
+        if (!scene()) return;
+
+        QList<QGraphicsItem *> itemsAtClick = scene()->items(scenePos);
+        for (QGraphicsItem *item: itemsAtClick) {
+            auto pixmapItem = dynamic_cast<QGraphicsPixmapItem *>(item);
+            if (pixmapItem) {
+                QPointF localPos = pixmapItem->mapFromScene(scenePos);
+                int x = static_cast<int>(localPos.x());
+                int y = static_cast<int>(localPos.y());
+                if (x >= 0 && y >= 0 && x < pixmapItem->pixmap().width() && y < pixmapItem->pixmap().height()) {
+                    if (!QApplication::topLevelWidgets().isEmpty()) {
+                        this->setWindowTitle(QString("QtVor - Pixel: (%1, %2)").arg(x).arg(y));
+                        this->window()->update()
+                    }
+                }
+            }
+        }
     }
 
     Scene yaptScene;
@@ -250,7 +300,7 @@ int main(int argc, char **argv) {
     view.viewport()->setCursor(Qt::ArrowCursor);
     view.setScene(&scene);
     view.setRenderHint(QPainter::Antialiasing);
-    view.setWindowTitle("Image Display");
+    view.setWindowTitle("QtVor");
     view.resize(800, 800);
     view.fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
     view.show();
