@@ -8,7 +8,11 @@
 #include "qtvor/utils.h"
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
+#include <QVBoxLayout>
+#include <QLabel>
 #include <QPen>
+#include <QTableWidget>
+#include <QHeaderView>
 
 class VoronoiCellItem : public QGraphicsPolygonItem {
 public:
@@ -39,7 +43,8 @@ protected:
         auto views = scene()->views();
         if (!views.isEmpty()) {
             if (QGraphicsView *view = views.first()) {
-                view->setWindowTitle(QString("Voronoi Cell - site = (%1, %2)").arg(sitePoint.x()).arg(sitePoint.y()));
+                view->window()->setWindowTitle(QString("Voronoi Cell - site = (%1, %2)").arg(sitePoint.x()).arg(sitePoint.y()));
+                view->window()->update();
             }
         }
     }
@@ -114,17 +119,61 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
         qScene->addItem(cellItem);
     }
 
+
+
     qScene->addRect(-.5, -.5, (1.), (1.), pointPen);
 
     QGraphicsView *popupView = new ZoomableGraphicsView();
     popupView->setScene(qScene);
     popupView->setRenderHint(QPainter::Antialiasing);
-    popupView->setWindowTitle(QString("Voronoi (%1; %2)").arg(x).arg(y));
-    popupView->resize(800, 800);
-    popupView->setAttribute(Qt::WA_DeleteOnClose);
     popupView->fitInView(QRectF(-0.55, -0.55, 1.1, 1.1), Qt::KeepAspectRatio);
+
     popupView->setDragMode(QGraphicsView::ScrollHandDrag);
     popupView->viewport()->setCursor(Qt::ArrowCursor);
-    popupView->show();
+
+    QWidget *textWidget = new QWidget();
+    QVBoxLayout *textLayout = new QVBoxLayout(textWidget);
+
+    textLayout->addWidget(new QLabel(QString("Pixel: (%1, %2)").arg(x).arg(y)));
+
+    size_t size = aggregator->samples.size();
+
+    QTableWidget *table = new QTableWidget(size, 6);
+    table->setHorizontalHeaderLabels({"Site x", "Site y", "R",
+                                  "G", "B", "Area"});
+
+    size_t row = 0;
+    for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
+        Point p = vertex->point();
+        size_t index = aggregator->pointToIndex[p];
+        Color contribution = aggregator->contributions[index];
+        table->setItem(row, 0, new QTableWidgetItem(QString("%1").arg(p.x())));
+        table->setItem(row, 1, new QTableWidgetItem(QString("%1").arg(p.y())));
+        table->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(contribution.x())));
+        table->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(contribution.y())));
+        table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.z())));
+        table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(aggregator->weights[index])));
+        ++row;
+    }
+
+    table->horizontalHeader()->setStretchLastSection(true);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    textLayout->addWidget(table);
+
+
+    textLayout->addStretch();
+
+    QWidget *popupWidget = new QWidget();
+    QHBoxLayout *mainLayout = new QHBoxLayout(popupWidget);
+    mainLayout->addWidget(popupView);
+    mainLayout->addWidget(textWidget);
+
+    popupWidget->setWindowTitle(QString("Voronoi (%1; %2)").arg(x).arg(y));
+    popupWidget->resize(1200, 800);
+    popupWidget->setAttribute(Qt::WA_DeleteOnClose);
+
+    popupWidget->show();
 }
 #endif //VORONOICELLITEM_H

@@ -65,7 +65,7 @@ protected:
                 int y = static_cast<int>(localPos.y());
                 if (x >= 0 && y >= 0 && x < pixmapItem->pixmap().width() && y < pixmapItem->pixmap().height()) {
                     if (!QApplication::topLevelWidgets().isEmpty()) {
-                        this->setWindowTitle(QString("QtVor - Pixel: (%1, %2)").arg(x).arg(y));
+                        this->window()->setWindowTitle(QString("QtVor - Pixel: (%1, %2)").arg(x).arg(y));
                         this->window()->update();
                     }
                 }
