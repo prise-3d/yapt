@@ -81,8 +81,9 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     QPen pointPen(Qt::red);
     pointPen.setWidthF(.0025);
 
-    for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
-        constexpr qreal ellipse_diameter = .003;
+    size_t idx = 0;
+    for (auto vertex = delaunay.vertices_begin(); vertex != delaunay.vertices_end(); ++vertex) {
+        constexpr qreal ellipse_diameter = .01;
         Point &site = vertex->point();
         if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) {
             auto ellipseItem = new QGraphicsEllipseItem(site.x() - ellipse_diameter / 2,
@@ -112,14 +113,13 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
         auto qPolygon = QPolygonF(QVector<QPointF>(polygon.begin(), polygon.end()));
 
         auto *cellItem = new VoronoiCellItem(
-            qPolygon, QBrush(toQColor(aggregator->contributions[aggregator->pointToIndex[site]])),
+            qPolygon, QBrush(toQColor(aggregator->contributions[idx])),
             QPointF(site.x(), site.y()),
             ellipse_diameter);
         cellItem->setPen(voronoiPen);
         qScene->addItem(cellItem);
+        ++idx;
     }
-
-
 
     qScene->addRect(-.5, -.5, (1.), (1.), pointPen);
 
@@ -145,14 +145,14 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     size_t row = 0;
     for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
         Point p = vertex->point();
-        size_t index = aggregator->pointToIndex[p];
-        Color contribution = aggregator->contributions[index];
+        // size_t index = aggregator->pointToIndex[p];
+        Color contribution = aggregator->contributions[row];
         table->setItem(row, 0, new QTableWidgetItem(QString("%1").arg(p.x())));
         table->setItem(row, 1, new QTableWidgetItem(QString("%1").arg(p.y())));
         table->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(contribution.x())));
         table->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(contribution.y())));
         table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.z())));
-        table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(aggregator->weights[index])));
+        table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(aggregator->weights[row])));
         ++row;
     }
 

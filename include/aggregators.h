@@ -7,7 +7,6 @@
 #ifndef YAPT_AGGREGATORS_H
 #define YAPT_AGGREGATORS_H
 
-#include "yapt.h"
 #include "Vec3.h"
 #include "color.h"
 
@@ -20,7 +19,6 @@ public:
     virtual void traverse() = 0;
     virtual bool hasNext() = 0;
     virtual Sample next() = 0;
-    virtual void debug() = 0;
 };
 
 class MCSampleAggregator : public SampleAggregator {
@@ -76,10 +74,6 @@ public:
         else can_traverse = true;
 
         return sample;
-    }
-
-    void debug() override {
-
     }
 
 private:
@@ -244,20 +238,10 @@ public:
 
             // we now need to construct the voronoi diagram to check if it satisfies our
             // robustness criterion
-
-            // Voronoi point sites
-            std::vector<Point> points(samples.size());
-
-            // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
-            // a correspondence by hand to be able to map sites to weights and thus sites to samples
-            pointToIndex.clear();
-
-            // here we populate the Delaunay triangulation and the vertex -> index mapping
             for (i = 0 ; i < samples.size() ; i++) {
                 Sample sample = samples[i];
                 Point p(sample.dx, sample.dy);
-                Delaunay::Vertex_handle vertexHandle = delaunay.insert(Point(sample.dx, sample.dy));
-                pointToIndex[p] = i;
+                delaunay.insert(p);
             }
 
             voronoi = Voronoi(delaunay);
@@ -278,6 +262,8 @@ public:
     Color aggregate() override {
         weights = std::vector<double>(samples.size());
         double total_weight = 0.;
+        int idx = 0;
+
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
             Point &site = vertex->point();
             if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
@@ -286,19 +272,17 @@ public:
 
             Polygon polygon;
 
-            Ccb_halfedge_circulator halfEdge = face->ccb();
+            Ccb_halfedge_circulator halfEdge = face->ccb(), done(halfEdge);
 
-            // Voronoi region area computation
             do {
-                Point p = halfEdge->source()->point();
-                polygon.push_back(p);
-            } while (++halfEdge != face->ccb());
+                polygon.push_back(halfEdge->source()->point());
+            } while (++halfEdge != done);
 
-            std::size_t pointIndex = pointToIndex[vertex->point()];
             double area = polygon.area();
-            if (area < 0) area = -area;
-            weights[pointIndex] = area;
+            if (area < 0)  area = -area;
+            weights[idx] = area;
             total_weight += area;
+            ++idx;
         }
 
         Color color(0, 0, 0);
@@ -336,14 +320,7 @@ public:
         return sample;
     }
 
-    void debug() override {
-        for (int i = 0 ; i < samples.size() ; i++) {
-            std::cout << i << "  =>  " << samples[i] << "  -  " << weights[i] << std::endl;
-        }
-    }
-
     std::vector<Color> contributions;
-    std::unordered_map<Point, std::size_t> pointToIndex;
     Voronoi voronoi;
     Delaunay delaunay;
     std::vector<Sample> samples;
@@ -358,7 +335,7 @@ protected:
         bool found = false;
 
         while (search && !found) {
-            Sample sample = samples[i];
+            const Sample &sample = samples[i];
             if (sample.dx > -.5 && sample.dx < .5 && sample.dy > -.5 && sample.dy < .5) {
                 found = true;
                 value_found = i;
@@ -423,14 +400,14 @@ public:
 
         // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
         // a correspondence by hand to be able to map sites to weights and thus sites to samples
-        pointToIndex.clear();
+        // pointToIndex.clear();
 
         // here we populate the Delaunay triangulation and the vertex -> index mapping
         for (i = 0 ; i < samples.size() ; i++) {
             Sample sample = samples[i];
             Point p(sample.dx, sample.dy);
             delaunay.insert(p);
-            pointToIndex[p] = i;
+            // pointToIndex[p] = i;
         }
 
         voronoi = Voronoi(delaunay);
@@ -456,16 +433,9 @@ public:
         // Voronoi point sites
         std::vector<Point> points(samples.size());
 
-        // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
-        // a correspondence by hand to be able to map sites to weights and thus sites to samples
-        pointToIndex.clear();
-
-        // here we populate the Delaunay triangulation and the vertex -> index mapping
-        for (int i = 0 ; i < samples.size() ; i++) {
-            Sample sample = samples[i];
+        for (auto sample : samples) {
             Point p(sample.dx, sample.dy);
-            Delaunay::Vertex_handle vertexHandle = delaunay.insert(p);
-            pointToIndex[p] = i;
+            delaunay.insert(p);
         }
 
         voronoi = Voronoi(delaunay);
@@ -476,6 +446,7 @@ public:
     Color aggregate() override {
         weights = std::vector<double>(samples.size());
         double total_weight = 0.;
+        std::size_t idx = 0;
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
             Point site = vertex->point();
             if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
@@ -496,12 +467,12 @@ public:
                 polygon.push_back(p);
             } while (valid && ++halfEdge != face->ccb());
             if (!valid) continue;
-            std::size_t pointIndex = pointToIndex[vertex->point()];
             double area = polygon.area();
 
             if (area < 0) area = -area;
-            weights[pointIndex] = area;
+            weights[idx] = area;
             total_weight += area;
+            ++idx;
         }
 
         Color color(0, 0, 0);
