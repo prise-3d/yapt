@@ -13,6 +13,7 @@
 #include <QPen>
 #include <QTableWidget>
 #include <QHeaderView>
+#include <QClipboard>
 
 class VoronoiCellItem : public QGraphicsPolygonItem {
 public:
@@ -59,6 +60,55 @@ private:
     QPointF sitePoint;
     qreal ellipseDiameter;
     QGraphicsEllipseItem *ellipseItem;
+};
+
+class CustomTableWidget : public QTableWidget {
+
+public:
+    CustomTableWidget(int rows, int columns, QWidget* parent = nullptr) : QTableWidget(rows, columns, parent) {
+        setSelectionMode(QAbstractItemView::ContiguousSelection);
+    }
+
+    ~CustomTableWidget() override = default;
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override {
+        if (event->matches(QKeySequence::Copy)) {
+            copySelectionToClipboard();
+        } else {
+            QTableWidget::keyPressEvent(event);
+        }
+    }
+
+private:
+    void copySelectionToClipboard() {
+        QModelIndexList indexes = selectionModel()->selectedIndexes();
+
+        if (indexes.isEmpty()) {
+            return;
+        }
+
+        // Sort the selected indexes by row and column
+        std::sort(indexes.begin(), indexes.end());
+
+        QString copiedText;
+        int previousRow = indexes.first().row();
+
+        for (const QModelIndex& index : indexes) {
+            if (index.row() != previousRow) {
+                copiedText += '\n'; // New line for a new row
+                previousRow = index.row();
+            } else if (!copiedText.isEmpty()) {
+                copiedText += '\t'; // Tab for a new column
+            }
+
+            copiedText += model()->data(index).toString();
+        }
+
+        // Copy to clipboard
+        QClipboard* clipboard = QApplication::clipboard();
+        clipboard->setText(copiedText);
+    }
 };
 
 inline void displayVoronoi(Scene yaptScene, int x, int y) {
@@ -138,12 +188,12 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
 
     size_t size = aggregator->samples.size();
 
-    QTableWidget *table = new QTableWidget(size, 6);
+    auto *table = new CustomTableWidget(size, 6);
     table->setHorizontalHeaderLabels({"Site x", "Site y", "R",
                                   "G", "B", "Area"});
 
     size_t row = 0;
-    for (auto vertex = delaunay.finite_vertices_begin(); vertex != delaunay.finite_vertices_end(); ++vertex) {
+    for (auto vertex = delaunay.vertices_begin(); vertex != delaunay.vertices_end(); ++vertex) {
         Point p = vertex->point();
         // size_t index = aggregator->pointToIndex[p];
         Color contribution = aggregator->contributions[row];
