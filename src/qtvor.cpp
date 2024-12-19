@@ -10,10 +10,7 @@ int main(int argc, char **argv) {
     Parser parser;
     Scene yaptScene;
     if (!parser.parseScene(argc, argv, yaptScene)) return 0;
-
     yaptScene.camera->render(*yaptScene.content, *yaptScene.lights);
-
-    parser.exportImage(argc, argv, yaptScene);
 
     QApplication app(argc, argv);
 
