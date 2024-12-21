@@ -244,8 +244,7 @@ public:
             voronoi = Voronoi(delaunay);
 
             for (auto f = voronoi.unbounded_faces_begin(); f != voronoi.unbounded_faces_end(); ++f) {
-                auto p = f->dual();
-                auto site = p->point();
+                const auto site = f->dual()->point();
                 if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
                 isInvalid = true;
                 delaunay.clear();
@@ -260,9 +259,8 @@ public:
         double total_weight = 0.;
         int idx = 0;
 
-        //TODO: is this correct?
-        for (auto vertex = delaunay.all_vertices_begin() ; vertex != delaunay.all_vertices_end() ; ++vertex) {
-            Point &site = vertex->point();
+        for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
+            const Point &site = vertex->point();
             if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
 
             Face_handle face = voronoi.dual(vertex);
@@ -275,8 +273,7 @@ public:
                 polygon.push_back(halfEdge->source()->point());
             } while (++halfEdge != done);
 
-            double area = polygon.area();
-            if (area < 0)  area = -area;
+            const double area = polygon.area();
             weights[idx] = area;
             total_weight += area;
             ++idx;
