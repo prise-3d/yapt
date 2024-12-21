@@ -225,6 +225,7 @@ public:
         bool isInvalid = false;
 
         do {
+            isInvalid = false;
             // we collect samples
             const auto pixelSampler = factory->create(x, y);
             pixelSampler->begin();
@@ -233,27 +234,22 @@ public:
             contributions = std::vector<Color>(size);
             std::size_t i = 0;
             for (; pixelSampler->hasNext(); i++) {
-                samples[i] = pixelSampler->get();
+                const auto sample = pixelSampler->get();
+                samples[i] = sample;
+                delaunay.insert(Point(sample.dx, sample.dy));
             }
 
             // we now need to construct the voronoi diagram to check if it satisfies our
             // robustness criterion
-            for (i = 0 ; i < samples.size() ; i++) {
-                Sample sample = samples[i];
-                Point p(sample.dx, sample.dy);
-                delaunay.insert(p);
-            }
-
             voronoi = Voronoi(delaunay);
 
-            for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() && !isInvalid ; ++vertex) {
-                Point &site = vertex->point();
+            for (auto f = voronoi.unbounded_faces_begin(); f != voronoi.unbounded_faces_end(); ++f) {
+                auto p = f->dual();
+                auto site = p->point();
                 if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
-                Face_handle face = voronoi.dual(vertex);
-
-                if (face->is_unbounded()) {
-                    isInvalid = true;
-                }
+                isInvalid = true;
+                delaunay.clear();
+                break;
             }
         } while (isInvalid);
         current_index = 0;
@@ -264,7 +260,8 @@ public:
         double total_weight = 0.;
         int idx = 0;
 
-        for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
+        //TODO: is this correct?
+        for (auto vertex = delaunay.all_vertices_begin() ; vertex != delaunay.all_vertices_end() ; ++vertex) {
             Point &site = vertex->point();
             if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
 
