@@ -378,7 +378,7 @@ class FilteringVoronoiAggregator: public VoronoiAggregator {
                 good = is_good(point);
 
                 polygon.push_back(point);
-            } while (++halfEdge != done);
+            } while (++halfEdge != done && good);
 
             if (good) {
                 const double area = polygon.area();
