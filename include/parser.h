@@ -156,6 +156,7 @@ protected:
                 std::cout << "                 - vor    => Voronoi aggregation (DEFAULT)" << std::endl;
                 std::cout << "                 - cvor   => Clipped Voronoi aggregation" << std::endl;
                 std::cout << "                 - ivor   => Inner Voronoi aggregation" << std::endl;
+                std::cout << "                 - fvor   => Filtering Voronoi aggregation" << std::endl;
                 std::cout << "                 - median => Median aggregation" << std::endl;
                 std::cout << "                 - mon    => MoN (Median Of meaNs) aggregation" << std::endl;
                 std::cout << "                 - winsor =>  Winsorization" << std::endl;
@@ -237,6 +238,8 @@ protected:
             aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
         } else if (aggregator == "ivor") {
             aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
+        } else if (aggregator == "fvor") {
+            aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>();
         } else if (aggregator == "median") {
             aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
         } else if (aggregator == "mon") {
