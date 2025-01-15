@@ -239,7 +239,19 @@ protected:
         } else if (aggregator == "ivor") {
             aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
         } else if (aggregator == "fvor") {
-            aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>();
+
+            // auto the_sampler_factory = dynamic_cast<SkewedPPPSamplerFactory*>(aggregatorFactory.get());
+
+            auto sampler = samplerFactory->create(0, 0);
+            auto sppp_sampler = dynamic_cast<SkewedPPPSampler*>(sampler.get());
+
+            double margin = .1;
+            if (sppp_sampler != nullptr) {
+                margin = sppp_sampler->epsilon_margin;
+            }
+
+            aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>(margin);
+
         } else if (aggregator == "median") {
             aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
         } else if (aggregator == "mon") {

@@ -354,6 +354,7 @@ class FilteringVoronoiAggregator: public VoronoiAggregator {
     double margin;
 
     explicit FilteringVoronoiAggregator() : VoronoiAggregator(), margin(0.1) {}
+    FilteringVoronoiAggregator(const double margin) : VoronoiAggregator(), margin(margin) {}
 
     Color aggregate() override {
         weights = std::vector<double>(samples.size());
@@ -615,11 +616,16 @@ public:
 
 class FilteringVoronoiAggregatorFactory: public AggregatorFactory {
 public:
-    FilteringVoronoiAggregatorFactory(): AggregatorFactory() {}
+    FilteringVoronoiAggregatorFactory(): AggregatorFactory(), margin(.1) {}
+
+    explicit FilteringVoronoiAggregatorFactory(const double m): AggregatorFactory(), margin(m) {}
 
     shared_ptr<SampleAggregator> create() override {
-        return std::make_shared<FilteringVoronoiAggregator>();
+        return std::make_shared<FilteringVoronoiAggregator>(margin);
     }
+
+    private:
+    double margin;
 };
 
 #endif //YAPT_AGGREGATORS_H

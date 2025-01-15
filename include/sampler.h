@@ -498,12 +498,14 @@ public:
 
     size_t sampleSize() override { return intensity; }
 
+    double epsilon_margin;
+
 private:
     std::size_t intensity;
     std::size_t number_of_samples;
     std::size_t index;
 
-    double epsilon_margin;
+
     double _dx;
     double _dy;
 };
@@ -529,8 +531,10 @@ public:
         return make_shared<SkewedPPPSampler>(x, y, number_of_samples, skewed_intensity, confidence);
     }
 
-protected:
     std::size_t skewed_intensity;
+
+protected:
+
     std::size_t number_of_samples;
     double confidence;
 };
