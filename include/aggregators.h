@@ -347,6 +347,72 @@ protected:
 };
 
 
+class FilteringVoronoiAggregator: public VoronoiAggregator {
+
+    public:
+
+    double margin;
+
+    explicit FilteringVoronoiAggregator() : VoronoiAggregator(), margin(0.1) {}
+
+    Color aggregate() override {
+        weights = std::vector<double>(samples.size());
+        double total_weight = 0.;
+        int idx = 0;
+
+        for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
+            const Point &site = vertex->point();
+            if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
+
+            Face_handle face = voronoi.dual(vertex);
+
+            Polygon polygon;
+
+            Ccb_halfedge_circulator halfEdge = face->ccb(), done(halfEdge);
+
+
+            bool good = true;
+            do {
+                Point point = halfEdge->source()->point();
+
+                good = is_good(point);
+
+                polygon.push_back(point);
+            } while (++halfEdge != done);
+
+            if (good) {
+                const double area = polygon.area();
+                weights[idx] = area;
+                total_weight += area;
+            } else {
+                weights[idx] = 0.;
+            }
+            ++idx;
+        }
+
+        Color color(0, 0, 0);
+
+        // And finally, we weight the samples
+        for (int i = 0 ; i < samples.size() ; i++) {
+            const double weight = weights[i];
+            color += weight * contributions[i];
+        }
+
+        return color / total_weight;
+    }
+
+    bool is_good(const Point &point) const {
+
+        const double x = point.x();
+        const double y = point.y();
+
+        if (x > .5 + margin || x < -.5 - margin) return false;
+        if (y > .5 + margin || y < -.5 - margin) return false;
+
+        return true;
+    }
+};
+
 class FilteringMCAggregator: public VoronoiAggregator {
     Color aggregate() override {
         Color color(0, 0, 0);
@@ -392,16 +458,11 @@ public:
         // Voronoi point sites
         std::vector<Point> points(samples.size());
 
-        // vertex -> index mapping -- CGAL does not preserve sites order. We need to establish
-        // a correspondence by hand to be able to map sites to weights and thus sites to samples
-        // pointToIndex.clear();
-
         // here we populate the Delaunay triangulation and the vertex -> index mapping
         for (i = 0 ; i < samples.size() ; i++) {
             Sample sample = samples[i];
             Point p(sample.dx, sample.dy);
             delaunay.insert(p);
-            // pointToIndex[p] = i;
         }
 
         voronoi = Voronoi(delaunay);
@@ -549,6 +610,15 @@ public:
     FilteringMCAggregatorFactory(): AggregatorFactory() {}
     shared_ptr<SampleAggregator> create() override {
         return std::make_shared<FilteringMCAggregator>();
+    }
+};
+
+class FilteringVoronoiAggregatorFactory: public AggregatorFactory {
+public:
+    FilteringVoronoiAggregatorFactory(): AggregatorFactory() {}
+
+    shared_ptr<SampleAggregator> create() override {
+        return std::make_shared<FilteringVoronoiAggregator>();
     }
 };
 
