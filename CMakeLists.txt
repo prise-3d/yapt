@@ -5,9 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+#set(THREADS_PREFER_PTHREAD_FLAG ON)
+#set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 # Add include directory
 include_directories(include)
