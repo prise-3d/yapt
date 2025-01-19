@@ -355,10 +355,9 @@ class FilteringVoronoiAggregator: public VoronoiAggregator {
     bool fake_mc;
 
     explicit FilteringVoronoiAggregator() : VoronoiAggregator(), margin(0.1), fake_mc(false) {}
-    explicit FilteringVoronoiAggregator(const double margin, const bool fake_mc=false) : VoronoiAggregator(), margin(margin), fake_mc(fake_mc) {}
+    explicit FilteringVoronoiAggregator(const double margin, bool fake_mc) : VoronoiAggregator(), margin(margin), fake_mc(fake_mc) {}
 
     Color aggregate() override {
-        fake_mc = true;
         weights = std::vector<double>(samples.size());
         double total_weight = 0.;
         int idx = 0;
@@ -405,6 +404,14 @@ class FilteringVoronoiAggregator: public VoronoiAggregator {
             const double weight = weights[i];
             color += weight * contributions[i];
         }
+
+        if (fake_mc) {
+            total_weight = 0;
+            for (int i = 0 ; i < samples.size() ; i++) {
+                total_weight += weights[i];
+            }
+        }
+
 
         return color / total_weight;
     }
@@ -625,15 +632,19 @@ class FilteringVoronoiAggregatorFactory: public AggregatorFactory {
 public:
     FilteringVoronoiAggregatorFactory(): AggregatorFactory(), margin(.1) {}
 
-    explicit FilteringVoronoiAggregatorFactory(const double m, const bool fake_mc = false): AggregatorFactory(), margin(m) {}
+    explicit FilteringVoronoiAggregatorFactory(const double m, const bool fake_mc): AggregatorFactory(), margin(m), fake_mc(fake_mc) {}
 
     shared_ptr<SampleAggregator> create() override {
-        return std::make_shared<FilteringVoronoiAggregator>(margin);
+        return std::make_shared<FilteringVoronoiAggregator>(margin, fake_mc);
     }
 
-    private:
+
+private:
     double margin;
-    bool fake_mc;
+    bool fake_mc=false;
+
+
+
 };
 
 #endif //YAPT_AGGREGATORS_H
