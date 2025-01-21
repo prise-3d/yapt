@@ -15,6 +15,7 @@
 #include "image_exporter.h"
 #include "sceneloader.h"
 #include "scene.h"
+#include "exprtk/exprtk.hpp"
 
 
 class Parser {
@@ -287,7 +288,7 @@ protected:
         camera->defocusAngle   = 0;
         camera->seed           = seed;
 
-
+        std::cout << source.extension() << std::endl;
 
         if (source.extension() == ".ypt") {
             YaptSceneLoader loader;
@@ -297,6 +298,19 @@ protected:
             }
         } else if (source.extension() == ".obj") {
             camera->background = Color(1., .5, .5);
+        } else if (source.extension() == ".func") {
+            std::cout << "HELLO WORLD!" << std::endl;
+            camera = std::make_shared<FunctionCamera>(Function::from_file(source.string()));
+            camera->background = Color(0., .0, .0);
+            camera->imageWidth = 1;
+            camera->imageHeight = 1;
+            camera->aspect_ratio = 1.;
+            camera->seed = seed;
+            camera->numThreads = numThreads;
+            camera->maxDepth = maxDepth;
+            camera->samplerAggregator = aggregatorFactory;
+            camera->pixelSamplerFactory = samplerFactory;
+            camera->imageWidth = width;
         } else {
             std::cerr << "Unrecognized source extension: " << source.extension() << std::endl;
             return false;

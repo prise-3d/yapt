@@ -292,3 +292,35 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::renderPixel(
 
     return aggregator;
 }
+
+FunctionCamera::FunctionCamera(shared_ptr<Function> function): ForwardParallelCamera(), function(function) {}
+
+std::shared_ptr<SampleAggregator> FunctionCamera::renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) {
+    randomSeed(combine(seed, row, column));
+
+    const auto aggregator = samplerAggregator->create();
+    aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    aggregator->traverse();
+
+    while (aggregator-> hasNext()) {
+        Sample sample = aggregator->next();
+
+        double value = function->compute(sample.dx, sample.dy);
+        
+        const Color color(value, value, value);
+        aggregator->insertContribution(color);
+    }
+
+    const Color pixel_color = aggregator->aggregate();
+
+    const size_t idx = 3 * (column + row * imageWidth);
+
+    imageData.data[idx]     = pixel_color.x();  // R
+    imageData.data[idx + 1] = pixel_color.y();  // G
+    imageData.data[idx + 2] = pixel_color.z();  // B
+
+    return aggregator;
+}
+
+
+

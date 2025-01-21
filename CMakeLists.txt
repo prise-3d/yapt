@@ -237,6 +237,7 @@ add_executable(qtvor ${SOURCES}
         include/qtvor/voronoicellitem.h
         include/qtvor/zoomableimageview.h
         include/qtvor/utils.h
+        include/functions.h
 )
 
 target_link_libraries(qtvor
