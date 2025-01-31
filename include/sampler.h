@@ -69,6 +69,37 @@ protected:
     double _dy;
 };
 
+class CentralSampler: public PixelSampler {
+public:
+    CentralSampler(const double x, const double y, const int size): PixelSampler(x, y), size(size) {}
+
+    void begin() override {
+        index = 0;
+    }
+
+    bool hasNext() override {
+        return index < size;
+    }
+
+    Sample get() override {
+        index++;
+        return {
+            x ,
+            y ,
+            0,
+            0
+        };
+    }
+
+    std::size_t sampleSize() override {
+        return this->size;
+    }
+
+protected:
+    int size = 10;
+    int index = 0;
+};
+
 class UniformSampler: public PixelSampler {
 public:
     UniformSampler(double x, double y, const size_t sqrtSpp) :
@@ -270,6 +301,17 @@ public:
     explicit TrivialSamplerFactory(int samples): samples(samples) {}
     shared_ptr<PixelSampler> create(double x, double y) override {
         return make_shared<TrivialSampler>(x, y, samples);
+    }
+
+protected:
+    int samples;
+};
+
+class CentralSamplerFactory: public SamplerFactory {
+public:
+    explicit CentralSamplerFactory(int samples): samples(samples) {}
+    shared_ptr<PixelSampler> create(double x, double y) override {
+        return make_shared<CentralSampler>(x, y, samples);
     }
 
 protected:

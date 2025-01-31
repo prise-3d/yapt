@@ -194,6 +194,8 @@ protected:
         // SAMPLER FACTORY INIT
         if (sampler == "rnd") {
             samplerFactory = std::make_shared<TrivialSamplerFactory>(spp);
+        } else if (sampler == "cent") {
+            samplerFactory = std::make_shared<CentralSamplerFactory>(spp);
         } else if (sampler == "strat") {
             auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
             samplerFactory = std::make_shared<StratifiedSamplerFactory>(sqrtSpp);
