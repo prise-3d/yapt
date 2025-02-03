@@ -158,6 +158,7 @@ protected:
                 std::cout << "                 - cvor   => Clipped Voronoi aggregation" << std::endl;
                 std::cout << "                 - ivor   => Inner Voronoi aggregation" << std::endl;
                 std::cout << "                 - fvor   => Filtering Voronoi aggregation" << std::endl;
+                std::cout << "                 - nzvor  => Non Zero Filtering Voronoi aggregation" << std::endl;
                 std::cout << "                 - median => Median aggregation" << std::endl;
                 std::cout << "                 - mon    => MoN (Median Of meaNs) aggregation" << std::endl;
                 std::cout << "                 - winsor =>  Winsorization" << std::endl;
@@ -239,9 +240,7 @@ protected:
             aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
         } else if (aggregator == "ivor") {
             aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
-        } else if (aggregator == "fvor") {
-
-            // auto the_sampler_factory = dynamic_cast<SkewedPPPSamplerFactory*>(aggregatorFactory.get());
+        } else if (aggregator == "fvor" || aggregator == "nzvor") {
 
             auto sampler = samplerFactory->create(0, 0);
             auto sppp_sampler = dynamic_cast<SkewedPPPSampler*>(sampler.get());
@@ -251,7 +250,8 @@ protected:
                 margin = sppp_sampler->epsilon_margin;
             }
 
-            aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>(margin);
+            if (aggregator == "fvor") aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>(margin);
+            else aggregatorFactory = std::make_shared<NonZeroVoronoiAggregatorFactory>(margin);
 
         } else if (aggregator == "median") {
             aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
@@ -288,8 +288,6 @@ protected:
         camera->defocusAngle   = 0;
         camera->seed           = seed;
 
-        std::cout << source.extension() << std::endl;
-
         if (source.extension() == ".ypt") {
             YaptSceneLoader loader;
             loader.load(source, content, lights, camera);
@@ -299,11 +297,8 @@ protected:
         } else if (source.extension() == ".obj") {
             camera->background = Color(1., .5, .5);
         } else if (source.extension() == ".func") {
-            std::cout << "HELLO WORLD!" << std::endl;
             camera = std::make_shared<FunctionCamera>(Function::from_file(source.string()));
             camera->background = Color(0., .0, .0);
-            camera->imageWidth = 1;
-            camera->imageHeight = 1;
             camera->aspect_ratio = 1.;
             camera->seed = seed;
             camera->numThreads = numThreads;

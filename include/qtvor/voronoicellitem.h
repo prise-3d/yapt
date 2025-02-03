@@ -27,13 +27,13 @@ public:
         setAcceptHoverEvents(true);
 
         const qreal ellipseRadius = ellipseDiameter / 2.0;
-        ellipseItem = new QGraphicsEllipseItem(site.x() - ellipseRadius,
+        /*ellipseItem = new QGraphicsEllipseItem(site.x() - ellipseRadius,
                                                site.y() - ellipseRadius,
                                                ellipseDiameter,
                                                ellipseDiameter,
                                                this);
         ellipseItem->setBrush(QBrush(Qt::red));
-        ellipseItem->setPen(QPen(Qt::NoPen));
+        ellipseItem->setPen(QPen(Qt::NoPen));*/
     }
 
 protected:
@@ -126,7 +126,7 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     auto voronoi = aggregator->voronoi;
 
     QPen voronoiPen(Qt::blue);
-    voronoiPen.setWidthF(.0015);
+    voronoiPen.setWidthF(.0002);
 
     QPen pointPen(Qt::red);
     pointPen.setWidthF(.0025);
@@ -204,6 +204,8 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
         table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.z())));
         table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(aggregator->weights[row])));
         ++row;
+
+        std::cout << contribution << std::endl;
     }
 
     table->horizontalHeader()->setStretchLastSection(true);

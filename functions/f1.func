@@ -1,0 +1,1 @@
+sqrt(abs(x + y) * (2 + abs(sin(113 * x * y)) + cos(15 * y) + cos(x * x * y * 131))) / 3

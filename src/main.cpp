@@ -3,7 +3,6 @@
 //
 
 #include "parser.h"
-#include "functions.h"
 
 int main(const int argc, char* argv[]) {
     Parser parser;

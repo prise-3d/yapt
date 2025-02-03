@@ -252,3 +252,64 @@ target_link_libraries(qtvor
         CGAL::CGAL_Core
         OpenEXR::OpenEXR
 )
+
+add_executable(eval ${SOURCES}
+        src/eval.cpp
+        src/stb_image.cpp
+        include/Vec3.h
+        include/ray.h
+        include/hittable.h
+        include/sphere.h
+        src/Vec3.cpp
+        src/ray.cpp
+        include/hittable_list.h
+        src/hittable_list.cpp
+        include/yapt.h
+        include/constants.h
+        src/color.cpp
+        include/interval.h
+        src/interval.cpp
+        include/camera.h
+        src/camera.cpp
+        include/utils.h
+        include/material.h
+        src/material.cpp
+        include/aabb.h
+        include/bvh.h
+        include/texture.h
+        include/external/stb_image.h
+        include/rtw_stb_image.h
+        src/aabb.cpp
+        include/perlin.h
+        include/quad.h
+        include/constant_medium.h
+        include/onb.h
+        include/pdf.h
+        include/image_exporter.h
+        src/image_exporter.cpp
+        include/image_data.h
+        include/sampler.h
+        include/triangle.h
+        src/demo.cpp
+        include/demo.h
+        include/importer.h
+        include/aggregators.h
+        include/sceneloader.h
+        include/path.h
+        src/sceneloader.cpp
+        src/path.cpp
+        include/parser.h
+        include/scene.h
+        include/functions.h
+        src/eval.cpp
+)
+
+target_link_libraries(eval
+        CGAL::CGAL
+        ${PNG_LIBRARIES}
+        Threads::Threads
+        assimp
+        CGAL::CGAL
+        CGAL::CGAL_Core
+        OpenEXR::OpenEXR
+)

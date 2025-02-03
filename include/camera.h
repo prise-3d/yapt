@@ -41,6 +41,8 @@ public:
     virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
                                                           size_t column) = 0;
 
+    virtual void initialize();
+
 protected:
     Point3 center;           // Camera center
     Point3 pixel00_loc;      // Location of pixel 0, 0
@@ -51,7 +53,7 @@ protected:
     Vec3 defocusDiskV;       // Defocus disk vertical radius
     ImageData imageData = ImageData();     // image output
 
-    virtual void initialize();
+
     [[nodiscard]] Point3 defocusDiskSample() const;
     [[nodiscard]] virtual Ray getRay(double x, double y) const;
 };
@@ -109,8 +111,8 @@ public:
     std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
                                                   size_t column) override;
 
-protected:
     void initialize() override;
+
 };
 
 class FunctionCamera final : public ForwardParallelCamera {

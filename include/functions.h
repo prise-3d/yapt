@@ -28,9 +28,11 @@ public:
     }
 
     explicit Function(std::string str_fn) {
+        randomSeed(100);
         std::cout << "compiling function " << str_fn << std::endl;
         symbol_table.add_variable("x", _x);
         symbol_table.add_variable("y", _y);
+        symbol_table.add_function("RND", rnd_double);
         symbol_table.add_constants();
 
         expression.register_symbol_table(symbol_table);
