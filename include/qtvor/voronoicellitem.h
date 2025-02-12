@@ -195,7 +195,7 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     size_t row = 0;
     for (auto vertex = delaunay.vertices_begin(); vertex != delaunay.vertices_end(); ++vertex) {
         Point p = vertex->point();
-        // size_t index = aggregator->pointToIndex[p];
+
         Color contribution = aggregator->contributions[row];
         table->setItem(row, 0, new QTableWidgetItem(QString("%1").arg(p.x())));
         table->setItem(row, 1, new QTableWidgetItem(QString("%1").arg(p.y())));
@@ -204,8 +204,6 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
         table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.z())));
         table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(aggregator->weights[row])));
         ++row;
-
-        std::cout << contribution << std::endl;
     }
 
     table->horizontalHeader()->setStretchLastSection(true);

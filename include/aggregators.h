@@ -606,15 +606,16 @@ public:
         }
         voronoi = Voronoi(delaunay);
 
-        samples = voronoi_samples;
-
         weights = std::vector<double>(voronoi_samples.size());
         double total_weight = 0.;
         int idx = 0;
 
         for (auto vertex = delaunay.vertices_begin() ; vertex != delaunay.vertices_end() ; ++vertex) {
             const Point &site = vertex->point();
-            if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
+            if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) {
+                ++idx;
+                continue;
+            }
 
             Face_handle face = voronoi.dual(vertex);
 
@@ -646,13 +647,14 @@ public:
         // And finally, we weight the samples
         for (int i = 0 ; i < non_zero_inner_contributions.size() ; i++) {
             const double weight = weights[i];
-            color += weight * contributions[i];
+            color += weight * non_zero_inner_contributions[i];
         }
 
         Color contribution = color / total_weight;
 
-        //contribution *= static_cast<double>(non_zero_inner_contributions.size()) / static_cast<double>(n_inner_samples);
+        contribution *= static_cast<double>(non_zero_inner_contributions.size()) / static_cast<double>(n_inner_samples);
 
+        samples = voronoi_samples;
         contributions = non_zero_inner_contributions;
 
         return contribution;
