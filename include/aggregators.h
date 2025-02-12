@@ -642,6 +642,8 @@ public:
             ++idx;
         }
 
+        if (total_weight == 0) return {0, 0, 0};
+
         Color color(0, 0, 0);
 
         // And finally, we weight the samples
