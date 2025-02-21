@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(yapt)
 
+option(FUNCTION_PARSING "Function Parsing" OFF)
+
+if(FUNCTION_PARSING)
+    add_definitions(-DFUNCTION_PARSING)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)

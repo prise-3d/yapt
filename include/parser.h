@@ -296,7 +296,10 @@ protected:
             }
         } else if (source.extension() == ".obj") {
             camera->background = Color(1., .5, .5);
-        } else if (source.extension() == ".func") {
+        }
+#ifdef FUNCTION_PARSING
+        else if (source.extension() == ".func") {
+
             camera = std::make_shared<FunctionCamera>(Function::from_file(source.string()));
             camera->background = Color(0., .0, .0);
             camera->aspect_ratio = 1.;
@@ -306,7 +309,9 @@ protected:
             camera->samplerAggregator = aggregatorFactory;
             camera->pixelSamplerFactory = samplerFactory;
             camera->imageWidth = width;
-        } else {
+        }
+#endif
+        else {
             std::cerr << "Unrecognized source extension: " << source.extension() << std::endl;
             return false;
         }

@@ -293,7 +293,9 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::renderPixel(
     return aggregator;
 }
 
+#ifdef FUNCTION_PARSING
 FunctionCamera::FunctionCamera(shared_ptr<Function> function): ForwardParallelCamera(), function(function) {}
+
 
 std::shared_ptr<SampleAggregator> FunctionCamera::renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) {
     randomSeed(combine(seed, row, column));
@@ -321,6 +323,6 @@ std::shared_ptr<SampleAggregator> FunctionCamera::renderPixel(const Hittable &wo
 
     return aggregator;
 }
-
+#endif
 
 

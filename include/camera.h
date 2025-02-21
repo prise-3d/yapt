@@ -10,7 +10,11 @@
 #include "image_data.h"
 #include "sampler.h"
 #include "aggregators.h"
-#include "functions.h"
+
+#ifdef FUNCTION_PARSING
+    #include "functions.h"
+#endif
+
 #include "path.h"
 
 class Camera {
@@ -117,13 +121,15 @@ public:
 
 class FunctionCamera final : public ForwardParallelCamera {
     public:
-
+#ifdef FUNCTION_PARSING
     FunctionCamera(shared_ptr<Function> function);
-
+#endif
     std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
 
 
 protected:
+#ifdef FUNCTION_PARSING
     shared_ptr<Function> function;
+#endif
 };
 #endif //YAPT_CAMERA_H

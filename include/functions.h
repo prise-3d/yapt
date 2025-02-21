@@ -5,6 +5,8 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+#ifdef FUNCTION_PARSING
+
 #include "yapt.h"
 #include <iostream>
 
@@ -59,5 +61,7 @@ private:
     exprtk::symbol_table<double> symbol_table;
     exprtk::parser<double> parser;
 };
+
+#endif
 
 #endif //FUNCTIONS_H
