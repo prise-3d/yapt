@@ -132,4 +132,11 @@ protected:
     shared_ptr<Function> function;
 #endif
 };
+
+class NormalCamera : public ForwardParallelCamera {
+    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
+};
+
+
+
 #endif //YAPT_CAMERA_H

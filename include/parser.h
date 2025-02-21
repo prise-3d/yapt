@@ -170,6 +170,7 @@ protected:
                 std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
+                std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
                 std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
                 std::cout << "                 - test      => test camera" << std::endl;
                 std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
@@ -267,6 +268,8 @@ protected:
             camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
         } else if (cameraType == "biased") {
             camera = std::make_shared<BiasedForwardParallelCamera>();
+        } else if (cameraType == "norm") {
+            camera = std::make_shared<NormalCamera>();
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
         }

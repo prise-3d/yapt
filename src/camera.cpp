@@ -325,4 +325,23 @@ std::shared_ptr<SampleAggregator> FunctionCamera::renderPixel(const Hittable &wo
 }
 #endif
 
+Color NormalCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+    if (depth <= 0)
+        return {0, 0, 0};
+
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, Interval(0.001, infinity), rec))
+        return background;
+
+    const auto n = unit_vector(rec.normal);
+
+    double red = (n.x() + 1.) / 2.;
+    double green = (n.y() + 1.) / 2.;
+    double blue = (n.z() + 1.) / 2.;
+
+    return {red, green, blue};
+}
+
+
 
