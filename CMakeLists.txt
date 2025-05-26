@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(yapt)
 
-option(FUNCTION_PARSING "Function Parsing" OFF)
+option(FUNCTION_PARSING "Function Parsing" ON)
 
 if(FUNCTION_PARSING)
     add_definitions(-DFUNCTION_PARSING)
