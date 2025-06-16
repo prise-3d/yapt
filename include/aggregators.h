@@ -438,7 +438,7 @@ public:
         pixelSampler->begin();
         std::size_t size = pixelSampler->sampleSize();
         samples = std::vector<Sample>(9 * size);
-        // contributions = std::vector<Color>(9 * size);
+
         int i = -1;
         size_t j = size;
 
