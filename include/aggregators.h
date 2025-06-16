@@ -438,21 +438,26 @@ public:
         pixelSampler->begin();
         std::size_t size = pixelSampler->sampleSize();
         samples = std::vector<Sample>(9 * size);
-        contributions = std::vector<Color>(9 * size);
+        // contributions = std::vector<Color>(9 * size);
         int i = -1;
+        size_t j = size;
 
         while (pixelSampler->hasNext()) {
             Sample sample = pixelSampler->get();
             samples[++i] = sample;
-            samples[++i] = {sample.x, sample.y, 1 - sample.dx, sample.dy};
-            samples[++i] = {sample.x, sample.y, -1 - sample.dx, sample.dy};
-            samples[++i] = {sample.x, sample.y, sample.dx, 1 - sample.dy};
-            samples[++i] = {sample.x, sample.y, sample.dx, -1 - sample.dy};
-            samples[++i] = {sample.x, sample.y, 1 - sample.dx, -1 - sample.dy};
-            samples[++i] = {sample.x, sample.y, -1 - sample.dx, -1 - sample.dy};
-            samples[++i] = {sample.x, sample.y, -1 - sample.dx, 1 - sample.dy};
-            samples[++i] = {sample.x, sample.y, 1 - sample.dx, 1 - sample.dy};
+            if (sample.dx < -.5 || sample.dx >= .5 || sample.dy < -.5 || sample.dy >= .5) continue;
+            samples[++j] = {sample.x, sample.y, 1 - sample.dx, sample.dy};
+            samples[++j] = {sample.x, sample.y, -1 - sample.dx, sample.dy};
+            samples[++j] = {sample.x, sample.y, sample.dx, 1 - sample.dy};
+            samples[++j] = {sample.x, sample.y, sample.dx, -1 - sample.dy};
+            samples[++j] = {sample.x, sample.y, 1 - sample.dx, -1 - sample.dy};
+            samples[++j] = {sample.x, sample.y, -1 - sample.dx, -1 - sample.dy};
+            samples[++j] = {sample.x, sample.y, -1 - sample.dx, 1 - sample.dy};
+            samples[++j] = {sample.x, sample.y, 1 - sample.dx, 1 - sample.dy};
         }
+
+        samples.resize(j + 1);
+        contributions = std::vector<Color>(j + 1);
 
         // Voronoi point sites
         std::vector<Point> points(samples.size());
