@@ -137,6 +137,14 @@ class NormalCamera : public ForwardParallelCamera {
     Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
 };
 
+class SinglePixelCamera: public ForwardCamera {
 
+public:
+    SinglePixelCamera(size_t pixel_x, size_t pixel_y);
+    void render(const Hittable &world, const Hittable &lights) override;
+
+    size_t pixel_x;
+    size_t pixel_y;
+};
 
 #endif //YAPT_CAMERA_H

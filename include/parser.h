@@ -89,7 +89,8 @@ protected:
         const std::string silentprefix = "silent";
         const std::string seedprefix = "seed";
 
-        const std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
+        const std::regex pixelcam_coords(R"(cam=pixel-([0-9]+),([0-9]+))");
+        const std::regex singlecam_coords(R"(cam=one-([0-9]+),([0-9]+))");
         std::smatch matches;
 
         for (int i = 1 ; i < argc ; i++) {
@@ -174,16 +175,22 @@ protected:
                 std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
                 std::cout << "                 - test      => test camera" << std::endl;
                 std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
+                std::cout << "                 - one-x,y   => renders only one pixel @coords (x,y)" << std::endl;
                 std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
                 std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
                 std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 return false;
             }
-            if (std::regex_match(parameter, matches, coords)) {
+            if (std::regex_match(parameter, matches, pixelcam_coords)) {
                 cameraType = "pixel";
                 pixel_x = std::stoi(matches[1]);
                 pixel_y = std::stoi(matches[2]);
+            } else if (std::regex_match(parameter, matches, singlecam_coords)) {
+                cameraType = "single";
+                pixel_x = std::stoi(matches[1]);
+                pixel_y = std::stoi(matches[2]);
+                std::cout << " \n\n  SINGLE = " << pixel_x << " ; " << pixel_y << std::endl << std::endl << std::endl;
             }
         }
 
@@ -266,6 +273,8 @@ protected:
 
         if (cameraType == "pixel") {
             camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
+        } else if (cameraType == "single") {
+            camera = std::make_shared<SinglePixelCamera>(pixel_x, pixel_y);
         } else if (cameraType == "biased") {
             camera = std::make_shared<BiasedForwardParallelCamera>();
         } else if (cameraType == "norm") {

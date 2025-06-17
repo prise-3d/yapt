@@ -343,5 +343,27 @@ Color NormalCamera::rayColor(const Ray &r, int depth, const Hittable &world, con
     return {red, green, blue};
 }
 
+void SinglePixelCamera::render(const Hittable &world, const Hittable &lights) {
+    initialize();
+
+    renderPixel(world, lights, pixel_y, pixel_x);
+
+    const size_t idx = 3 * (pixel_x + pixel_y * imageWidth);
+
+    imageData.data[0] = imageData.data[idx];
+    imageData.data[1] = imageData.data[idx + 1];
+    imageData.data[2] = imageData.data[idx + 2];
+
+    imageHeight = 1;
+    imageWidth = 1;
+
+    imageData.data.resize(3);
+    imageData.width = 1;
+    imageData.height = 1;
+}
+
+SinglePixelCamera::SinglePixelCamera(const size_t pixel_x, const size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
+
+
 
 
