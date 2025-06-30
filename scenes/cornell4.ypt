@@ -59,7 +59,7 @@ material : green
 lambertian = .12, .45, .15
 
 material : light
-difflight = 42, 42, 42
+difflight = 75, 75, 75
 
 material : metallic
 metal = .6, .6, .05, .05
