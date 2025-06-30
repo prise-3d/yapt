@@ -70,6 +70,7 @@ shared_ptr<Material> YaptSceneLoader::loadMaterial(std::ifstream &file) {
     std::string line;
     std::getline(file, line);
     std::regex lambertian(R"(lambertian\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+))");
+    std::regex lambertian_checker(R"(lambertian_checker\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+))");
     std::regex difflight(R"(difflight\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+))");
     std::regex metal(R"(metal\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)(?:\s*,\s*([0-9]*\.?[0-9]+))?)");
     std::regex dielectric(R"(dielectric\s*=\s*([0-9]*\.?[0-9]+))");
@@ -81,6 +82,13 @@ shared_ptr<Material> YaptSceneLoader::loadMaterial(std::ifstream &file) {
         Color color = vectorMatch(matches, 1);
         std::clog << "found: Lambertian " << color << std::endl;
         return make_shared<Lambertian>(color);
+        //return make_shared<Lambertian>(make_shared<CheckerTexture>(15, Color(0, 0, 0), color));
+    } else if (std::regex_match(line, matches, lambertian_checker)) {
+        std::cout << "MATCHING" << line << std::endl;
+        double scale = std::stod(matches[1]);
+        Color color1 = vectorMatch(matches, 2);
+        Color color2 = vectorMatch(matches, 5);
+        return make_shared<Lambertian>(make_shared<CheckerTexture>(scale, color1, color2));
     } else
     if (std::regex_match(line, matches, difflight)) {
         Color color = vectorMatch(matches, 1);
