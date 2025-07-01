@@ -83,10 +83,10 @@ quad = 0,0,555 - 0,0,-555 - 0,555,0 - red
 object: ceiling
 quad = 0,555,0 - 555,0,0 - 0,0,555 - white
 
-object: rear_wall
+object: floor
 quad = 0,0,555 - 555,0,0 - 0,0,-555 - white
 
-object: floor
+object: rear_wall
 quad = 555,0,555 - -555,0,0 - 0,555,0 - white
 
 object: source1
