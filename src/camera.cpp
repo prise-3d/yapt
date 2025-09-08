@@ -150,6 +150,29 @@ Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& wor
         return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
     }
 
+    Color colorFromScatter{0, 0, 0};
+
+    // Next Event Estimation (NEE)
+    if (this->use_nee) {
+        // Sample a point on the light
+        auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
+        Ray light_ray(rec.p, light_ptr->generate());
+        double light_pdf = light_ptr->value(light_ray.direction());
+
+        if (light_pdf > 0) {
+            HitRecord light_rec;
+            // Check if the light is visible (no occlusion)
+            if (world.hit(light_ray, Interval(0.001, infinity), light_rec)) {
+                if (light_rec.mat->emitted(light_ray, light_rec, light_rec.u, light_rec.v, light_rec.p).length2() > 0) {
+                    double scattering_pdf = rec.mat->scattering_pdf(r, rec, light_ray);
+                    Color light_emission = light_rec.mat->emitted(light_ray, light_rec, light_rec.u, light_rec.v, light_rec.p);
+                    colorFromScatter += scatterRecord.attenuation * scattering_pdf * light_emission / light_pdf;
+                }
+            }
+        }
+    }
+    
+    // Standard path tracing
     const auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
     const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
 
@@ -158,9 +181,8 @@ Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& wor
 
     const double scatteringPdf = rec.mat->scattering_pdf(r, rec, scattered);
 
-
     const Color sampleColor = rayColor(scattered, depth - 1, world, lights);
-    const Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
+    colorFromScatter += (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
 
     return color_from_emission + colorFromScatter;
 }

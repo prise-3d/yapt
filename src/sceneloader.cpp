@@ -62,12 +62,7 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
         if (std::regex_match(line, matches, lightsexp)) {
             std::clog << "found: Lights " << matches[1] << std::endl;
             scene->add(loadLights(file, lights));
-        } else
-        if (std::regex_match(line, matches, neeexp)) {
-            std::clog << "found: Nee" << std::endl;
-            loadNee(file, camera);
         }
-
     }
 }
 
@@ -208,16 +203,4 @@ shared_ptr<Hittable> YaptSceneLoader::loadLights(std::ifstream &file, shared_ptr
     return lights;
 }
 
-void YaptSceneLoader::loadNee(std::ifstream &file, shared_ptr<Camera> camera) {
-    std::string line;
-    std::getline(file, line);
-    std::regex pattern(R"((on|off))");
-    std::smatch matches;
-    if (std::regex_match(line, matches, pattern)) {
-        if (matches[1] == "on") {
-            camera->use_nee = true;
-        } else {
-            camera->use_nee = false;
-        }
-    }
-}
+

@@ -39,6 +39,7 @@ protected:
     std::size_t monSize = 5;
     bool winClip = false;
     double winRate = .05;
+    bool nee = false;
 
     long seed;
     bool silent = false;
@@ -87,6 +88,7 @@ protected:
         const std::string winrateprefix = "winrate=";
         const std::string silentprefix = "silent";
         const std::string seedprefix = "seed";
+        const std::string neeprefix = "nee=";
 
         const std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
         std::smatch matches;
@@ -132,6 +134,10 @@ protected:
                 std::string b = parameter.substr(winclipprefix.size());
                 winClip = (b == "true");
             }
+            else if (parameter.rfind(neeprefix, 0) == 0) {
+                std::string b = parameter.substr(neeprefix.size());
+                nee = (b == "true");
+            }
             else if (parameter.rfind(silentprefix, 0) == 0) {
                 silent = true;
             }
@@ -175,6 +181,7 @@ protected:
                 std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
                 std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
+                std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
                 return false;
             }
             if (std::regex_match(parameter, matches, coords)) {
@@ -273,8 +280,6 @@ protected:
             return false;
         }
 
-        const bool use_nee = camera->use_nee;
-
         if (cameraType == "pixel") {
             camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
         } else if (cameraType == "biased") {
@@ -300,8 +305,7 @@ protected:
         camera->vup            = Vec3(0, 1, 0);
         camera->defocusAngle   = 0;
         camera->seed           = seed;
-
-
+        camera->use_nee        = nee;
 
         scene.camera = camera;
         scene.lights = lights;
@@ -339,7 +343,8 @@ protected:
             filename += source.stem();
             filename += "-";
 
-            filename += aggregator + "-" + sampler + "-spp-" + std::to_string(spp) + "-w-" + std::to_string(width) + "-d-" + std::to_string(maxDepth) + ".exr";
+            std::string with_nee = nee ? "-nee" : "";
+            filename += aggregator + "-" + sampler + "-spp-" + std::to_string(spp) + "-w-" + std::to_string(width) + "-d-" + std::to_string(maxDepth) + with_nee + ".exr";
             path /= filename;
         }
 
