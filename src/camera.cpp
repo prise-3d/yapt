@@ -162,7 +162,8 @@ Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& wor
         if (light_pdf > 0) {
             HitRecord light_rec;
             // Check if the light is visible (no occlusion)
-            if (world.hit(light_ray, Interval(0.001, infinity), light_rec)) {
+            world.hit(light_ray, Interval(0.001, INFINITY), light_rec);
+            if (light_rec.t > 0.999) {
                 if (light_rec.mat->emitted(light_ray, light_rec, light_rec.u, light_rec.v, light_rec.p).length2() > 0) {
                     double scattering_pdf = rec.mat->scattering_pdf(r, rec, light_ray);
                     Color light_emission = light_rec.mat->emitted(light_ray, light_rec, light_rec.u, light_rec.v, light_rec.p);
