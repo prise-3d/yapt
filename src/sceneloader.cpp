@@ -35,7 +35,6 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
         std::regex object(R"(object\s*:\s*(\w+?))");
         std::regex sceneexp(R"(scene\s*:\s*(\w+?))");
         std::regex lightsexp(R"(lights\s*:\s*(\w+?))");
-        std::regex neeexp(R"(nee:)");
         std::smatch matches;
 
         if (std::regex_match(line, matches, material)) {
