@@ -32,7 +32,6 @@ private:
     shared_ptr<Hittable> loadHittable(std::ifstream &file) override;
     shared_ptr<Hittable> loadScene(std::ifstream &file) override;
     shared_ptr<Hittable> loadLights(std::ifstream &file, shared_ptr<HittableList> lights) override;
-    void loadNee(std::ifstream &file, shared_ptr<Camera> camera);
 
     std::unordered_map<std::string, shared_ptr<Material>> materials;
     std::unordered_map<std::string, shared_ptr<Hittable>> hittables;
