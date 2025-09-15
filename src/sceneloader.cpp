@@ -62,7 +62,6 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
             std::clog << "found: Lights " << matches[1] << std::endl;
             scene->add(loadLights(file, lights));
         }
-
     }
 }
 
@@ -210,3 +209,5 @@ shared_ptr<Hittable> YaptSceneLoader::loadLights(std::ifstream &file, shared_ptr
 
     return lights;
 }
+
+
