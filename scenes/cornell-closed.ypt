@@ -97,7 +97,7 @@ quad = 0,0,555 - 555,0,0 - 0,555,0 - white
 # second dim is vertical up
 # third dim is away from camera
 object: lid
-quad = 0,0,-805 - 5,0,0 - 0,555,0 - white
+quad = 0,0,0 - 555,0,-805 - 0,555,0 - white
 
 object: source1
 quad = 213,554,227 - 130,0,0 - 0,0,105 - light
