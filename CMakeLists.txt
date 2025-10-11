@@ -48,6 +48,27 @@ find_package(CGAL REQUIRED COMPONENTS Core)
 
 find_package(Threads REQUIRED)
 
+# Find Intel MKL
+set(MKL_ROOT "/opt/intel/oneapi/mkl/2025.2")
+set(MKL_INCLUDE_DIR "${MKL_ROOT}/include")
+set(MKL_LIBRARIES "${MKL_ROOT}/lib/intel64/libmkl_intel_lp64.so;${MKL_ROOT}/lib/intel64/libmkl_gnu_thread.so;${MKL_ROOT}/lib/intel64/libmkl_core.so")
+list(APPEND CMAKE_PREFIX_PATH "${MKL_ROOT}/lib/cmake/mkl")
+
+# Find PyTorch/libtorch
+list(APPEND CMAKE_PREFIX_PATH "/opt/libtorch")
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+# Workaround: Remove FALSE from torch/c10 targets (libtorch 2.8.0 packaging bug)
+foreach(_target torch c10 torch_cpu)
+    if(TARGET ${_target})
+        get_target_property(_libs ${_target} INTERFACE_LINK_LIBRARIES)
+        if(_libs)
+            list(REMOVE_ITEM _libs "FALSE")
+            set_target_properties(${_target} PROPERTIES INTERFACE_LINK_LIBRARIES "${_libs}")
+        endif()
+    endif()
+endforeach()
 
 # Add executable
 add_executable(yapt ${SOURCES}
@@ -107,6 +128,7 @@ target_link_libraries(yapt
         CGAL::CGAL
         CGAL::CGAL_Core
         OpenEXR::OpenEXR
+        ${TORCH_LIBRARIES}
 )
 
 
@@ -257,6 +279,7 @@ target_link_libraries(qtvor
         CGAL::CGAL
         CGAL::CGAL_Core
         OpenEXR::OpenEXR
+        ${TORCH_LIBRARIES}
 )
 
 add_executable(eval ${SOURCES}
@@ -318,4 +341,13 @@ target_link_libraries(eval
         CGAL::CGAL
         CGAL::CGAL_Core
         OpenEXR::OpenEXR
+        ${TORCH_LIBRARIES}
+)
+
+add_executable(test_torch
+        src/test_torch.cpp
+)
+
+target_link_libraries(test_torch
+        ${TORCH_LIBRARIES}
 )
