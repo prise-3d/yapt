@@ -17,10 +17,13 @@
 #include <QMouseEvent>
 #include <QWidget>
 
+// Forward declaration
+class CustomTableWidget;
+
 class VoronoiCellItem : public QGraphicsPolygonItem {
 public:
     VoronoiCellItem(const QPolygonF &polygon, const QBrush &brush, const QPointF &site,
-                    const qreal ellipseDiameter, const int rowIndex, QTableWidget *table,
+                    const qreal ellipseDiameter, const int rowIndex, CustomTableWidget *table,
                     QGraphicsItem *parent = nullptr)
         : QGraphicsPolygonItem(polygon, parent),
           sitePoint(site),
@@ -44,56 +47,23 @@ public:
         ellipseItem->setVisible(false);
     }
 
-    void showSite(bool show) {
-        if (ellipseItem) {
-            ellipseItem->setVisible(show);
-        }
+    void saveOriginalPen() {
+        originalPen = pen();
     }
+
+    void showSite(bool show);
 
 protected:
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override {
-        QGraphicsPolygonItem::hoverEnterEvent(event);
-
-        // Show the site point
-        if (ellipseItem) {
-            ellipseItem->setVisible(true);
-        }
-
-        // Highlight the corresponding row in the table
-        if (tableWidget && rowIndex >= 0 && rowIndex < tableWidget->rowCount()) {
-            tableWidget->selectRow(rowIndex);
-            tableWidget->scrollToItem(tableWidget->item(rowIndex, 0));
-        }
-
-        auto views = scene()->views();
-        if (!views.isEmpty()) {
-            if (QGraphicsView *view = views.first()) {
-                view->window()->setWindowTitle(QString("Voronoi Cell - site = (%1, %2)").arg(sitePoint.x()).arg(sitePoint.y()));
-                view->window()->update();
-            }
-        }
-    }
-
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override {
-        QGraphicsPolygonItem::hoverLeaveEvent(event);
-
-        // Hide the site point
-        if (ellipseItem) {
-            ellipseItem->setVisible(false);
-        }
-
-        // Deselect the table row
-        if (tableWidget) {
-            tableWidget->clearSelection();
-        }
-    }
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
 private:
+    QPen originalPen;
     QPointF sitePoint;
     qreal ellipseDiameter;
     QGraphicsEllipseItem *ellipseItem;
     int rowIndex;
-    QTableWidget *tableWidget;
+    CustomTableWidget *tableWidget;
 };
 
 class CustomTableWidget : public QTableWidget {
@@ -104,13 +74,39 @@ public:
         setSelectionMode(QAbstractItemView::ContiguousSelection);
         setMouseTracking(true);
         viewport()->setMouseTracking(true);
+        viewport()->setCursor(Qt::PointingHandCursor);
         connect(this, &QTableWidget::cellEntered, this, &CustomTableWidget::onCellEntered);
+
+        // Style for hovered rows
+        setStyleSheet(R"(
+            QTableWidget {
+                selection-background-color: transparent;
+            }
+        )");
     }
 
     ~CustomTableWidget() override = default;
 
     void setCellItems(const std::vector<VoronoiCellItem*>& cells) {
         cellItems = cells;
+    }
+
+    void setHoveredRow(int row) {
+        if (row != lastHoveredRow) {
+            lastHoveredRow = row;
+            // Scroll to make the row visible
+            if (row >= 0 && row < rowCount()) {
+                scrollTo(model()->index(row, 0), QAbstractItemView::EnsureVisible);
+            }
+            viewport()->update();
+        }
+    }
+
+    void clearHoveredRow() {
+        if (lastHoveredRow >= 0) {
+            lastHoveredRow = -1;
+            viewport()->update();
+        }
     }
 
 protected:
@@ -134,9 +130,29 @@ protected:
 private:
     void onCellEntered(int row, int column) {
         if (row != lastHoveredRow) {
+            // Remove red border from previous row
+            if (lastHoveredRow >= 0) {
+                for (int col = 0; col < columnCount(); ++col) {
+                    QTableWidgetItem* prevItem = item(lastHoveredRow, col);
+                    if (prevItem) {
+                        prevItem->setBackground(QBrush());
+                    }
+                }
+            }
+
             // Hide the previous row's site
             if (lastHoveredRow >= 0 && lastHoveredRow < cellItems.size()) {
                 cellItems[lastHoveredRow]->showSite(false);
+            }
+
+            // Add red border to current row
+            if (row >= 0) {
+                for (int col = 0; col < columnCount(); ++col) {
+                    QTableWidgetItem* currentItem = item(row, col);
+                    if (currentItem) {
+                        currentItem->setData(Qt::UserRole, true);
+                    }
+                }
             }
 
             // Show the current row's site
@@ -145,6 +161,35 @@ private:
             }
 
             lastHoveredRow = row;
+            viewport()->update();
+        }
+    }
+
+    void paintEvent(QPaintEvent* event) override {
+        QTableWidget::paintEvent(event);
+
+        if (lastHoveredRow >= 0 && lastHoveredRow < rowCount()) {
+            QPainter painter(viewport());
+            painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+            painter.setPen(QPen(Qt::red, 2));
+
+            // Start with the color widget column (column 0)
+            QWidget* colorWidget = cellWidget(lastHoveredRow, 0);
+            QRect rowRect;
+            if (colorWidget) {
+                rowRect = QRect(columnViewportPosition(0), rowViewportPosition(lastHoveredRow),
+                               columnWidth(0), rowHeight(lastHoveredRow));
+            } else {
+                rowRect = visualRect(model()->index(lastHoveredRow, 0));
+            }
+
+            // Unite with all other columns
+            for (int col = 1; col < columnCount(); ++col) {
+                rowRect = rowRect.united(visualRect(model()->index(lastHoveredRow, col)));
+            }
+
+            // Expand to ensure the border isn't overlapped by adjacent color widgets
+            painter.drawRect(rowRect.adjusted(-1, -2, 0, 1));
         }
     }
     void copySelectionToClipboard() {
@@ -179,6 +224,66 @@ private:
     std::vector<VoronoiCellItem*> cellItems;
     int lastHoveredRow;
 };
+
+// VoronoiCellItem method implementations (must be after CustomTableWidget definition)
+inline void VoronoiCellItem::showSite(bool show) {
+    if (ellipseItem) {
+        ellipseItem->setVisible(show);
+    }
+
+    // Also highlight the border
+    if (show) {
+        QPen highlightPen(Qt::red);
+        highlightPen.setWidthF(0.003);
+        setPen(highlightPen);
+    } else {
+        setPen(originalPen);
+    }
+}
+
+inline void VoronoiCellItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    QGraphicsPolygonItem::hoverEnterEvent(event);
+
+    // Show the site point
+    if (ellipseItem) {
+        ellipseItem->setVisible(true);
+    }
+
+    // Highlight the border with a thicker red pen
+    QPen highlightPen(Qt::red);
+    highlightPen.setWidthF(0.003);
+    setPen(highlightPen);
+
+    // Highlight the corresponding row in the table
+    if (tableWidget && rowIndex >= 0 && rowIndex < tableWidget->rowCount()) {
+        tableWidget->setHoveredRow(rowIndex);
+    }
+
+    auto views = scene()->views();
+    if (!views.isEmpty()) {
+        if (QGraphicsView *view = views.first()) {
+            view->window()->setWindowTitle(QString("Voronoi Cell - site = (%1, %2)").arg(sitePoint.x()).arg(sitePoint.y()));
+            view->window()->update();
+        }
+    }
+}
+
+inline void VoronoiCellItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    QGraphicsPolygonItem::hoverLeaveEvent(event);
+
+    // Hide the site point
+    if (ellipseItem) {
+        ellipseItem->setVisible(false);
+    }
+
+    // Restore the original border
+    setPen(originalPen);
+
+    // Clear the table row highlight
+    if (tableWidget) {
+        tableWidget->clearHoveredRow();
+    }
+}
 
 inline void displayVoronoi(Scene yaptScene, int x, int y) {
     auto ag = yaptScene.camera->renderPixel(*yaptScene.content, *yaptScene.lights, y, x);
@@ -244,6 +349,8 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     for (auto vertex = delaunay.vertices_begin(); vertex != delaunay.vertices_end(); ++vertex) {
         constexpr qreal ellipse_diameter = .01;
         Point &site = vertex->point();
+
+        // Sites outside the pixel - special treatment, no table row
         if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) {
             auto ellipseItem = new QGraphicsEllipseItem(site.x() - ellipse_diameter / 2,
                                        site.y() - ellipse_diameter / 2,
@@ -254,6 +361,7 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
             ellipseItem->setPen(QPen(Qt::NoPen));
             qScene->addItem(ellipseItem);
 
+            // Don't increment idx, don't add to cellItems
             continue;
         }
 
@@ -276,7 +384,10 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
             QPointF(site.x(), site.y()),
             ellipse_diameter, idx, table);
         cellItem->setPen(voronoiPen);
+        cellItem->saveOriginalPen();  // Save the pen AFTER setting it
         qScene->addItem(cellItem);
+
+        // Only add to cellItems for sites inside the pixel
         cellItems.push_back(cellItem);
         ++idx;
     }
@@ -298,15 +409,12 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     QVBoxLayout *textLayout = new QVBoxLayout(textWidget);
 
     textLayout->addWidget(new QLabel(QString("Pixel: (%1, %2)").arg(x).arg(y)));
-    textLayout->addWidget(table);
-
-
-    textLayout->addStretch();
+    textLayout->addWidget(table, 1);  // stretch factor of 1 to take all available space
 
     QWidget *popupWidget = new QWidget();
     QHBoxLayout *mainLayout = new QHBoxLayout(popupWidget);
-    mainLayout->addWidget(popupView);
-    mainLayout->addWidget(textWidget);
+    mainLayout->addWidget(popupView, 1);      // stretch factor of 1
+    mainLayout->addWidget(textWidget, 1);     // stretch factor of 1 (same height as popupView)
 
     popupWidget->setWindowTitle(QString("Voronoi (%1; %2)").arg(x).arg(y));
     popupWidget->resize(1300, 800);
