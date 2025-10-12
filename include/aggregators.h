@@ -35,10 +35,10 @@ class SampleAggregator {
 public:
     virtual ~SampleAggregator() = default;
     virtual Color aggregate() = 0;
-    virtual void sampleFrom(std::shared_ptr<SamplerFactory>, double x, double y) = 0;
-    virtual void insertContribution(Color color) = 0;
+    virtual void sample_from(std::shared_ptr<SamplerFactory>, double x, double y) = 0;
+    virtual void insert_contribution(Color color) = 0;
     virtual void traverse() = 0;
-    virtual bool hasNext() = 0;
+    virtual bool has_next() = 0;
     virtual Sample next() = 0;
 };
 
@@ -46,11 +46,11 @@ class MCSampleAggregator : public SampleAggregator {
 public:
     MCSampleAggregator();
 
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
     Color aggregate() override;
-    void insertContribution(Color color) override;
+    void insert_contribution(Color color) override;
     void traverse() override;
-    bool hasNext() override;
+    bool has_next() override;
     Sample next() override;
 
 private:
@@ -100,11 +100,11 @@ public:
      * @param x x coordinate of the pixel to sample
      * @param y y coordinate of the pixel to sample
      */
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
     Color aggregate() override;
-    void insertContribution(Color color) override;
+    void insert_contribution(Color color) override;
     void traverse() override;
-    bool hasNext() override;
+    bool has_next() override;
     Sample next() override;
 
     std::vector<Color> contributions;
@@ -141,12 +141,12 @@ public:
 class ClippedVoronoiAggregator: public VoronoiAggregator {
 public:
     ClippedVoronoiAggregator() = default;
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
 };
 
 class InnerVoronoiAggregator: public VoronoiAggregator {
 public:
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
     Color aggregate() override;
 };
 
@@ -158,7 +158,7 @@ class NonZeroVoronoiAggregator: public FilteringVoronoiAggregator {
 public:
     explicit NonZeroVoronoiAggregator(double margin);
 
-    void sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
     Color aggregate() override;
 };
 

@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     scene.camera->imageWidth = 1;
     scene.camera->initialize();
 
-    scene.camera->renderPixel(*scene.content, *scene.lights, 0, 0);
+    scene.camera->render_pixel(*scene.content, *scene.lights, 0, 0);
     auto data = scene.camera->data();
     auto v = data->data[0];
 

@@ -14,7 +14,7 @@ MCSampleAggregator::MCSampleAggregator() {
     contributions_index = 0;
 }
 
-void MCSampleAggregator::sampleFrom(std::shared_ptr<SamplerFactory> factory, const double x, const double y) {
+void MCSampleAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, const double x, const double y) {
     const auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
     const std::size_t size = pixelSampler->sampleSize();
@@ -39,7 +39,7 @@ Color MCSampleAggregator::aggregate() {
     return v / static_cast<double>(samples.size());
 }
 
-void MCSampleAggregator::insertContribution(Color color) {
+void MCSampleAggregator::insert_contribution(Color color) {
     contributions[contributions_index] = color;
 }
 
@@ -49,7 +49,7 @@ void MCSampleAggregator::traverse() {
     else can_traverse = true;
 }
 
-bool MCSampleAggregator::hasNext() {
+bool MCSampleAggregator::has_next() {
     return can_traverse;
 }
 
@@ -167,7 +167,7 @@ Color WinsorAggregator::aggregate() {
 // VoronoiAggregator
 // ============================================================================
 
-void VoronoiAggregator::sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) {
+void VoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) {
     bool isInvalid = false;
 
     do {
@@ -236,7 +236,7 @@ Color VoronoiAggregator::aggregate() {
     return color / total_weight;
 }
 
-void VoronoiAggregator::insertContribution(Color color) {
+void VoronoiAggregator::insert_contribution(Color color) {
     contributions[contributions_index] = color;
 }
 
@@ -246,7 +246,7 @@ void VoronoiAggregator::traverse() {
     else can_traverse = true;
 }
 
-bool VoronoiAggregator::hasNext() {
+bool VoronoiAggregator::has_next() {
     return can_traverse;
 }
 
@@ -365,7 +365,7 @@ Color FilteringMCAggregator::aggregate() {
 // ClippedVoronoiAggregator Implementation
 // ============================================================================
 
-void ClippedVoronoiAggregator::sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) {
+void ClippedVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) {
     // we collect samples
     auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
@@ -411,7 +411,7 @@ void ClippedVoronoiAggregator::sampleFrom(std::shared_ptr<SamplerFactory> factor
 // InnerVoronoiAggregator
 // ============================================================================
 
-void InnerVoronoiAggregator::sampleFrom(std::shared_ptr<SamplerFactory> factory, double x, double y) {
+void InnerVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) {
     // we collect samples
     auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
@@ -485,7 +485,7 @@ Color InnerVoronoiAggregator::aggregate() {
 NonZeroVoronoiAggregator::NonZeroVoronoiAggregator(double margin)
     : FilteringVoronoiAggregator(margin) {}
 
-void NonZeroVoronoiAggregator::sampleFrom(std::shared_ptr<SamplerFactory> factory, const double x, const double y) {
+void NonZeroVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, const double x, const double y) {
     const auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
     const std::size_t size = pixelSampler->sampleSize();

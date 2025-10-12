@@ -287,7 +287,7 @@ inline void VoronoiCellItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 }
 
 inline void displayVoronoi(Scene yaptScene, int x, int y) {
-    auto ag = yaptScene.camera->renderPixel(*yaptScene.content, *yaptScene.lights, y, x);
+    auto ag = yaptScene.camera->render_pixel(*yaptScene.content, *yaptScene.lights, y, x);
 
     auto aggregator = std::dynamic_pointer_cast<VoronoiAggregator>(ag);
 

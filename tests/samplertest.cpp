@@ -31,10 +31,10 @@ TEST_CASE("vor-unit-disk") {
     for (int i = 0; i < N; i++) {
         std::shared_ptr<SampleAggregator> aggregator = aggregatorFactory->create();
 
-        aggregator->sampleFrom(samplerFactory, .5, .5);
-        for (aggregator->traverse(); aggregator->hasNext();) {
+        aggregator->sample_from(samplerFactory, .5, .5);
+        for (aggregator->traverse(); aggregator->has_next();) {
             Sample sample = aggregator->next();
-            aggregator->insertContribution(unit_disk(sample));
+            aggregator->insert_contribution(unit_disk(sample));
         }
 
         Color out =  aggregator->aggregate();
@@ -55,10 +55,10 @@ TEST_CASE("vor-noise") {
     for (int i = 0; i < N; i++) {
         std::shared_ptr<SampleAggregator> aggregator = aggregatorFactory->create();
 
-        aggregator->sampleFrom(samplerFactory, .5, .5);
-        for (aggregator->traverse(); aggregator->hasNext();) {
+        aggregator->sample_from(samplerFactory, .5, .5);
+        for (aggregator->traverse(); aggregator->has_next();) {
             Sample sample = aggregator->next();
-            aggregator->insertContribution(noise(sample));
+            aggregator->insert_contribution(noise(sample));
         }
 
         Color out =  aggregator->aggregate();
@@ -79,10 +79,10 @@ TEST_CASE("mc-unit-disk") {
     for (int i = 0; i < N; i++) {
         std::shared_ptr<SampleAggregator> aggregator = aggregatorFactory->create();
 
-        aggregator->sampleFrom(samplerFactory, .5, .5);
-        for (aggregator->traverse(); aggregator->hasNext();) {
+        aggregator->sample_from(samplerFactory, .5, .5);
+        for (aggregator->traverse(); aggregator->has_next();) {
             Sample sample = aggregator->next();
-            aggregator->insertContribution(unit_disk(sample));
+            aggregator->insert_contribution(unit_disk(sample));
         }
 
         Color out =  aggregator->aggregate();
@@ -103,10 +103,10 @@ TEST_CASE("mc-noise") {
     for (int i = 0; i < N; i++) {
         std::shared_ptr<SampleAggregator> aggregator = aggregatorFactory->create();
 
-        aggregator->sampleFrom(samplerFactory, .5, .5);
-        for (aggregator->traverse(); aggregator->hasNext();) {
+        aggregator->sample_from(samplerFactory, .5, .5);
+        for (aggregator->traverse(); aggregator->has_next();) {
             Sample sample = aggregator->next();
-            aggregator->insertContribution(noise(sample));
+            aggregator->insert_contribution(noise(sample));
         }
 
         Color out =  aggregator->aggregate();
