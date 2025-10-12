@@ -173,12 +173,12 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
                                     .arg(cellColor.blue()));
         table->setCellWidget(row, 0, colorWidget);
 
-        table->setItem(row, 1, new QTableWidgetItem(QString("%1").arg(p.x())));
-        table->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(p.y())));
-        table->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(contribution.x())));
-        table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.y())));
-        table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(contribution.z())));
-        table->setItem(row, 6, new QTableWidgetItem(QString("%1").arg(aggregator->weights[row])));
+        table->setItem(row, 1, new QTableWidgetItem(QString::number(p.x(), 'f', 5)));
+        table->setItem(row, 2, new QTableWidgetItem(QString::number(p.y(), 'f', 5)));
+        table->setItem(row, 3, new QTableWidgetItem(QString::number(contribution.x(), 'f', 5)));
+        table->setItem(row, 4, new QTableWidgetItem(QString::number(contribution.y(), 'f', 5)));
+        table->setItem(row, 5, new QTableWidgetItem(QString::number(contribution.z(), 'f', 5)));
+        table->setItem(row, 6, new QTableWidgetItem(QString::number(aggregator->weights[row], 'f', 5)));
         ++row;
     }
 
@@ -263,7 +263,7 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     mainLayout->addWidget(textWidget);
 
     popupWidget->setWindowTitle(QString("Voronoi (%1; %2)").arg(x).arg(y));
-    popupWidget->resize(1200, 800);
+    popupWidget->resize(1300, 800);
     popupWidget->setAttribute(Qt::WA_DeleteOnClose);
 
     popupWidget->show();
