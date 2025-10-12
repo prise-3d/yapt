@@ -15,6 +15,7 @@
 #include <QHeaderView>
 #include <QClipboard>
 #include <QMouseEvent>
+#include <QWidget>
 
 class VoronoiCellItem : public QGraphicsPolygonItem {
 public:
@@ -22,28 +23,35 @@ public:
                     const qreal ellipseDiameter, const int rowIndex, QTableWidget *table,
                     QGraphicsItem *parent = nullptr)
         : QGraphicsPolygonItem(polygon, parent),
-          originalBrush(brush),
           sitePoint(site),
           ellipseDiameter(ellipseDiameter),
           rowIndex(rowIndex),
           tableWidget(table) {
         setBrush(brush);
         setAcceptHoverEvents(true);
+        setCursor(Qt::PointingHandCursor);
 
         const qreal ellipseRadius = ellipseDiameter / 2.0;
-        /*ellipseItem = new QGraphicsEllipseItem(site.x() - ellipseRadius,
+        ellipseItem = new QGraphicsEllipseItem(site.x() - ellipseRadius,
                                                site.y() - ellipseRadius,
                                                ellipseDiameter,
                                                ellipseDiameter,
                                                this);
-        ellipseItem->setBrush(QBrush(Qt::red));
-        ellipseItem->setPen(QPen(Qt::NoPen));*/
+        ellipseItem->setBrush(QBrush(Qt::white));
+        QPen sitePen(Qt::black);
+        sitePen.setWidthF(0.001);
+        ellipseItem->setPen(sitePen);
+        ellipseItem->setVisible(false);
     }
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override {
-        setBrush(QBrush(Qt::yellow));
         QGraphicsPolygonItem::hoverEnterEvent(event);
+
+        // Show the site point
+        if (ellipseItem) {
+            ellipseItem->setVisible(true);
+        }
 
         // Highlight the corresponding row in the table
         if (tableWidget && rowIndex >= 0 && rowIndex < tableWidget->rowCount()) {
@@ -61,8 +69,12 @@ protected:
     }
 
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override {
-        setBrush(originalBrush);
         QGraphicsPolygonItem::hoverLeaveEvent(event);
+
+        // Hide the site point
+        if (ellipseItem) {
+            ellipseItem->setVisible(false);
+        }
 
         // Deselect the table row
         if (tableWidget) {
@@ -71,7 +83,6 @@ protected:
     }
 
 private:
-    QBrush originalBrush;
     QPointF sitePoint;
     qreal ellipseDiameter;
     QGraphicsEllipseItem *ellipseItem;
@@ -142,8 +153,8 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
 
     // Create the table first so we can pass it to VoronoiCellItem
     size_t size = aggregator->samples.size();
-    auto *table = new CustomTableWidget(size, 6);
-    table->setHorizontalHeaderLabels({"Site x", "Site y", "R",
+    auto *table = new CustomTableWidget(size, 7);
+    table->setHorizontalHeaderLabels({"Color", "Site x", "Site y", "R",
                                   "G", "B", "Area"});
 
     // Populate the table
@@ -152,17 +163,30 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
         Point p = vertex->point();
 
         Color contribution = aggregator->contributions[row];
-        table->setItem(row, 0, new QTableWidgetItem(QString("%1").arg(p.x())));
-        table->setItem(row, 1, new QTableWidgetItem(QString("%1").arg(p.y())));
-        table->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(contribution.x())));
-        table->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(contribution.y())));
-        table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.z())));
-        table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(aggregator->weights[row])));
+
+        // Create a colored widget for the first column
+        QWidget *colorWidget = new QWidget();
+        QColor cellColor = toQColor(contribution);
+        colorWidget->setStyleSheet(QString("background-color: rgb(%1, %2, %3);")
+                                    .arg(cellColor.red())
+                                    .arg(cellColor.green())
+                                    .arg(cellColor.blue()));
+        table->setCellWidget(row, 0, colorWidget);
+
+        table->setItem(row, 1, new QTableWidgetItem(QString("%1").arg(p.x())));
+        table->setItem(row, 2, new QTableWidgetItem(QString("%1").arg(p.y())));
+        table->setItem(row, 3, new QTableWidgetItem(QString("%1").arg(contribution.x())));
+        table->setItem(row, 4, new QTableWidgetItem(QString("%1").arg(contribution.y())));
+        table->setItem(row, 5, new QTableWidgetItem(QString("%1").arg(contribution.z())));
+        table->setItem(row, 6, new QTableWidgetItem(QString("%1").arg(aggregator->weights[row])));
         ++row;
     }
 
     table->horizontalHeader()->setStretchLastSection(true);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    // Set fixed width for the Color column
+    table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    table->setColumnWidth(0, 60);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Now create the graphics scene with cells linked to table rows
