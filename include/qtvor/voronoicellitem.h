@@ -44,6 +44,12 @@ public:
         ellipseItem->setVisible(false);
     }
 
+    void showSite(bool show) {
+        if (ellipseItem) {
+            ellipseItem->setVisible(show);
+        }
+    }
+
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override {
         QGraphicsPolygonItem::hoverEnterEvent(event);
@@ -93,11 +99,19 @@ private:
 class CustomTableWidget : public QTableWidget {
 
 public:
-    CustomTableWidget(int rows, int columns, QWidget* parent = nullptr) : QTableWidget(rows, columns, parent) {
+    CustomTableWidget(int rows, int columns, QWidget* parent = nullptr)
+        : QTableWidget(rows, columns, parent), lastHoveredRow(-1) {
         setSelectionMode(QAbstractItemView::ContiguousSelection);
+        setMouseTracking(true);
+        viewport()->setMouseTracking(true);
+        connect(this, &QTableWidget::cellEntered, this, &CustomTableWidget::onCellEntered);
     }
 
     ~CustomTableWidget() override = default;
+
+    void setCellItems(const std::vector<VoronoiCellItem*>& cells) {
+        cellItems = cells;
+    }
 
 protected:
     void keyPressEvent(QKeyEvent* event) override {
@@ -108,7 +122,31 @@ protected:
         }
     }
 
+    void leaveEvent(QEvent* event) override {
+        QTableWidget::leaveEvent(event);
+        // Hide site when mouse leaves the table
+        if (lastHoveredRow >= 0 && lastHoveredRow < cellItems.size()) {
+            cellItems[lastHoveredRow]->showSite(false);
+        }
+        lastHoveredRow = -1;
+    }
+
 private:
+    void onCellEntered(int row, int column) {
+        if (row != lastHoveredRow) {
+            // Hide the previous row's site
+            if (lastHoveredRow >= 0 && lastHoveredRow < cellItems.size()) {
+                cellItems[lastHoveredRow]->showSite(false);
+            }
+
+            // Show the current row's site
+            if (row >= 0 && row < cellItems.size()) {
+                cellItems[row]->showSite(true);
+            }
+
+            lastHoveredRow = row;
+        }
+    }
     void copySelectionToClipboard() {
         QModelIndexList indexes = selectionModel()->selectedIndexes();
 
@@ -137,6 +175,9 @@ private:
         QClipboard* clipboard = QApplication::clipboard();
         clipboard->setText(copiedText);
     }
+
+    std::vector<VoronoiCellItem*> cellItems;
+    int lastHoveredRow;
 };
 
 inline void displayVoronoi(Scene yaptScene, int x, int y) {
@@ -191,6 +232,7 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
 
     // Now create the graphics scene with cells linked to table rows
     auto *qScene = new QGraphicsScene();
+    std::vector<VoronoiCellItem*> cellItems;
 
     QPen voronoiPen(Qt::blue);
     voronoiPen.setWidthF(.0002);
@@ -235,8 +277,12 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
             ellipse_diameter, idx, table);
         cellItem->setPen(voronoiPen);
         qScene->addItem(cellItem);
+        cellItems.push_back(cellItem);
         ++idx;
     }
+
+    // Connect the cell items to the table for hover highlighting
+    table->setCellItems(cellItems);
 
     qScene->addRect(-.5, -.5, (1.), (1.), pointPen);
 
