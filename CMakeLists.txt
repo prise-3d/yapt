@@ -112,6 +112,7 @@ add_executable(yapt ${SOURCES}
         include/demo.h
         include/importer.h
         include/aggregators.h
+        src/aggregators.cpp
         include/sceneloader.h
         include/path.h
         src/sceneloader.cpp
@@ -191,6 +192,7 @@ add_executable(tests ${TEST_SOURCES}
         include/triangle.h
         tests/triangletest.cpp
         include/aggregators.h
+        src/aggregators.cpp
         tests/samplertest.cpp
         include/sceneloader.h
         src/sceneloader.cpp
@@ -254,6 +256,7 @@ add_executable(qtvor ${SOURCES}
         include/demo.h
         include/importer.h
         include/aggregators.h
+        src/aggregators.cpp
         include/sceneloader.h
         include/path.h
         src/sceneloader.cpp
@@ -323,6 +326,7 @@ add_executable(eval ${SOURCES}
         include/demo.h
         include/importer.h
         include/aggregators.h
+        src/aggregators.cpp
         include/sceneloader.h
         include/path.h
         src/sceneloader.cpp
