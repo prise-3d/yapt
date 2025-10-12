@@ -90,20 +90,8 @@ public:
 };
 
 class TestCamera final : public ForwardParallelCamera {
-
-    [[nodiscard]] Ray getRay(const double x, const double y) const override {
-        double ex, ey;
-        const double dx = modf(x, &ex);
-        const double dy = modf(y, &ey);
-
-        return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
-    }
-
-    [[nodiscard]] Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override {
-        if (-r.origin().x() + r.origin().y() > 0) {
-            return {0, 0, 0};
-        } else return {1, 1, 1};
-    }
+    [[nodiscard]] Ray getRay(const double x, const double y) const override;
+    [[nodiscard]] Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
 };
 
 class CartographyCamera final : public ForwardCamera {

@@ -108,8 +108,6 @@ add_executable(yapt ${SOURCES}
         include/image_data.h
         include/sampler.h
         include/triangle.h
-        src/demo.cpp
-        include/demo.h
         include/importer.h
         include/aggregators.h
         src/aggregators.cpp
@@ -252,8 +250,6 @@ add_executable(qtvor ${SOURCES}
         include/image_data.h
         include/sampler.h
         include/triangle.h
-        src/demo.cpp
-        include/demo.h
         include/importer.h
         include/aggregators.h
         src/aggregators.cpp
@@ -322,8 +318,6 @@ add_executable(eval ${SOURCES}
         include/image_data.h
         include/sampler.h
         include/triangle.h
-        src/demo.cpp
-        include/demo.h
         include/importer.h
         include/aggregators.h
         src/aggregators.cpp

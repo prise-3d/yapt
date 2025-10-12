@@ -423,6 +423,16 @@ void SinglePixelCamera::render(const Hittable &world, const Hittable &lights) {
 
 SinglePixelCamera::SinglePixelCamera(const size_t pixel_x, const size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
 
+Ray TestCamera::getRay(const double x, const double y) const {
+    double ex, ey;
+    const double dx = modf(x, &ex);
+    const double dy = modf(y, &ey);
 
+    return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
+}
 
-
+Color TestCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+    if (-r.origin().x() + r.origin().y() > 0) {
+        return {0, 0, 0};
+    } else return {1, 1, 1};
+}
