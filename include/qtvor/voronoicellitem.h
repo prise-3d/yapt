@@ -16,6 +16,7 @@
 #include <QClipboard>
 #include <QMouseEvent>
 #include <QWidget>
+#include <QScrollBar>
 
 // Forward declaration
 class CustomTableWidget;
@@ -94,9 +95,9 @@ public:
     void setHoveredRow(int row) {
         if (row != lastHoveredRow) {
             lastHoveredRow = row;
-            // Scroll to make the row visible
+            // Scroll to center the row in the viewport for better visibility of the red border
             if (row >= 0 && row < rowCount()) {
-                scrollTo(model()->index(row, 0), QAbstractItemView::EnsureVisible);
+                scrollTo(model()->index(row, 0), QAbstractItemView::PositionAtCenter);
             }
             viewport()->update();
         }
