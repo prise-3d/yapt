@@ -44,7 +44,7 @@ bool Dielectric::scatter(const Ray &r_in, const HitRecord &rec, ScatterRecord &s
     bool cannot_refract = ri * sin_theta > 1.0;
     Vec3 direction;
 
-    if (cannot_refract || reflectance(cos_theta, ri) > randomDouble())
+    if (cannot_refract || reflectance(cos_theta, ri) > random_double())
         direction = reflect(unit_direction, rec.normal);
     else
         direction = refract(unit_direction, rec.normal, ri);

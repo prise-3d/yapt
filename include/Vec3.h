@@ -43,11 +43,11 @@ public:
 
 
     inline static Vec3 random() {
-        return {randomDouble(), randomDouble(), randomDouble()};
+        return {random_double(), random_double(), random_double()};
     }
 
     inline static Vec3 random(double min, double max) {
-        return {randomDouble(min, max), randomDouble(min, max), randomDouble(min, max)};
+        return {random_double(min, max), random_double(min, max), random_double(min, max)};
     }
 
     bool operator==(const Vec3& other) const;
@@ -142,15 +142,15 @@ inline Vec3 refract(const Vec3 &uv, const Vec3 &n, double etai_over_etat) {
 
 inline Vec3 random_in_unit_disk() {
     while (true) {
-        auto p = Vec3(randomDouble(-1, 1), randomDouble(-1, 1), 0);
+        auto p = Vec3(random_double(-1, 1), random_double(-1, 1), 0);
         if (p.length2() < 1)
             return p;
     }
 }
 
 inline Vec3 random_cosine_direction() {
-    auto r1 = randomDouble();
-    auto r2 = randomDouble();
+    auto r1 = random_double();
+    auto r2 = random_double();
 
     auto phi = 2 * pi * r1;
     auto x = cos(phi) * sqrt(r2);

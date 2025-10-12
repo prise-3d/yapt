@@ -23,7 +23,7 @@ public:
 
     bool hit(const Ray &r, Interval ray_t, HitRecord &record) const override;
 
-    [[nodiscard]] AABB boundingBox() const override;
+    [[nodiscard]] AABB bounding_box() const override;
 
     [[nodiscard]] double pdfValue(const Point3 &origin, const Vec3 &direction) const override;
 

@@ -115,7 +115,7 @@ public:
     Composite(shared_ptr<Material> material1, shared_ptr<Material> material2, double ratio): mat1(material1), mat2(material2), ratio(ratio) {}
 
     shared_ptr<Material> get() override {
-        double r = randomDouble();
+        double r = random_double();
         if (r < ratio)  return mat1;
         return mat2;
     }

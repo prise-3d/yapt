@@ -63,16 +63,16 @@ inline bool write_png(const std::string& file_name, const std::vector<uint8_t>& 
 }
 
 void PNGImageExporter::write(std::string fileName) {
-    std::vector<uint8_t> png_data(imageData->data.size());
+    std::vector<uint8_t> png_data(image_data->data.size());
 
-    for (int i = 0 ; i < imageData->data.size() ; ++i) {
-        double value = imageData->data[i];
-        value = linearToGamma(value);
+    for (int i = 0 ; i < image_data->data.size() ; ++i) {
+        double value = image_data->data[i];
+        value = linear_to_gamma(value);
         // Translate the [0,1] component values to the byte range [0,255].
         static const Interval intensity(0.000, 0.999);
         png_data[i] = static_cast<int>(256 * intensity.clamp(value));
     }
-    if (write_png(fileName, png_data, imageData->width, imageData->height)) {
+    if (write_png(fileName, png_data, image_data->width, image_data->height)) {
         std::clog << "Image successfully written to " << fileName << std::endl;
     } else {
         std::clog << "Error while writing to " << fileName << std::endl;
@@ -81,15 +81,15 @@ void PNGImageExporter::write(std::string fileName) {
 
 void EXRImageExporter::write(std::string fileName) {
 
-    const int width = imageData->width;
-    const int height = imageData->height;
+    const int width = image_data->width;
+    const int height = image_data->height;
 
     Imf::Array2D<Imf::Rgba> pixels(width, height);
     for (int y = 0 ; y < height ; y++) {
         for (int x = 0 ; x < width ; x++) {
-            const double r = imageData->data[3*(y * width + x)];
-            const double g = imageData->data[3*(y * width + x) + 1];
-            const double b = imageData->data[3*(y * width + x) + 2];
+            const double r = image_data->data[3*(y * width + x)];
+            const double g = image_data->data[3*(y * width + x) + 1];
+            const double b = image_data->data[3*(y * width + x) + 2];
             pixels[y][x] = Imf::Rgba(r, g, b);
         }
     }

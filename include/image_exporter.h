@@ -16,7 +16,7 @@ class ImageExporter {
 public:
     ImageExporter(): renderTime(0) {}
 
-    void setRenderTime(const std::size_t renderTime) {
+    void set_render_time(const std::size_t renderTime) {
         this->renderTime = renderTime;
     }
 
@@ -33,21 +33,21 @@ protected:
 
 class PNGImageExporter final : public ImageExporter {
 public:
-    explicit PNGImageExporter(const shared_ptr<ImageData> imageData): imageData(imageData) {}
+    explicit PNGImageExporter(const shared_ptr<ImageData> image_data): image_data(image_data) {}
 
     virtual void write(std::string fileName) override;
 
 protected:
-    shared_ptr<ImageData> imageData;
+    shared_ptr<ImageData> image_data;
 };
 
 class EXRImageExporter final : public ImageExporter {
 public:
-    explicit EXRImageExporter(const shared_ptr<ImageData> imageData): imageData(imageData) {}
+    explicit EXRImageExporter(const shared_ptr<ImageData> image_data): image_data(image_data) {}
     void write(std::string fileName) override;
 
 protected:
-    shared_ptr<ImageData> imageData;
+    shared_ptr<ImageData> image_data;
     size_t render_time = 0;
 };
 

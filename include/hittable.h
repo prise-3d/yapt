@@ -38,7 +38,7 @@ public:
 
     virtual bool hit(const Ray &r, Interval ray_t, HitRecord &rec) const = 0;
 
-    [[nodiscard]] virtual AABB boundingBox() const = 0;
+    [[nodiscard]] virtual AABB bounding_box() const = 0;
 
     [[nodiscard]] virtual double pdfValue(const Point3 &origin, const Vec3 &direction) const {
         return 0.0;
@@ -58,7 +58,7 @@ class Translate : public Hittable {
 public:
     Translate(const shared_ptr<Hittable>& object, const Vec3 &offset)
             : object(object), offset(offset) {
-        bbox = object->boundingBox() + offset;
+        bbox = object->bounding_box() + offset;
     }
 
     bool hit(const Ray &r, const Interval ray_t, HitRecord &rec) const override {
@@ -75,7 +75,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB boundingBox() const override { return bbox; }
+    [[nodiscard]] AABB bounding_box() const override { return bbox; }
 
 private:
     shared_ptr<Hittable> object;
@@ -89,7 +89,7 @@ public:
         const auto radians = degrees_to_radians(angle);
         sin_theta = sin(radians);
         cos_theta = cos(radians);
-        bbox = object->boundingBox();
+        bbox = object->bounding_box();
 
         Point3 min(infinity, infinity, infinity);
         Point3 max(-infinity, -infinity, -infinity);
@@ -150,7 +150,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB boundingBox() const override { return bbox; }
+    [[nodiscard]] AABB bounding_box() const override { return bbox; }
 
 private:
     shared_ptr<Hittable> object;

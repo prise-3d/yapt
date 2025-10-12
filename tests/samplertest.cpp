@@ -8,7 +8,7 @@
 #include "aggregators.h"
 
 Color noise(Sample sample) {
-    return {randomDouble(), randomDouble(), randomDouble()};
+    return {random_double(), random_double(), random_double()};
 }
 
 Color unit_disk(Sample sample) {
@@ -22,7 +22,7 @@ Color unit_disk(Sample sample) {
 }
 
 TEST_CASE("vor-unit-disk") {
-    randomSeed();
+    random_seed();
     std::shared_ptr<SamplerFactory> samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(10000, .999);
     std::shared_ptr<AggregatorFactory> aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
 
@@ -46,7 +46,7 @@ TEST_CASE("vor-unit-disk") {
 }
 
 TEST_CASE("vor-noise") {
-    randomSeed();
+    random_seed();
     std::shared_ptr<SamplerFactory> samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(10000, .999);
     std::shared_ptr<AggregatorFactory> aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
 
@@ -70,7 +70,7 @@ TEST_CASE("vor-noise") {
 }
 
 TEST_CASE("mc-unit-disk") {
-    randomSeed();
+    random_seed();
     std::shared_ptr<SamplerFactory> samplerFactory = std::make_shared<TrivialSamplerFactory>(10000);
     std::shared_ptr<AggregatorFactory> aggregatorFactory = std::make_shared<MCAggregatorFactory>();
 
@@ -94,7 +94,7 @@ TEST_CASE("mc-unit-disk") {
 }
 
 TEST_CASE("mc-noise") {
-    randomSeed();
+    random_seed();
     std::shared_ptr<SamplerFactory> samplerFactory = std::make_shared<TrivialSamplerFactory>(10000);
     std::shared_ptr<AggregatorFactory> aggregatorFactory = std::make_shared<MCAggregatorFactory>();
 

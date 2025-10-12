@@ -65,7 +65,7 @@ public:
         return Interval(radius2 - EPSILON, radius2 + EPSILON).contains(r.length2());
     }
 
-    [[nodiscard]] AABB boundingBox() const override { return bbox; }
+    [[nodiscard]] AABB bounding_box() const override { return bbox; }
 
     [[nodiscard]] double pdfValue(const Point3 &origin, const Vec3 &direction) const override {
         // This method only works for stationary spheres.
@@ -112,8 +112,8 @@ private:
     }
 
     static Vec3 random_to_sphere(double radius, double distance_squared) {
-        auto r1 = randomDouble();
-        auto r2 = randomDouble();
+        auto r1 = random_double();
+        auto r2 = random_double();
         auto z = 1 + r2 * (sqrt(1 - radius * radius / distance_squared) - 1);
 
         auto phi = 2 * pi * r1;

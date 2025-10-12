@@ -30,7 +30,7 @@ public:
         bbox = AABB(bbox_diagonal1, bbox_diagonal2);
     }
 
-    [[nodiscard]] AABB boundingBox() const override { return bbox; }
+    [[nodiscard]] AABB bounding_box() const override { return bbox; }
 
     bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
         auto denom = dot(normal, r.direction());
@@ -88,7 +88,7 @@ public:
     }
 
     [[nodiscard]] Vec3 random(const Point3& origin) const override {
-        auto p = Q + (randomDouble() * u) + (randomDouble() * v);
+        auto p = Q + (random_double() * u) + (random_double() * v);
         return p - origin;
     }
 

@@ -402,7 +402,7 @@ protected:
             return false;
         }
 
-        exporter->setRenderTime(static_cast<size_t>(render_time.count()));
+        exporter->set_render_time(static_cast<size_t>(render_time.count()));
 
         exporter->write(path);
 

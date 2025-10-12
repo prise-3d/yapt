@@ -39,11 +39,11 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
 
         if (std::regex_match(line, matches, material)) {
             std::clog << "found: Material " << matches[1] << std::endl;
-            materials[matches[1]] = loadMaterial(file);
+            materials[matches[1]] = load_material(file);
         } else
         if (std::regex_match(line, matches, object)) {
             std::clog << "found: Object " << matches[1] << std::endl;
-            hittables[matches[1]] = loadHittable(file);
+            hittables[matches[1]] = load_hittable(file);
         } else
         if (std::regex_match(line, matches, sceneexp)) {
             std::clog << "found: Scene " << matches[1] << std::endl;
@@ -56,16 +56,16 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
                 std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
             }
 
-            scene->add(loadScene(file));
+            scene->add(load_scene(file));
         } else
         if (std::regex_match(line, matches, lightsexp)) {
             std::clog << "found: Lights " << matches[1] << std::endl;
-            scene->add(loadLights(file, lights));
+            scene->add(load_lights(file, lights));
         }
     }
 }
 
-shared_ptr<Material> YaptSceneLoader::loadMaterial(std::ifstream &file) {
+shared_ptr<Material> YaptSceneLoader::load_material(std::ifstream &file) {
     std::string line;
     std::getline(file, line);
     std::regex lambertian(R"(lambertian\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+))");
@@ -124,7 +124,7 @@ shared_ptr<Material> YaptSceneLoader::loadMaterial(std::ifstream &file) {
     return {};
 }
 
-shared_ptr<Hittable> YaptSceneLoader::loadHittable(std::ifstream &file) {
+shared_ptr<Hittable> YaptSceneLoader::load_hittable(std::ifstream &file) {
     std::string line;
     std::getline(file, line);
     std::smatch matches;
@@ -171,7 +171,7 @@ shared_ptr<Hittable> YaptSceneLoader::loadHittable(std::ifstream &file) {
     return {};
 }
 
-shared_ptr<Hittable> YaptSceneLoader::loadScene(std::ifstream &file) {
+shared_ptr<Hittable> YaptSceneLoader::load_scene(std::ifstream &file) {
     std::string line;
     std::getline(file, line);
     std::regex pattern(R"([\w]+)");
@@ -190,7 +190,7 @@ shared_ptr<Hittable> YaptSceneLoader::loadScene(std::ifstream &file) {
     return make_shared<BVHNode>(scene);
 }
 
-shared_ptr<Hittable> YaptSceneLoader::loadLights(std::ifstream &file, shared_ptr<HittableList> lights) {
+shared_ptr<Hittable> YaptSceneLoader::load_lights(std::ifstream &file, shared_ptr<HittableList> lights) {
     std::string line;
     std::getline(file, line);
     std::regex pattern(R"([\w]+)");

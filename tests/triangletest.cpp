@@ -13,9 +13,9 @@ TEST_CASE("hit in triangle") {
     auto l = make_shared<Lambertian>(nullptr);
     for (int h = 0 ; h < 100 ; h++) {
         Triangle t(
-                {randomDouble(), randomDouble(), randomDouble()},
-                {randomDouble(), randomDouble(), randomDouble()},
-                {randomDouble(), randomDouble(), randomDouble()},
+                {random_double(), random_double(), random_double()},
+                {random_double(), random_double(), random_double()},
+                {random_double(), random_double(), random_double()},
                 l
         );
 
@@ -30,9 +30,9 @@ TEST_CASE("hit in triangle") {
         CHECK(t.hit(Ray(origin, t.v[2] - origin), Interval::future, rec));*/
 
         // miss
-        double x = randomDouble();
-        double y = randomDouble();
-        double z = randomDouble();
+        double x = random_double();
+        double y = random_double();
+        double z = random_double();
 
         Point3 a = (-x * t.v[0] + y * t.v[1] + z * t.v[2]) / (-x + y + z);
         Point3 b = (x * t.v[0] - y * t.v[1] + z * t.v[2]) / (x - y + z);
@@ -43,9 +43,9 @@ TEST_CASE("hit in triangle") {
         CHECK(t.hit(Ray(origin, c - origin), Interval::future, rec) == false);
 
         for (int i = 0; i < 10; i++) {
-            x = randomDouble();
-            y = randomDouble();
-            z = randomDouble();
+            x = random_double();
+            y = random_double();
+            z = random_double();
 
             // inside the triangle
             a = (x * t.v[0] + y * t.v[1] + z * t.v[2]) / (x + y + z);

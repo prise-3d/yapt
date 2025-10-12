@@ -17,12 +17,12 @@ MCSampleAggregator::MCSampleAggregator() {
 void MCSampleAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, const double x, const double y) {
     const auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
-    const std::size_t size = pixelSampler->sampleSize();
+    const std::size_t size = pixelSampler->sample_size();
     samples = std::vector<Sample>(size);
     contributions = std::vector<Color>(size);
 
     std::size_t i = 0;
-    for ( ; pixelSampler->hasNext() ; i++) {
+    for ( ; pixelSampler->has_next() ; i++) {
         samples[i] = pixelSampler->get();
     }
 
@@ -175,11 +175,11 @@ void VoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, dou
         // we collect samples
         const auto pixelSampler = factory->create(x, y);
         pixelSampler->begin();
-        const std::size_t size = pixelSampler->sampleSize();
+        const std::size_t size = pixelSampler->sample_size();
         samples = std::vector<Sample>(size);
         contributions = std::vector<Color>(size);
         std::size_t i = 0;
-        for (; pixelSampler->hasNext(); i++) {
+        for (; pixelSampler->has_next(); i++) {
             const auto sample = pixelSampler->get();
             samples[i] = sample;
             delaunay.insert(Point(sample.dx, sample.dy));
@@ -211,15 +211,7 @@ Color VoronoiAggregator::aggregate() {
 
         Face_handle face = voronoi.dual(vertex);
 
-        Polygon polygon;
-
-        Ccb_halfedge_circulator halfEdge = face->ccb(), done(halfEdge);
-
-        do {
-            polygon.push_back(halfEdge->source()->point());
-        } while (++halfEdge != done);
-
-        const double area = polygon.area();
+        const double area = compute_voronoi_cell_area(face);
         weights[idx] = area;
         total_weight += area;
         ++idx;
@@ -277,6 +269,17 @@ int VoronoiAggregator::nextIndexFrom(const std::size_t start) const {
         search = i < samples.size();
     }
     return value_found;
+}
+
+double VoronoiAggregator::compute_voronoi_cell_area(Face_handle face) const {
+    Polygon polygon;
+    Ccb_halfedge_circulator halfEdge = face->ccb(), done(halfEdge);
+
+    do {
+        polygon.push_back(halfEdge->source()->point());
+    } while (++halfEdge != done);
+
+    return polygon.area();
 }
 
 // ============================================================================
@@ -369,13 +372,13 @@ void ClippedVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> facto
     // we collect samples
     auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
-    std::size_t size = pixelSampler->sampleSize();
+    std::size_t size = pixelSampler->sample_size();
     samples = std::vector<Sample>(9 * size);
 
     int i = -1;
     size_t j = size;
 
-    while (pixelSampler->hasNext()) {
+    while (pixelSampler->has_next()) {
         Sample sample = pixelSampler->get();
         samples[++i] = sample;
         if (sample.dx < -.5 || sample.dx >= .5 || sample.dy < -.5 || sample.dy >= .5) continue;
@@ -415,11 +418,11 @@ void InnerVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory
     // we collect samples
     auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
-    std::size_t size = pixelSampler->sampleSize();
+    std::size_t size = pixelSampler->sample_size();
     samples = std::vector<Sample>(9 * size);
     contributions = std::vector<Color>(9 * size);
 
-    for (int i = 0; pixelSampler->hasNext(); i++) {
+    for (int i = 0; pixelSampler->has_next(); i++) {
         samples[i] = pixelSampler->get();
     }
 
@@ -460,9 +463,8 @@ Color InnerVoronoiAggregator::aggregate() {
             polygon.push_back(p);
         } while (valid && ++halfEdge != face->ccb());
         if (!valid) continue;
-        double area = polygon.area();
 
-        if (area < 0) area = -area;
+        double area = std::abs(polygon.area());
         weights[idx] = area;
         total_weight += area;
         ++idx;
@@ -488,12 +490,12 @@ NonZeroVoronoiAggregator::NonZeroVoronoiAggregator(double margin)
 void NonZeroVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, const double x, const double y) {
     const auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
-    const std::size_t size = pixelSampler->sampleSize();
+    const std::size_t size = pixelSampler->sample_size();
     samples = std::vector<Sample>(size);
     contributions = std::vector<Color>(size);
 
     std::size_t i = 0;
-    for ( ; pixelSampler->hasNext() ; i++) {
+    for ( ; pixelSampler->has_next() ; i++) {
         samples[i] = pixelSampler->get();
     }
 

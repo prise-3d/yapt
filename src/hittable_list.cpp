@@ -17,7 +17,7 @@ void HittableList::clear() { objects.clear(); }
 
 void HittableList::add(const shared_ptr<Hittable> &object) {
     objects.push_back(object);
-    bbox = AABB(bbox, object->boundingBox());
+    bbox = AABB(bbox, object->bounding_box());
 }
 
 bool HittableList::hit(const Ray &r, Interval ray_t, HitRecord &record) const {
@@ -36,7 +36,7 @@ bool HittableList::hit(const Ray &r, Interval ray_t, HitRecord &record) const {
     return hit_anything;
 }
 
-AABB HittableList::boundingBox() const { return bbox; }
+AABB HittableList::bounding_box() const { return bbox; }
 
 double HittableList::pdfValue(const Point3 &origin, const Vec3 &direction) const {
     auto weight = 1.0 / objects.size();
@@ -50,5 +50,5 @@ double HittableList::pdfValue(const Point3 &origin, const Vec3 &direction) const
 
 Vec3 HittableList::random(const Point3 &origin) const {
     auto int_size = int(objects.size());
-    return objects[randomInt(0, int_size - 1)]->random(origin);
+    return objects[random_int(0, int_size - 1)]->random(origin);
 }

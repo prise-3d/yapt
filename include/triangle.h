@@ -56,7 +56,7 @@ public:
         bbox = AABB(Point3(minX, minY, minZ), Point3(maxX, maxY, maxZ));
     }
 
-    [[nodiscard]] AABB boundingBox() const override {
+    [[nodiscard]] AABB bounding_box() const override {
         return bbox;
     }
 
@@ -72,9 +72,9 @@ public:
     }
 
     [[nodiscard]] Vec3 random(const Point3 &origin) const override {
-        auto r = randomDouble();
-        auto s = randomDouble();
-        auto t = randomDouble();
+        auto r = random_double();
+        auto s = random_double();
+        auto t = random_double();
         Point3 inside = (r * v[0] + s * v[1] + t * v[2]) / (r + s + t);
         return inside - origin;
     }

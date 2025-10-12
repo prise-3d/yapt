@@ -102,7 +102,7 @@ void ForwardCamera::persist_color_to_data(const size_t row, const size_t column,
 
 std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &world, const Hittable &lights,
                                                              const size_t row, const size_t column) {
-    randomSeed(combine(seed, row, column));
+    random_seed(combine(seed, row, column));
 
     const auto aggregator = samplerAggregator->create();
     aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));

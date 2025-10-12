@@ -44,7 +44,7 @@ public:
 
         auto ray_length = r.direction().length();
         auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-        auto hit_distance = neg_inv_density * log(randomDouble());
+        auto hit_distance = neg_inv_density * log(random_double());
 
         if (hit_distance > distance_inside_boundary)
             return false;
@@ -60,7 +60,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] AABB boundingBox() const override { return boundary->boundingBox(); }
+    [[nodiscard]] AABB bounding_box() const override { return boundary->bounding_box(); }
 
 private:
     shared_ptr<Hittable> boundary;

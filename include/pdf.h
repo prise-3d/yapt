@@ -86,7 +86,7 @@ public:
     }
 
     [[nodiscard]] Vec3 generate() const override {
-        if (randomDouble() < 0.5)
+        if (random_double() < 0.5)
             return p[0]->generate();
         else
             return p[1]->generate();

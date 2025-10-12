@@ -25,9 +25,9 @@ public:
     PixelSampler(double x, double y): x(x), y(y) {}
     virtual ~PixelSampler() = default;
     virtual void begin() = 0;
-    virtual bool hasNext() = 0;
+    virtual bool has_next() = 0;
     virtual Sample get() = 0;
-    virtual std::size_t sampleSize() = 0;
+    virtual std::size_t sample_size() = 0;
 
 public:
     double x;
@@ -42,14 +42,14 @@ public:
         index = 0;
     }
 
-    bool hasNext() override {
+    bool has_next() override {
         return index < size;
     }
 
     Sample get() override {
         index++;
-        _dx = randomDouble() - .5;
-        _dy = randomDouble() - .5;
+        _dx = random_double() - .5;
+        _dy = random_double() - .5;
         return {
             x + _dx,
             y + _dy,
@@ -58,7 +58,7 @@ public:
         };
     }
 
-    std::size_t sampleSize() override {
+    std::size_t sample_size() override {
         return this->size;
     }
 
@@ -98,7 +98,7 @@ public:
         index = 0;
     }
 
-    size_t sampleSize() override {
+    size_t sample_size() override {
         return total_samples_amount;
     }
 
@@ -115,7 +115,7 @@ public:
         return sample;
     };
 
-    bool hasNext() override { return index < total_samples_amount; }
+    bool has_next() override { return index < total_samples_amount; }
 
 private:
     size_t sqrtSpp;
@@ -146,8 +146,8 @@ public:
         for (auto row = 0; row < sqrtSpp; ++row) {
             const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
             for (auto column = 0; column < sqrtSpp; ++column) {
-                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + randomDouble(-margin, margin);
-                y_samples[row * sqrtSpp + column] = y_value + randomDouble(-margin, margin);
+                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + random_double(-margin, margin);
+                y_samples[row * sqrtSpp + column] = y_value + random_double(-margin, margin);
             }
         }
     }
@@ -156,7 +156,7 @@ public:
         index = 0;
     }
 
-    size_t sampleSize() override {
+    size_t sample_size() override {
         return total_samples_amount;
     }
 
@@ -173,7 +173,7 @@ public:
         return sample;
     };
 
-    bool hasNext() override { return index < total_samples_amount; }
+    bool has_next() override { return index < total_samples_amount; }
 
 private:
     size_t sqrtSpp;
@@ -204,8 +204,8 @@ public:
         for (auto row = 0; row < sqrtSpp; ++row) {
             const auto y_value = margin + static_cast<double>(row) / n_steps - .5;
             for (auto column = 0; column < sqrtSpp; ++column) {
-                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + randomDouble(-margin, margin);
-                y_samples[row * sqrtSpp + column] = y_value + randomDouble(-margin, margin);
+                x_samples[row * sqrtSpp + column] = margin + static_cast<double>(column) / n_steps - .5 + random_double(-margin, margin);
+                y_samples[row * sqrtSpp + column] = y_value + random_double(-margin, margin);
             }
         }
 
@@ -229,7 +229,7 @@ public:
         index = 0;
     }
 
-    size_t sampleSize() override {
+    size_t sample_size() override {
         return total_samples_amount;
     }
 
@@ -246,7 +246,7 @@ public:
         return sample;
     };
 
-    bool hasNext() override { return index < total_samples_amount; }
+    bool has_next() override { return index < total_samples_amount; }
 
 private:
     size_t sqrtSpp;
@@ -312,10 +312,10 @@ public:
         total_samples_amount = Poisson(intensity).next();
     }
 
-    bool hasNext() override { return index < total_samples_amount; }
+    bool has_next() override { return index < total_samples_amount; }
     Sample get() override {
-        _dx = randomDouble(min_value, max_value);
-        _dy = randomDouble(min_value, max_value);
+        _dx = random_double(min_value, max_value);
+        _dy = random_double(min_value, max_value);
         Sample sample{
                 x + _dx,
                 y + _dy,
@@ -325,7 +325,7 @@ public:
         ++index;
         return sample;
     };
-    size_t sampleSize() override { return total_samples_amount; }
+    size_t sample_size() override { return total_samples_amount; }
 
 private:
     double intensity;
@@ -387,7 +387,7 @@ public:
         index = 0;
     }
 
-    size_t sampleSize() override {
+    size_t sample_size() override {
         return total_samples_amount;
     }
 
@@ -404,7 +404,7 @@ public:
         return sample;
     };
 
-    bool hasNext() override { return index < total_samples_amount; }
+    bool has_next() override { return index < total_samples_amount; }
 
 private:
     size_t intensity;
@@ -469,23 +469,23 @@ public:
         index = 0;
     }
 
-    bool hasNext() override { return index < intensity; }
+    bool has_next() override { return index < intensity; }
 
     Sample get() override {
         if (index < number_of_samples) {
-            _dx = randomDouble() - .5;
-            _dy = randomDouble() - .5;
+            _dx = random_double() - .5;
+            _dy = random_double() - .5;
         } else {
-            if (randomDouble() < .5) {
-                _dx = randomDouble(-.5 - epsilon_margin, .5 + epsilon_margin);
-                _dy = randomDouble(.5, .5 + epsilon_margin);
+            if (random_double() < .5) {
+                _dx = random_double(-.5 - epsilon_margin, .5 + epsilon_margin);
+                _dy = random_double(.5, .5 + epsilon_margin);
             } else {
-                _dx = randomDouble(.5, .5 + epsilon_margin);
-                _dy = randomDouble(-.5 - epsilon_margin, .5 + epsilon_margin);
+                _dx = random_double(.5, .5 + epsilon_margin);
+                _dy = random_double(-.5 - epsilon_margin, .5 + epsilon_margin);
             }
 
-            if (randomDouble() < .5) _dx = -_dx;
-            if (randomDouble() < .5) _dy = -_dy;
+            if (random_double() < .5) _dx = -_dx;
+            if (random_double() < .5) _dy = -_dy;
         }
         ++index;
         return {
@@ -496,7 +496,7 @@ public:
         };
     }
 
-    size_t sampleSize() override { return intensity; }
+    size_t sample_size() override { return intensity; }
 
     double epsilon_margin;
 
