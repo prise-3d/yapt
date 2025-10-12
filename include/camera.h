@@ -43,7 +43,7 @@ public:
 
     virtual void render(const Hittable &world, const Hittable &lights) = 0;
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
-    virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+    virtual std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                           size_t column) = 0;
 
     virtual void initialize();
@@ -60,7 +60,7 @@ protected:
 
 
     [[nodiscard]] Point3 defocusDiskSample() const;
-    [[nodiscard]] virtual Ray getRay(double x, double y) const;
+    [[nodiscard]] virtual Ray get_ray(double x, double y) const;
 };
 
 class ForwardCamera: public Camera {
@@ -68,8 +68,10 @@ public:
     ~ForwardCamera() override = default;
 
     void render(const Hittable &world, const Hittable &lights) override;
-    virtual void renderLine(const Hittable &world, const Hittable &lights, size_t j);
-    virtual std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+    virtual void render_line(const Hittable &world, const Hittable &lights, size_t j);
+    void persist_color_to_data(size_t row, size_t column, Color pixel_color);
+
+    virtual std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                           size_t column) override;
 
 protected:
@@ -85,12 +87,12 @@ public:
 
 class BiasedForwardParallelCamera: public ForwardParallelCamera {
 public:
-    std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+    std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                   size_t column) override;
 };
 
 class TestCamera final : public ForwardParallelCamera {
-    [[nodiscard]] Ray getRay(const double x, const double y) const override;
+    [[nodiscard]] Ray get_ray(const double x, const double y) const override;
     [[nodiscard]] Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
 };
 
@@ -101,7 +103,7 @@ public:
 
     CartographyCamera(size_t pixel_x, size_t pixel_y);
     void render(const Hittable &world, const Hittable &lights) override;
-    std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row,
+    std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                   size_t column) override;
 
     void initialize() override;
@@ -113,7 +115,7 @@ class FunctionCamera final : public ForwardParallelCamera {
 #ifdef FUNCTION_PARSING
     FunctionCamera(shared_ptr<Function> function);
 #endif
-    std::shared_ptr<SampleAggregator> renderPixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
+    std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
 
 
 protected:

@@ -58,7 +58,7 @@ void Camera::initialize() {
  * @param y y (fractional) coordinate of a pixel. 0 <= y < imageHeight
  * @return a ray traversing this fractional pixel.
  */
-Ray Camera::getRay(double x, double y) const {
+Ray Camera::get_ray(double x, double y) const {
     auto pixelSample = pixel00_loc +
                        x * pixel_delta_u +
                        y * pixel_delta_v;
@@ -80,9 +80,9 @@ Point3 Camera::defocusDiskSample() const {
 }
 
 
-void ForwardCamera::renderLine(const Hittable &world, const Hittable &lights, size_t j) {
+void ForwardCamera::render_line(const Hittable &world, const Hittable &lights, size_t j) {
     for (size_t column = 0; column < imageWidth; ++column) {
-        renderPixel(world, lights, j, column);
+        render_pixel(world, lights, j, column);
     }
 }
 
@@ -92,30 +92,34 @@ inline uint64_t combine(const uint32_t seed, const uint32_t x, const uint32_t y)
     return combined;
 }
 
-std::shared_ptr<SampleAggregator> ForwardCamera::renderPixel(const Hittable &world, const Hittable &lights,
-                                                             const size_t row, const size_t column) {
-    randomSeed(combine(seed, row, column));
-
-    const auto aggregator = samplerAggregator->create();
-    aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
-    aggregator->traverse();
-
-    while (aggregator-> hasNext()) {
-        Sample sample = aggregator->next();
-
-        Ray r = getRay(sample.x, sample.y);
-
-        const Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
-        aggregator->insertContribution(color);
-    }
-
-    const Color pixel_color = aggregator->aggregate();
-
+void ForwardCamera::persist_color_to_data(const size_t row, const size_t column, const Color pixel_color) {
     const size_t idx = 3 * (column + row * imageWidth);
 
     imageData.data[idx]     = pixel_color.x();  // R
     imageData.data[idx + 1] = pixel_color.y();  // G
     imageData.data[idx + 2] = pixel_color.z();  // B
+}
+
+std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &world, const Hittable &lights,
+                                                             const size_t row, const size_t column) {
+    randomSeed(combine(seed, row, column));
+
+    const auto aggregator = samplerAggregator->create();
+    aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    aggregator->traverse();
+
+    while (aggregator-> has_next()) {
+        Sample sample = aggregator->next();
+
+        Ray r = get_ray(sample.x, sample.y);
+
+        const Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+        aggregator->insert_contribution(color);
+    }
+
+    const Color pixel_color = aggregator->aggregate();
+
+    persist_color_to_data(row, column, pixel_color);
 
     return aggregator;
 }
@@ -126,7 +130,7 @@ void ForwardCamera::render(const Hittable& world, const Hittable& lights) {
 
     for (int j = 0; j < imageHeight; j++) {
         std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
-        renderLine(world, lights, j);
+        render_line(world, lights, j);
     }
 }
 
@@ -264,7 +268,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
             const int end_j = task.second;
 
             for (int j = start_j; j <= end_j; ++j) {
-                renderLine(world, lights, j);
+                render_line(world, lights, j);
             }
         }
     };
@@ -285,7 +289,7 @@ CartographyCamera::CartographyCamera(const size_t pixel_x, const size_t pixel_y)
 
 void CartographyCamera::render(const Hittable &world, const Hittable &lights) {
     initialize();
-    renderPixel(world, lights, pixel_y, pixel_x);
+    render_pixel(world, lights, pixel_y, pixel_x);
 }
 
 void CartographyCamera::initialize() {
@@ -299,38 +303,34 @@ void CartographyCamera::initialize() {
  * @param row
  * @param column
  */
-std::shared_ptr<SampleAggregator> CartographyCamera::renderPixel(const Hittable &world, const Hittable &lights,
+std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Hittable &world, const Hittable &lights,
                                                                  const size_t row, const size_t column) {
     std::clog << "Rendering pixel @ " << column << ", " << row << std::endl;
     for (size_t y = 0 ; y < imageHeight ; ++y) {
         const double dy = static_cast<double>(y) / static_cast<double>(imageHeight) - .5;
         for (size_t x = 0 ; x < imageWidth ; ++x) {
             const double dx = static_cast<double>(x) / static_cast<double>(imageWidth) - .5;
-            Ray r = getRay(dx + static_cast<double>(column), dy + static_cast<double>(row));
+            Ray r = get_ray(dx + static_cast<double>(column), dy + static_cast<double>(row));
 
-            Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+            Color pixel_color = rayColor(r, static_cast<int>(maxDepth), world, lights);
 
-            const size_t idx = 3 * (x + y * imageWidth);
-
-            imageData.data[idx]     = color.x();  // R
-            imageData.data[idx + 1] = color.y();  // G
-            imageData.data[idx + 2] = color.z();  // B
+            persist_color_to_data(row, column, pixel_color);
         }
     }
 
     return nullptr;
 }
 
-std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::renderPixel(
+std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
     const Hittable &world, const Hittable &lights, size_t row, size_t column) {
     const auto aggregator = samplerAggregator->create();
-    aggregator->sampleFrom(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
     aggregator->traverse();
 
-    while (aggregator-> hasNext()) {
+    while (aggregator-> has_next()) {
         Sample sample = aggregator->next();
 
-        Ray r = getRay(sample.x, sample.y);
+        Ray r = get_ray(sample.x, sample.y);
 
         size_t retries = 0;
         Color color;
@@ -338,16 +338,12 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::renderPixel(
         do {
             color = rayColor(r, static_cast<int>(maxDepth), world, lights);
         } while (color.near_zero() && ++retries < 20);
-        aggregator->insertContribution(color);
+        aggregator->insert_contribution(color);
     }
 
     const Color pixel_color = aggregator->aggregate();
 
-    const size_t idx = 3 * (column + row * imageWidth);
-
-    imageData.data[idx] = pixel_color.x();      // R
-    imageData.data[idx + 1] = pixel_color.y();  // G
-    imageData.data[idx + 2] = pixel_color.z();  // B
+    persist_color_to_data(row, column, pixel_color);
 
     return aggregator;
 }
@@ -374,11 +370,7 @@ std::shared_ptr<SampleAggregator> FunctionCamera::renderPixel(const Hittable &wo
 
     const Color pixel_color = aggregator->aggregate();
 
-    const size_t idx = 3 * (column + row * imageWidth);
-
-    imageData.data[idx]     = pixel_color.x();  // R
-    imageData.data[idx + 1] = pixel_color.y();  // G
-    imageData.data[idx + 2] = pixel_color.z();  // B
+    persist_color_to_data(row, column, pixel_color);
 
     return aggregator;
 }
@@ -405,7 +397,7 @@ Color NormalCamera::rayColor(const Ray &r, int depth, const Hittable &world, con
 void SinglePixelCamera::render(const Hittable &world, const Hittable &lights) {
     initialize();
 
-    renderPixel(world, lights, pixel_y, pixel_x);
+    render_pixel(world, lights, pixel_y, pixel_x);
 
     const size_t idx = 3 * (pixel_x + pixel_y * imageWidth);
 
@@ -423,7 +415,7 @@ void SinglePixelCamera::render(const Hittable &world, const Hittable &lights) {
 
 SinglePixelCamera::SinglePixelCamera(const size_t pixel_x, const size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
 
-Ray TestCamera::getRay(const double x, const double y) const {
+Ray TestCamera::get_ray(const double x, const double y) const {
     double ex, ey;
     const double dx = modf(x, &ex);
     const double dy = modf(y, &ey);
