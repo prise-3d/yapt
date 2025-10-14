@@ -275,19 +275,6 @@ protected:
             aggregatorFactory = std::make_shared<WinsorAggregatorFactory>(winRate, winClip);
         }
 
-        if (source.extension() == ".ypt") {
-            YaptSceneLoader loader;
-            loader.load(source, content, lights, camera);
-            if (silent) {
-                freopen("/dev/tty", "w", stderr);
-            }
-        } else if (source.extension() == ".obj") {
-            camera->background = Color(1., .5, .5);
-        } else {
-            std::cerr << "Unrecognized source extension: " << source.extension() << std::endl;
-            return false;
-        }
-
         if (cameraType == "pixel") {
             camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
         } else if (cameraType == "single") {
@@ -299,7 +286,6 @@ protected:
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
         }
-
 
         if (width == 0) width = 900;
 
@@ -334,6 +320,7 @@ protected:
         } else if (source.extension() == ".obj") {
             camera->background = Color(1., .5, .5);
         }
+
 #ifdef FUNCTION_PARSING
         else if (source.extension() == ".func") {
 
