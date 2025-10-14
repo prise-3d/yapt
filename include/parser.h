@@ -310,14 +310,20 @@ protected:
         camera->imageWidth = width;
 
         camera->aspect_ratio   = 1.0;
-        camera->background = Color(0, 0, 0);
+        camera->background     = Color(0, 0, 0);
         camera->vfov           = 40;
         camera->lookFrom       = Point3(278, 278, -800);
         camera->lookAt         = Point3(278, 278, 0);
         camera->vup            = Vec3(0, 1, 0);
         camera->defocusAngle   = 0;
         camera->seed           = seed;
-        camera->use_nee        = nee;
+
+        // Set the sampling strategy based on nee flag
+        if (nee) {
+            camera->samplingStrategy = make_shared<NEESamplingStrategy>();
+        } else {
+            camera->samplingStrategy = make_shared<MixtureSamplingStrategy>();
+        }
 
         if (source.extension() == ".ypt") {
             YaptSceneLoader loader;

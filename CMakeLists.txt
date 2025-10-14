@@ -117,6 +117,8 @@ add_executable(yapt ${SOURCES}
         src/path.cpp
         include/parser.h
         include/scene.h
+        include/sampling_strategy.h
+        src/sampling_strategy.cpp
 )
 
 find_package(Threads REQUIRED)
@@ -195,6 +197,8 @@ add_executable(tests ${TEST_SOURCES}
         include/sceneloader.h
         src/sceneloader.cpp
         src/path.cpp
+        include/sampling_strategy.h
+        src/sampling_strategy.cpp
 )
 
 # Link external libraries to tests executable if needed
@@ -265,6 +269,8 @@ add_executable(qtvor ${SOURCES}
         include/qtvor/zoomableimageview.h
         include/qtvor/utils.h
         include/functions.h
+        include/sampling_strategy.h
+        src/sampling_strategy.cpp
 )
 
 target_link_libraries(qtvor
@@ -329,6 +335,8 @@ add_executable(eval ${SOURCES}
         include/scene.h
         include/functions.h
         src/eval.cpp
+        include/sampling_strategy.h
+        src/sampling_strategy.cpp
 )
 
 target_link_libraries(eval

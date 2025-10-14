@@ -10,6 +10,7 @@
 #include "image_data.h"
 #include "sampler.h"
 #include "aggregators.h"
+#include "sampling_strategy.h"
 
 #ifdef FUNCTION_PARSING
     #include "functions.h"
@@ -39,7 +40,7 @@ public:
     double focusDist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
     long seed = 0;
-    bool use_nee = false;
+    shared_ptr<SamplingStrategy> samplingStrategy;
 
     virtual void render(const Hittable &world, const Hittable &lights) = 0;
     shared_ptr<ImageData> data() {return make_shared<ImageData>(imageData);}
