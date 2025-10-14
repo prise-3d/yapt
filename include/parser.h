@@ -87,7 +87,7 @@ protected:
         const std::string winclipprefix = "winclip=";
         const std::string winrateprefix = "winrate=";
         const std::string silentprefix = "silent";
-        const std::string seedprefix = "seed";
+        const std::string seedprefix = "seed=";
         const std::string neeprefix = "nee=";
 
         const std::regex pixelcam_coords(R"(cam=pixel-([0-9]+),([0-9]+))");
@@ -143,7 +143,7 @@ protected:
                 silent = true;
             }
             else if (parameter.rfind(seedprefix, 0) == 0) {
-                seed = std::stol(parameter.substr(widthprefix.size()));
+                seed = std::stol(parameter.substr(seedprefix.size()));
             }
             else if (parameter.rfind("help", 0) == 0) {
                 std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
