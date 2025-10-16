@@ -30,7 +30,7 @@ public:
     }
 
     explicit Function(std::string str_fn) {
-        randomSeed(100);
+        random_seed(100);
         std::cout << "compiling function " << str_fn << std::endl;
         symbol_table.add_variable("x", _x);
         symbol_table.add_variable("y", _y);
