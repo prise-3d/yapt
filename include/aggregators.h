@@ -54,7 +54,7 @@ public:
     Sample next() override;
 
 private:
-    int nextIndexFrom(std::size_t start);
+    int next_index_from(std::size_t start);
 
 protected:
     std::vector<Sample> samples;
@@ -114,7 +114,7 @@ public:
     std::vector<double> weights;
 
 protected:
-    int nextIndexFrom(std::size_t start) const;
+    int next_index_from(std::size_t start) const;
     double compute_voronoi_cell_area(Face_handle face) const;
 
     int current_index = 0;
