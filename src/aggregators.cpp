@@ -44,7 +44,7 @@ void MCSampleAggregator::insert_contribution(Color color) {
 }
 
 void MCSampleAggregator::traverse() {
-    current_index = nextIndexFrom(-1);
+    current_index = next_index_from(-1);
     if (current_index < 0) can_traverse = false;
     else can_traverse = true;
 }
@@ -55,31 +55,22 @@ bool MCSampleAggregator::has_next() {
 
 Sample MCSampleAggregator::next() {
     contributions_index = current_index;
-    const Sample sample = samples[current_index];
-    current_index = nextIndexFrom(current_index);
+    const int idx = current_index;
+    current_index = next_index_from(current_index);
     if (current_index < 0) can_traverse = false;
     else can_traverse = true;
 
-    return sample;
+    return samples[idx];
 }
 
-int MCSampleAggregator::nextIndexFrom(std::size_t start) {
-    size_t i = start + 1;
-    int value_found = -1;
-
-    bool search = i < samples.size();
-    bool found = false;
-
-    while (search && !found) {
-        Sample sample = samples[i];
+int MCSampleAggregator::next_index_from(std::size_t start) {
+    for (size_t i = start + 1; i < samples.size(); ++i) {
+        const Sample &sample = samples[i];
         if (sample.dx > -.5 && sample.dx < .5 && sample.dy > -.5 && sample.dy < .5) {
-            found = true;
-            value_found = static_cast<int>(i);
+            return static_cast<int>(i);
         }
-        ++i;
-        search = i < samples.size();
     }
-    return value_found;
+    return -1;
 }
 
 // ============================================================================
@@ -233,7 +224,7 @@ void VoronoiAggregator::insert_contribution(Color color) {
 }
 
 void VoronoiAggregator::traverse() {
-    current_index = nextIndexFrom(-1);
+    current_index = next_index_from(-1);
     if (current_index < 0) can_traverse = false;
     else can_traverse = true;
 }
@@ -244,31 +235,22 @@ bool VoronoiAggregator::has_next() {
 
 Sample VoronoiAggregator::next() {
     contributions_index = current_index;
-    Sample sample = samples[current_index];
-    current_index = nextIndexFrom(current_index);
+    const int idx = current_index;
+    current_index = next_index_from(current_index);
     if (current_index < 0) can_traverse = false;
     else can_traverse = true;
 
-    return sample;
+    return samples[idx];
 }
 
-int VoronoiAggregator::nextIndexFrom(const std::size_t start) const {
-    size_t i = start + 1;
-    int value_found = -1;
-
-    bool search = i < samples.size();
-    bool found = false;
-
-    while (search && !found) {
+int VoronoiAggregator::next_index_from(const std::size_t start) const {
+    for (size_t i = start + 1; i < samples.size(); ++i) {
         const Sample &sample = samples[i];
         if (sample.dx > -.5 && sample.dx < .5 && sample.dy > -.5 && sample.dy < .5) {
-            found = true;
-            value_found = i;
+            return static_cast<int>(i);
         }
-        ++i;
-        search = i < samples.size();
     }
-    return value_found;
+    return -1;
 }
 
 double VoronoiAggregator::compute_voronoi_cell_area(Face_handle face) const {
@@ -355,7 +337,7 @@ Color FilteringMCAggregator::aggregate() {
     size_t n_relevant_samples = 0;
     // And finally, we weight the samples
     for (int i = 0 ; i < samples.size() ; i++) {
-        const auto sample = samples[i];
+        const auto &sample = samples[i];
         if (sample.dx < -.5 || sample.dx >= .5 || sample.dy < -.5 || sample.dy >= .5) continue;
         color += contributions[i];
         ++n_relevant_samples;
@@ -400,7 +382,7 @@ void ClippedVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> facto
 
     // here we populate the Delaunay triangulation and the vertex -> index mapping
     for (i = 0 ; i < samples.size() ; i++) {
-        Sample sample = samples[i];
+        const Sample &sample = samples[i];
         Point p(sample.dx, sample.dy);
         delaunay.insert(p);
     }
@@ -429,7 +411,7 @@ void InnerVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory
     // Voronoi point sites
     std::vector<Point> points(samples.size());
 
-    for (auto sample : samples) {
+    for (const auto &sample : samples) {
         Point p(sample.dx, sample.dy);
         delaunay.insert(p);
     }
@@ -517,8 +499,8 @@ Color NonZeroVoronoiAggregator::aggregate() {
     std::vector<Sample> voronoi_samples;
 
     for (size_t i = 0 ; i < samples.size() ; ++i) {
-        const auto contribution = contributions[i];
-        const auto sample = samples[i];
+        const auto &contribution = contributions[i];
+        const auto &sample = samples[i];
 
         if (sample.dx >= -.5 && sample.dx < .5 && sample.dy >= -.5 && sample.dy < .5) {
             ++n_inner_samples;
@@ -532,14 +514,14 @@ Color NonZeroVoronoiAggregator::aggregate() {
     }
 
     for (size_t i = 0 ; i < samples.size() ; ++i) {
-        const auto sample = samples[i];
+        const auto &sample = samples[i];
 
         if (!(sample.dx >= -.5 && sample.dx < .5 && sample.dy >= -.5 && sample.dy < .5)) {
             voronoi_samples.push_back(sample);
         }
     }
 
-    for (const auto sample: voronoi_samples) {
+    for (const auto &sample: voronoi_samples) {
         delaunay.insert(Point(sample.dx, sample.dy));
     }
     voronoi = Voronoi(delaunay);
