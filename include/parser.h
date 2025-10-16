@@ -401,6 +401,8 @@ protected:
 
         std::cout << "Rendering duration: " << static_cast<double>(render_time.count()) / 1000. << " s" << std::endl;
 
+        std::cout << "Image saved to: " << path << std::endl;
+
         return true;
     }
 };
