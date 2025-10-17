@@ -74,7 +74,6 @@ shared_ptr<Material> YaptSceneLoader::load_material(std::ifstream &file) {
     std::regex metal(R"(metal\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)(?:\s*,\s*([0-9]*\.?[0-9]+))?)");
     std::regex dielectric(R"(dielectric\s*=\s*([0-9]*\.?[0-9]+))");
     std::regex isotropic(R"(isotropic\s*=\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+))");
-    std::regex composite(R"(composite\s*=\s*([\w]+)\s*-\s*([\w]+)\s*-\s*(-?[0-9]+\.?[0-9]*))");
     std::smatch matches;
 
     if (std::regex_match(line, matches, lambertian)) {
@@ -112,13 +111,6 @@ shared_ptr<Material> YaptSceneLoader::load_material(std::ifstream &file) {
         Color color = vectorMatch(matches, 1);
         std::clog << "found: Isotropic " << color << std::endl;
         return make_shared<Isotropic>(color);
-    } else
-    if (std::regex_match(line, matches, composite)) {
-        std::string name1 = matches[1];
-        std::string name2 = matches[2];
-        double ratio = std::stod(matches[3]);
-        std::clog << "found: Composite " << name1 << ", " << name2 << ", " << ratio << std::endl;
-        return make_shared<Composite>(materials[name1], materials[name2], ratio);
     }
 
     return {};

@@ -55,7 +55,7 @@ public:
         rec.normal = Vec3(1, 0, 0);  // arbitrary
         rec.front_face = true;     // also arbitrary
 
-        rec.mat = phase_function->get();
+        rec.mat = phase_function;
 
         return true;
     }

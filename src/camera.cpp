@@ -108,7 +108,7 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &wo
     aggregator->traverse();
 
     while (aggregator-> has_next()) {
-        Sample sample = aggregator->next();
+        const Sample sample = aggregator->next();
 
         Ray r = get_ray(sample.x, sample.y);
 

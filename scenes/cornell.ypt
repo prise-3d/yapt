@@ -30,7 +30,6 @@
 # metal = r, g, b         declares a metallic material and its RGB albedo
 # dielectric = r          declares a dielectric material and its refraction index r
 # isotropic = r, g, b     declares an isotropic participating media and its density
-# composite = n1 - n2 - r declares a composite material behaving like material with name n1 with probability r, n2 otherwise
 #
 # object specifications:
 # quad = x, y, z - ux, uy, uz - vx, vy, vz - mat   declares a quad ranging from (x, y, z) in the directions (ux, uy, uz) and (vx, vy, vz) using the material named mat
@@ -70,9 +69,6 @@ isotropic = 1, 2, 3
 
 material : sphere_lamb
 lambertian = .67, .67, .05
-
-material : comp
-composite = sphere_lamb - metallic - 0.4
 
 object: left_wall
 quad = 555,0,0 - 0,0,555 - 0,555,0 - green

@@ -54,7 +54,7 @@ public:
         get_sphere_uv(outward_normal, rec.u, rec.v);
 
         if (mat)
-            rec.mat = mat->get();
+            rec.mat = mat;
 
         return true;
     }

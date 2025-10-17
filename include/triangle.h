@@ -105,7 +105,7 @@ public:
 
         rec.normal = n;
 
-        rec.mat = mat->get();
+        rec.mat = mat;
 
         rec.p = r.at(rec.t);
         rec.set_face_normal(r, n);

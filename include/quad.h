@@ -57,7 +57,7 @@ public:
         rec.t = t;
         rec.p = intersection;
 
-        rec.mat = mat->get();
+        rec.mat = mat;
         rec.set_face_normal(r, normal);
 
         return true;
