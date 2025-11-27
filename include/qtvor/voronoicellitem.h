@@ -299,7 +299,7 @@ inline void displayVoronoi(Scene yaptScene, int x, int y) {
     auto voronoi = aggregator->voronoi;
 
     // Create the table first so we can pass it to VoronoiCellItem
-    size_t size = aggregator->samples.size();
+    size_t size = aggregator->_samples.size();
     auto *table = new CustomTableWidget(size, 7);
     table->setHorizontalHeaderLabels({"Color", "Site x", "Site y", "R",
                                   "G", "B", "Area"});

@@ -19,7 +19,8 @@ double random_double() {
 }
 
 double random_double(const double min, const double max) {
-    return min + (max - min) * random_double();
+    std::uniform_real_distribution<double> distribution(min, max);
+    return distribution(threadGenerator());
 }
 
 int random_int(int min, int max) {

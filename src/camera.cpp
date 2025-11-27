@@ -105,11 +105,8 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &wo
 
     const auto aggregator = samplerAggregator->create();
     aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
-    aggregator->traverse();
 
-    while (aggregator-> has_next()) {
-        const Sample sample = aggregator->next();
-
+    for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
 
         const Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
@@ -262,11 +259,8 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
     const Hittable &world, const Hittable &lights, size_t row, size_t column) {
     const auto aggregator = samplerAggregator->create();
     aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
-    aggregator->traverse();
 
-    while (aggregator-> has_next()) {
-        Sample sample = aggregator->next();
-
+    for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
 
         size_t retries = 0;
@@ -277,6 +271,20 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
         } while (color.near_zero() && ++retries < 20);
         aggregator->insert_contribution(color);
     }
+
+    // while (aggregator-> has_next()) {
+    //     Sample sample = aggregator->next();
+    //
+    //     Ray r = get_ray(sample.x, sample.y);
+    //
+    //     size_t retries = 0;
+    //     Color color;
+    //
+    //     do {
+    //         color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+    //     } while (color.near_zero() && ++retries < 20);
+    //     aggregator->insert_contribution(color);
+    // }
 
     const Color pixel_color = aggregator->aggregate();
 
@@ -294,13 +302,8 @@ std::shared_ptr<SampleAggregator> FunctionCamera::render_pixel(const Hittable &w
 
     const auto aggregator = samplerAggregator->create();
     aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
-    aggregator->traverse();
-
-    while (aggregator->has_next()) {
-        Sample sample = aggregator->next();
-
-        double value = function->compute(sample.dx, sample.dy);
-        
+    for (const Sample& sample : *aggregator) {
+        const double value = function->compute(sample.dx, sample.dy);
         const Color color(value, value, value);
         aggregator->insert_contribution(color);
     }

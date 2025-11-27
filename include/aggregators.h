@@ -36,32 +36,32 @@ public:
     virtual ~SampleAggregator() = default;
     virtual Color aggregate() = 0;
     virtual void sample_from(std::shared_ptr<SamplerFactory>, double x, double y) = 0;
-    virtual void insert_contribution(Color color) = 0;
-    virtual void traverse() = 0;
-    virtual bool has_next() = 0;
-    virtual Sample next() = 0;
+    virtual void insert_contribution(Color color);
+    using const_iterator = std::vector<Sample>::const_iterator;
+
+    const_iterator begin() const {
+        return _samples.begin();
+    }
+
+    const_iterator end() const {
+        // assert(_usable_sample_count <= _samples.size());
+
+        return _samples.begin() + _usable_sample_count;
+    }
+
+    std::vector<Sample> _samples;
+    std::vector<Color> contributions;
+
+protected:
+    std::size_t _usable_sample_count = 0;
+    std::size_t _total_sample_count = 0;
 };
 
 class MCSampleAggregator : public SampleAggregator {
 public:
     MCSampleAggregator();
-
-    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
     Color aggregate() override;
-    void insert_contribution(Color color) override;
-    void traverse() override;
-    bool has_next() override;
-    Sample next() override;
-
-private:
-    int next_index_from(std::size_t start);
-
-protected:
-    std::vector<Sample> samples;
-    std::vector<Color> contributions;
-    std::size_t contributions_index;
-    int current_index;
-    bool can_traverse;
+    void sample_from(std::shared_ptr<SamplerFactory>, double x, double y) override;
 };
 
 class MedianAggregator: public MCSampleAggregator {
@@ -102,24 +102,14 @@ public:
      */
     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
     Color aggregate() override;
-    void insert_contribution(Color color) override;
-    void traverse() override;
-    bool has_next() override;
-    Sample next() override;
+    void fill_delaunay();
 
-    std::vector<Color> contributions;
     Voronoi voronoi;
     Delaunay delaunay;
-    std::vector<Sample> samples;
     std::vector<double> weights;
 
 protected:
-    int next_index_from(std::size_t start) const;
     double compute_voronoi_cell_area(Face_handle face) const;
-
-    int current_index = 0;
-    std::size_t contributions_index;
-    bool can_traverse = false;
 };
 
 
@@ -134,43 +124,43 @@ public:
     bool is_good(const Point &point) const;
 };
 
-class FilteringMCAggregator: public VoronoiAggregator {
-public:
-    Color aggregate() override;
-};
+// class FilteringMCAggregator: public VoronoiAggregator {
+// public:
+//     Color aggregate() override;
+// };
 
 class ClippedVoronoiAggregator: public VoronoiAggregator {
 public:
     ClippedVoronoiAggregator() = default;
     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
 };
-
-class InnerVoronoiAggregator: public VoronoiAggregator {
-public:
-    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
-    Color aggregate() override;
-};
-
-class NicoVoronoiAggregator: public VoronoiAggregator {
-public:
-    double margin;
-
-    explicit NicoVoronoiAggregator();
-    explicit NicoVoronoiAggregator(double margin);
-
-    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
-};
+//
+// class InnerVoronoiAggregator: public VoronoiAggregator {
+// public:
+//     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+//     Color aggregate() override;
+// };
+//
+// class NicoVoronoiAggregator: public VoronoiAggregator {
+// public:
+//     double margin;
+//
+//     explicit NicoVoronoiAggregator();
+//     explicit NicoVoronoiAggregator(double margin);
+//
+//     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+// };
 
 /**
  * Creates a Voronoi Diagram using only non zero contributions
  */
-class NonZeroVoronoiAggregator: public FilteringVoronoiAggregator {
-public:
-    explicit NonZeroVoronoiAggregator(double margin);
-
-    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
-    Color aggregate() override;
-};
+// class NonZeroVoronoiAggregator: public FilteringVoronoiAggregator {
+// public:
+//     explicit NonZeroVoronoiAggregator(double margin);
+//
+//     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+//     Color aggregate() override;
+// };
 
 class AggregatorFactory {
 public:
@@ -194,10 +184,10 @@ public:
     shared_ptr<SampleAggregator> create() override;
 };
 
-class InnerVoronoiAggregatorFactory: public AggregatorFactory {
-public:
-    shared_ptr<SampleAggregator> create() override;
-};
+// class InnerVoronoiAggregatorFactory: public AggregatorFactory {
+// public:
+//     shared_ptr<SampleAggregator> create() override;
+// };
 
 class MedianAggregatorFactory: public AggregatorFactory {
 public:
@@ -223,11 +213,11 @@ private:
     bool clipped;
 };
 
-class FilteringMCAggregatorFactory: public AggregatorFactory {
-public:
-    FilteringMCAggregatorFactory();
-    shared_ptr<SampleAggregator> create() override;
-};
+// class FilteringMCAggregatorFactory: public AggregatorFactory {
+// public:
+//     FilteringMCAggregatorFactory();
+//     shared_ptr<SampleAggregator> create() override;
+// };
 
 class FilteringVoronoiAggregatorFactory: public AggregatorFactory {
 public:
@@ -240,26 +230,26 @@ private:
     double margin;
 };
 
-class NonZeroVoronoiAggregatorFactory: public AggregatorFactory {
-public:
-    NonZeroVoronoiAggregatorFactory();
-    explicit NonZeroVoronoiAggregatorFactory(double m);
-
-    shared_ptr<SampleAggregator> create() override;
-
-private:
-    double margin;
-};
-
-class NicoVoronoiAggregatorFactory: public AggregatorFactory {
-public:
-    NicoVoronoiAggregatorFactory();
-    explicit NicoVoronoiAggregatorFactory(double m);
-
-    shared_ptr<SampleAggregator> create() override;
-
-private:
-    double margin;
-};
+// class NonZeroVoronoiAggregatorFactory: public AggregatorFactory {
+// public:
+//     NonZeroVoronoiAggregatorFactory();
+//     explicit NonZeroVoronoiAggregatorFactory(double m);
+//
+//     shared_ptr<SampleAggregator> create() override;
+//
+// private:
+//     double margin;
+// };
+//
+// class NicoVoronoiAggregatorFactory: public AggregatorFactory {
+// public:
+//     NicoVoronoiAggregatorFactory();
+//     explicit NicoVoronoiAggregatorFactory(double m);
+//
+//     shared_ptr<SampleAggregator> create() override;
+//
+// private:
+//     double margin;
+// };
 
 #endif //YAPT_AGGREGATORS_H

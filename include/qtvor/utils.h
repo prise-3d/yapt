@@ -5,6 +5,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+
 inline QColor toQColor(const double r, const double g, const double b) {
     static const Interval intensity(0.000, 0.999);
     const double rr = linear_to_gamma(r);
