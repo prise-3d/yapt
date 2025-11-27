@@ -73,6 +73,7 @@ endforeach()
 # Add executable
 add_executable(yapt ${SOURCES}
         src/main.cpp
+        src/random.cpp
         src/stb_image.cpp
         include/Vec3.h
         include/ray.h
@@ -150,6 +151,7 @@ file(GLOB TEST_SOURCES "tests/*.cpp")
 # Add executable for tests
 add_executable(tests ${TEST_SOURCES}
         tests/vec3test.cpp
+        src/random.cpp
         src/stb_image.cpp
         include/color.h
         include/hittable.h
@@ -219,6 +221,7 @@ find_package(Qt6 COMPONENTS Core Widgets Gui REQUIRED)
 
 add_executable(qtvor ${SOURCES}
         src/qtvor.cpp
+        src/random.cpp
         src/stb_image.cpp
         include/Vec3.h
         include/ray.h
@@ -289,6 +292,7 @@ target_link_libraries(qtvor
 
 add_executable(eval ${SOURCES}
         src/eval.cpp
+        src/random.cpp
         src/stb_image.cpp
         include/Vec3.h
         include/ray.h

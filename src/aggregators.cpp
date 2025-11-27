@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cassert>
 
+#include "exprtk/exprtk.hpp"
+
 // ============================================================================
 // MCSampleAggregator
 // ============================================================================
@@ -352,18 +354,35 @@ Color FilteringMCAggregator::aggregate() {
 
 void ClippedVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) {
     // we collect samples
-    auto pixelSampler = factory->create(x, y);
+
+    const auto pixelSampler = factory->create(x, y);
     pixelSampler->begin();
     std::size_t size = pixelSampler->sample_size();
-    samples = std::vector<Sample>(9 * size);
+    auto temp_samples = std::vector<Sample>(9 * size);
 
     int i = -1;
-    size_t j = size;
+    int last_inside = -1;
 
     while (pixelSampler->has_next()) {
-        Sample sample = pixelSampler->get();
-        samples[++i] = sample;
-        if (sample.dx < -.5 || sample.dx >= .5 || sample.dy < -.5 || sample.dy >= .5) continue;
+        if (static_cast<size_t>(i + 1) >= temp_samples.size()) {
+            temp_samples.resize(temp_samples.size() * 2 + 1);
+        }
+        const Sample sample = pixelSampler->get();
+        temp_samples[++i] = sample;
+        if (sample.dx < -.5 || sample.dx >= .5 || sample.dy < -.5 || sample.dy >= .5) {
+            last_inside = i - 1; break;
+        }
+    }
+
+    if (last_inside < 0)
+        last_inside = i;
+    size_t total_size = (last_inside + 1) * 9;
+    samples = std::vector<Sample>(total_size);
+    size_t j = last_inside;
+
+    for (i = 0 ; i <= last_inside ;++i) {
+        const Sample sample = temp_samples[i];
+        samples[i] = sample;
         samples[++j] = {sample.x, sample.y, 1 - sample.dx, sample.dy};
         samples[++j] = {sample.x, sample.y, -1 - sample.dx, sample.dy};
         samples[++j] = {sample.x, sample.y, sample.dx, 1 - sample.dy};
@@ -374,11 +393,10 @@ void ClippedVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> facto
         samples[++j] = {sample.x, sample.y, 1 - sample.dx, 1 - sample.dy};
     }
 
-    samples.resize(j + 1);
-    contributions = std::vector<Color>(j + 1);
+    contributions = std::vector<Color>(total_size);
 
     // Voronoi point sites
-    std::vector<Point> points(samples.size());
+    std::vector<Point> points(total_size);
 
     // here we populate the Delaunay triangulation and the vertex -> index mapping
     for (i = 0 ; i < samples.size() ; i++) {
@@ -460,6 +478,70 @@ Color InnerVoronoiAggregator::aggregate() {
         color += weight * contributions[i] / total_weight;
     }
     return color;
+}
+
+NicoVoronoiAggregator::NicoVoronoiAggregator() : VoronoiAggregator(), margin(0.1) {}
+
+NicoVoronoiAggregator::NicoVoronoiAggregator(double margin) : VoronoiAggregator(), margin(margin) {}
+
+void NicoVoronoiAggregator::sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) {
+    bool isInvalid = false;
+    double max_sq = 4 * margin * margin;
+    // std::cout << "max_sq " << max_sq << std::endl;
+
+    do {
+        isInvalid = false;
+        // we collect samples
+        const auto pixelSampler = factory->create(x, y);
+        pixelSampler->begin();
+        const std::size_t size = pixelSampler->sample_size();
+        samples = std::vector<Sample>(size);
+        contributions = std::vector<Color>(size);
+        std::size_t i = 0;
+        for (; pixelSampler->has_next(); i++) {
+            const auto sample = pixelSampler->get();
+            samples[i] = sample;
+            delaunay.insert(Point(sample.dx, sample.dy));
+        }
+
+        // we now need to construct the voronoi diagram to check if it satisfies our
+        // robustness criterion
+        voronoi = Voronoi(delaunay);
+
+        for (auto f = voronoi.unbounded_faces_begin(); f != voronoi.unbounded_faces_end(); ++f) {
+            const auto site = f->dual()->point();
+            if (site.x() < -.5 || site.x() >= .5 || site.y() < -.5 || site.y() >= .5) continue;
+            isInvalid = true;
+            //delaunay.clear();
+
+            break;
+        }
+
+
+        // not ruled valid yet, may contain dangerous cells
+        for (auto f = voronoi.faces_begin(); f != voronoi.faces_end() && !isInvalid; ++f) {
+            if (f->is_unbounded()) continue;
+            auto site_point = f->dual()->point();
+            if (site_point.x() < -.5 || site_point.x() >= .5 || site_point.y() < -.5 || site_point.y() >= .5) continue;
+            auto ccb_start = f->ccb();
+            auto ccb = ccb_start;
+
+            do {
+                auto vertex_point = ccb->source()->point();
+
+                if (CGAL::squared_distance(site_point, vertex_point) > max_sq) {
+                    isInvalid = true;
+                    // std::cout << site_point.x() << " ; " << site_point.y() << std::endl;
+                    //std::cout << "INVALID BECAUSE OF RADIUS " << std::endl;
+                    //break;
+                }
+                ++ccb;
+            } while (!isInvalid && ccb != ccb_start);
+        }
+        if (isInvalid) delaunay.clear();
+    } while (isInvalid);
+    current_index = 0;
+    // std::cout << "SUCCESSFUL " << std::endl;
 }
 
 // ============================================================================
@@ -642,4 +724,12 @@ NonZeroVoronoiAggregatorFactory::NonZeroVoronoiAggregatorFactory(const double m)
 
 shared_ptr<SampleAggregator> NonZeroVoronoiAggregatorFactory::create() {
     return std::make_shared<NonZeroVoronoiAggregator>(margin);
+}
+
+NicoVoronoiAggregatorFactory::NicoVoronoiAggregatorFactory() : AggregatorFactory(), margin(.1) {}
+
+NicoVoronoiAggregatorFactory::NicoVoronoiAggregatorFactory(double m) : AggregatorFactory(), margin(m) {}
+
+shared_ptr<SampleAggregator> NicoVoronoiAggregatorFactory::create() {
+    return std::make_shared<NicoVoronoiAggregator>(margin);
 }

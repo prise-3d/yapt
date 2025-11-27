@@ -519,11 +519,15 @@ public:
         const auto N = static_cast<double>(number_of_samples);
         double n = N;
 
-        for (int i = 0 ; i < 10 ; i++) {
-            const double margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
+        /*for (int i = 0 ; i < 10 ; i++) {
+            double margin = sqrt(log(n * log(n)) - log(log(1./confidence))) / sqrt(pi * n);
             n = N * (1 + 2 * margin) * (1 + 2 * margin);
-        }
+        }*/
+        const double logz = log(4000 * N);
+        const double margin = sqrt((logz - log(logz)) / (M_PI * n));
 
+
+        n = N * (1 + 2 * margin) * (1 + 2 * margin);
         skewed_intensity = static_cast<size_t>(n + 1);
     }
 

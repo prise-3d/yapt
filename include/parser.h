@@ -164,6 +164,7 @@ protected:
                 std::cout << "                 - cvor   => Clipped Voronoi aggregation" << std::endl;
                 std::cout << "                 - ivor   => Inner Voronoi aggregation" << std::endl;
                 std::cout << "                 - fvor   => Filtering Voronoi aggregation" << std::endl;
+                std::cout << "                 - nvor   => Nico Voronoi aggregation" << std::endl;
                 std::cout << "                 - nzvor  => Non Zero Filtering Voronoi aggregation" << std::endl;
                 std::cout << "                 - median => Median aggregation" << std::endl;
                 std::cout << "                 - mon    => MoN (Median Of meaNs) aggregation" << std::endl;
@@ -254,7 +255,7 @@ protected:
             aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
         } else if (aggregator == "ivor") {
             aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
-        } else if (aggregator == "fvor" || aggregator == "nzvor") {
+        } else if (aggregator == "fvor" || aggregator == "nzvor" || aggregator == "nvor") {
 
             auto sampler = samplerFactory->create(0, 0);
             auto sppp_sampler = dynamic_cast<SkewedPPPSampler*>(sampler.get());
@@ -265,6 +266,7 @@ protected:
             }
 
             if (aggregator == "fvor") aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>(margin);
+            if (aggregator == "nvor") aggregatorFactory = std::make_shared<NicoVoronoiAggregatorFactory>(margin);
             else aggregatorFactory = std::make_shared<NonZeroVoronoiAggregatorFactory>(margin);
 
         } else if (aggregator == "median") {

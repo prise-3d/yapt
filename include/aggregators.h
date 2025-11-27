@@ -151,6 +151,15 @@ public:
     Color aggregate() override;
 };
 
+class NicoVoronoiAggregator: public VoronoiAggregator {
+public:
+    double margin;
+
+    explicit NicoVoronoiAggregator();
+    explicit NicoVoronoiAggregator(double margin);
+
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+};
 
 /**
  * Creates a Voronoi Diagram using only non zero contributions
@@ -235,6 +244,17 @@ class NonZeroVoronoiAggregatorFactory: public AggregatorFactory {
 public:
     NonZeroVoronoiAggregatorFactory();
     explicit NonZeroVoronoiAggregatorFactory(double m);
+
+    shared_ptr<SampleAggregator> create() override;
+
+private:
+    double margin;
+};
+
+class NicoVoronoiAggregatorFactory: public AggregatorFactory {
+public:
+    NicoVoronoiAggregatorFactory();
+    explicit NicoVoronoiAggregatorFactory(double m);
 
     shared_ptr<SampleAggregator> create() override;
 
