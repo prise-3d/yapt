@@ -44,8 +44,6 @@ public:
     }
 
     const_iterator end() const {
-        // assert(_usable_sample_count <= _samples.size());
-
         return _samples.begin() + _usable_sample_count;
     }
 
@@ -124,43 +122,21 @@ public:
     bool is_good(const Point &point) const;
 };
 
-// class FilteringMCAggregator: public VoronoiAggregator {
-// public:
-//     Color aggregate() override;
-// };
-
 class ClippedVoronoiAggregator: public VoronoiAggregator {
 public:
     ClippedVoronoiAggregator() = default;
     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
 };
-//
-// class InnerVoronoiAggregator: public VoronoiAggregator {
-// public:
-//     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
-//     Color aggregate() override;
-// };
-//
-// class NicoVoronoiAggregator: public VoronoiAggregator {
-// public:
-//     double margin;
-//
-//     explicit NicoVoronoiAggregator();
-//     explicit NicoVoronoiAggregator(double margin);
-//
-//     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
-// };
 
-/**
- * Creates a Voronoi Diagram using only non zero contributions
- */
-// class NonZeroVoronoiAggregator: public FilteringVoronoiAggregator {
-// public:
-//     explicit NonZeroVoronoiAggregator(double margin);
-//
-//     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
-//     Color aggregate() override;
-// };
+class NicoVoronoiAggregator: public VoronoiAggregator {
+public:
+    double margin;
+
+    explicit NicoVoronoiAggregator();
+    explicit NicoVoronoiAggregator(double margin);
+
+    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override;
+};
 
 class AggregatorFactory {
 public:
@@ -183,11 +159,6 @@ class ClippedVoronoiAggregatorFactory: public AggregatorFactory {
 public:
     shared_ptr<SampleAggregator> create() override;
 };
-
-// class InnerVoronoiAggregatorFactory: public AggregatorFactory {
-// public:
-//     shared_ptr<SampleAggregator> create() override;
-// };
 
 class MedianAggregatorFactory: public AggregatorFactory {
 public:
@@ -213,12 +184,6 @@ private:
     bool clipped;
 };
 
-// class FilteringMCAggregatorFactory: public AggregatorFactory {
-// public:
-//     FilteringMCAggregatorFactory();
-//     shared_ptr<SampleAggregator> create() override;
-// };
-
 class FilteringVoronoiAggregatorFactory: public AggregatorFactory {
 public:
     FilteringVoronoiAggregatorFactory();
@@ -230,26 +195,15 @@ private:
     double margin;
 };
 
-// class NonZeroVoronoiAggregatorFactory: public AggregatorFactory {
-// public:
-//     NonZeroVoronoiAggregatorFactory();
-//     explicit NonZeroVoronoiAggregatorFactory(double m);
-//
-//     shared_ptr<SampleAggregator> create() override;
-//
-// private:
-//     double margin;
-// };
-//
-// class NicoVoronoiAggregatorFactory: public AggregatorFactory {
-// public:
-//     NicoVoronoiAggregatorFactory();
-//     explicit NicoVoronoiAggregatorFactory(double m);
-//
-//     shared_ptr<SampleAggregator> create() override;
-//
-// private:
-//     double margin;
-// };
+class NicoVoronoiAggregatorFactory: public AggregatorFactory {
+public:
+    NicoVoronoiAggregatorFactory();
+    explicit NicoVoronoiAggregatorFactory(double m);
+
+    shared_ptr<SampleAggregator> create() override;
+
+private:
+    double margin;
+};
 
 #endif //YAPT_AGGREGATORS_H

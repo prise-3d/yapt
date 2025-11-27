@@ -152,18 +152,13 @@ protected:
                 std::cout << " - sampler    => pixel sampling method:" << std::endl;
                 std::cout << "                 - rnd    => pure random sampling" << std::endl;
                 std::cout << "                 - strat  => stratified sampling" << std::endl;
-                // std::cout << "                 - ppp    => Poisson Point Process sampling with margin" << std::endl;
                 std::cout << "                 - sppp   => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl;
-                // std::cout << "                 - cppp   => Constant Poisson Point Process sampling with margin" << std::endl;
-                // std::cout << " - aggregator => path aggregation method:" << std::endl;
+                std::cout << " - aggregator => path aggregation method:" << std::endl;
                 std::cout << "                 - mc     => Monte Carlo integration" << std::endl;
-                // std::cout << "                 - fmc    => Filtered Monte Carlo integration" << std::endl;
                 std::cout << "                 - vor    => Voronoi aggregation (DEFAULT)" << std::endl;
                 std::cout << "                 - cvor   => Clipped Voronoi aggregation" << std::endl;
-                // std::cout << "                 - ivor   => Inner Voronoi aggregation" << std::endl;
                 std::cout << "                 - fvor   => Filtering Voronoi aggregation" << std::endl;
-                // std::cout << "                 - nvor   => Nico Voronoi aggregation" << std::endl;
-                // std::cout << "                 - nzvor  => Non Zero Filtering Voronoi aggregation" << std::endl;
+                std::cout << "                 - nvor   => Nico Voronoi aggregation" << std::endl;
                 std::cout << "                 - median => Median aggregation" << std::endl;
                 std::cout << "                 - mon    => MoN (Median Of meaNs) aggregation" << std::endl;
                 std::cout << "                 - winsor =>  Winsorization" << std::endl;
@@ -215,44 +210,29 @@ protected:
                 std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
             }
             spp = sqrtSpp * sqrtSpp;
-        } else if (sampler == "ppp") {
-            // samplerFactory = std::make_shared<PPPSamplerFactory>(spp, confidence);
         } else if (sampler == "sppp") {
             samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(spp, confidence);
-        } else if (sampler == "cppp") {
-            auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
-            // samplerFactory = std::make_shared<CPPPSamplerFactory>(sqrtSpp);
-            if ((sqrtSpp * sqrtSpp) < spp) {
-                std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
-            }
-            spp = sqrtSpp * sqrtSpp;
         }
 
         // AGGREGATOR FACTORY INIT
         if (aggregator == "mc") {
             aggregatorFactory = std::make_shared<MCAggregatorFactory>();
-        } else if (aggregator == "fmc") {
-            // aggregatorFactory = std::make_shared<FilteringMCAggregatorFactory>();
         } else if (aggregator == "vor") {
             aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
         } else if (aggregator == "cvor") {
             aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
-        } else if (aggregator == "ivor") {
-            // aggregatorFactory = std::make_shared<InnerVoronoiAggregatorFactory>();
-        } else if (aggregator == "fvor" || aggregator == "nzvor" || aggregator == "nvor") {
+        } else if (aggregator == "fvor" || aggregator == "nvor") {
 
             auto sampler = samplerFactory->create(0, 0);
             auto sppp_sampler = dynamic_cast<SkewedPPPSampler*>(sampler.get());
 
             double margin = .1;
             if (sppp_sampler != nullptr) {
-                margin = sppp_sampler->epsilon_margin;
+                margin = sppp_sampler->margin;
             }
 
             if (aggregator == "fvor") aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>(margin);
-            // if (aggregator == "nvor") aggregatorFactory = std::make_shared<NicoVoronoiAggregatorFactory>(margin);
-            // else aggregatorFactory = std::make_shared<NonZeroVoronoiAggregatorFactory>(margin);
-
+            if (aggregator == "nvor") aggregatorFactory = std::make_shared<NicoVoronoiAggregatorFactory>(margin);
         } else if (aggregator == "median") {
             aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
         } else if (aggregator == "mon") {

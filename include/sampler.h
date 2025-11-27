@@ -150,7 +150,7 @@ public:
         PixelSampler(x, y),
         _usable_sample_count(number_of_samples),
         _total_sample_count(intensity),
-        epsilon_margin(margin)
+        margin(margin)
     {}
 
     [[nodiscard]] std::size_t total_sample_count() const override {
@@ -179,11 +179,11 @@ public:
             double _dx;
             double _dy;
             if (random_double() < .5) {
-                _dx = random_double(-.5 - epsilon_margin, .5 + epsilon_margin);
-                _dy = random_double(.5, .5 + epsilon_margin);
+                _dx = random_double(-.5 - margin, .5 + margin);
+                _dy = random_double(.5, .5 + margin);
             } else {
-                _dx = random_double(.5, .5 + epsilon_margin);
-                _dy = random_double(-.5 - epsilon_margin, .5 + epsilon_margin);
+                _dx = random_double(.5, .5 + margin);
+                _dy = random_double(-.5 - margin, .5 + margin);
             }
 
             if (random_double() < .5) _dx = -_dx;
@@ -197,7 +197,7 @@ public:
         }
     }
 
-    double epsilon_margin;
+    double margin;
 
 private:
     std::size_t _total_sample_count;
