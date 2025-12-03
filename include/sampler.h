@@ -77,7 +77,7 @@ protected:
 class StratifiedSampler: public PixelSampler {
 public:
 
-    StratifiedSampler(double x, double y, const size_t sqrtSpp): PixelSampler(x,y), sqrtSpp(sqrtSpp) {}
+    StratifiedSampler(const double x, const double y, const size_t sqrtSpp): PixelSampler(x,y), sqrtSpp(sqrtSpp) {}
 
     [[nodiscard]] std::size_t total_sample_count() const override {
         return sqrtSpp * sqrtSpp;
@@ -88,25 +88,25 @@ public:
     }
 
     void generate_samples(std::vector<Sample> &out) const override {
-        double step = 1.0 / sqrtSpp;
-        double start_offset = -0.5;
+        const double step = 1.0 / static_cast<double>(sqrtSpp);
+        const double start_offset = -0.5;
 
         for (size_t i = 0 ; i < sqrtSpp ; ++i) {
+            const double cell_x = start_offset + i * step;
             for (size_t j = 0 ; j < sqrtSpp ; ++j) {
-                double cell_x = start_offset + i * step;
-                double cell_y = start_offset + j * step;
+                const double cell_y = start_offset + j * step;
 
-                double jitter_x = step * random_double();
-                double jitter_y = step * random_double();
+                const double jitter_x = step * random_double();
+                const double jitter_y = step * random_double();
 
-                double dx = cell_x + jitter_x;
-                double dy = cell_y + jitter_y;
+                const double _dx = cell_x + jitter_x;
+                const double _dy = cell_y + jitter_y;
 
                 out.push_back(Sample{
-                    x + jitter_x,
-                    y + jitter_y,
-                    dx,
-                    dy
+                    x + _dx,
+                    y + _dy,
+                    _dx,
+                    _dy
                 });
             }
         }
