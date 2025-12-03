@@ -241,7 +241,6 @@ Color FilteringVoronoiAggregator::aggregate() {
         } else {
             weights[idx] = 0.;
         }
-        ++idx;
     }
 
     Color color(0, 0, 0);
