@@ -1,7 +1,3 @@
-//
-// Created by franck on 07/06/24.
-//
-
 #ifndef YAPT_COLOR_H
 #define YAPT_COLOR_H
 

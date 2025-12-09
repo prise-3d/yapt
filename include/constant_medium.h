@@ -1,7 +1,3 @@
-//
-// Created by franck on 10/06/24.
-//
-
 #ifndef YAPT_CONSTANT_MEDIUM_H
 #define YAPT_CONSTANT_MEDIUM_H
 

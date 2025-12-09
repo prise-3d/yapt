@@ -1,6 +1,26 @@
-//
-// Created by franck on 24/06/24.
-//
+/*
+ * This file is part of the YAPT distribution (https://github.com/prise-3d/yapt).
+ * Copyright (c) 2025 PrISE-3D.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * --- ADDITIONAL PERMISSION UNDER GNU GPL VERSION 3 SECTION 7 ---
+ *
+ * If you modify this Program, or any covered work, by linking or
+ * combining it with the Intel Math Kernel Library (MKL) (or a modified
+ * version of that library), containing parts covered by the terms of
+ * the Intel Simplified Software License, the licensors of this
+ * Program grant you additional permission to convey the resulting work.
+ */
 
 #ifndef YAPT_IMPORTER_H
 #define YAPT_IMPORTER_H
@@ -14,11 +34,11 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-Color colorFromAi(aiColor3D aiCol) {
+inline Color colorFromAi(aiColor3D aiCol) {
     return {aiCol.r, aiCol.g, aiCol.b};
 }
 
-HittableList import(std::string &path) {
+inline HittableList import(std::string &path) {
     Assimp::Importer importer;
     auto scene = importer.ReadFile(path, aiProcess_Triangulate);
     std::cout << scene->mNumMeshes << " meshes" << std::endl;
@@ -111,14 +131,6 @@ HittableList import(std::string &path) {
         std::cout << " - ShininessStrength: " << shininessStrength << std::endl;
         std::cout << " - RefractionIndex:   " << shininessStrength << std::endl;
     }
-
-//    auto numProperties = material->mNumProperties;
-//
-//    std:: cout << "Properties found: " << numProperties << std::endl;
-//    std:: cout << "Properties: " << std::endl;
-//    for (int i = 0 ; i < numProperties ; i++) {
-//        std::cout << " - " << material->mProperties[i] << std::endl;
-//    }s
 
     return world;
 }

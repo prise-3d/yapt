@@ -1,9 +1,3 @@
-//
-// Created by franck on 19/09/24.
-//
-
-
-
 #ifndef YAPT_AGGREGATORS_H
 #define YAPT_AGGREGATORS_H
 

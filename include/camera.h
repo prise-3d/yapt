@@ -1,7 +1,3 @@
-//
-// Created by franck on 09/06/24.
-//
-
 #ifndef YAPT_CAMERA_H
 #define YAPT_CAMERA_H
 

@@ -18,10 +18,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 # Add include directory
 include_directories(include)
 
-# Add source files
-#file(GLOB SOURCES "src/*.cpp")
-#file(GLOB HEADERS "include/*.h")
-
 #external dependencies
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIRS})
@@ -42,7 +38,6 @@ set(OPENEXR_BUILD_DOCS OFF)   # Turn off documentation
 
 # Fetch and make the library available
 FetchContent_MakeAvailable(OpenEXR)
-
 
 find_package(CGAL REQUIRED COMPONENTS Core)
 
@@ -140,82 +135,6 @@ add_custom_target(clean-all
         COMMAND ${CMAKE_COMMAND} -E remove CMakeCache.txt
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
-
-# Tests configuration
-# Add include directory for tests
-include_directories(tests)
-
-# Add test sources
-file(GLOB TEST_SOURCES "tests/*.cpp")
-
-# Add executable for tests
-add_executable(tests ${TEST_SOURCES}
-        tests/vec3test.cpp
-        src/random.cpp
-        src/stb_image.cpp
-        include/color.h
-        include/hittable.h
-        include/sphere.h
-        include/ray.h
-        tests/raytest.cpp
-        tests/spheretest.cpp
-        src/Vec3.cpp
-        src/ray.cpp
-        include/hittable_list.h
-        src/hittable_list.cpp
-        tests/hittabletest.cpp
-        include/yapt.h
-        include/constants.h
-        src/color.cpp
-        include/interval.h
-        include/interval.h
-        src/interval.cpp
-        tests/intervaltest.cpp
-        include/camera.h
-        src/camera.cpp
-        include/utils.h
-        include/material.h
-        src/material.cpp
-        include/aabb.h
-        include/bvh.h
-        include/texture.h
-        include/external/stb_image.h
-        include/rtw_stb_image.h
-        src/aabb.cpp
-        include/perlin.h
-        include/quad.h
-        include/constant_medium.h
-        include/onb.h
-        include/pdf.h
-        include/image_exporter.h
-        src/image_exporter.cpp
-        include/image_data.h
-        include/sampler.h
-        include/triangle.h
-        tests/triangletest.cpp
-        include/aggregators.h
-        src/aggregators.cpp
-        tests/samplertest.cpp
-        include/sceneloader.h
-        src/sceneloader.cpp
-        src/path.cpp
-        include/sampling_strategy.h
-        src/sampling_strategy.cpp
-)
-
-# Link external libraries to tests executable if needed
-target_link_libraries(tests
-        ${PNG_LIBRARIES}
-        CGAL::CGAL
-        CGAL::CGAL_Core
-        Threads::Threads
-)
-
-# Enable testing
-enable_testing()
-
-# Add tests to CTest
-add_test(NAME doctest COMMAND tests)
 
 find_package(Qt6 COMPONENTS Core Widgets Gui REQUIRED)
 

@@ -1,7 +1,3 @@
-//
-// Created by franck on 09/06/24.
-//
-
 #ifndef BVH_H
 #define BVH_H
 
