@@ -4,6 +4,7 @@ Yet another path tracer, influenced by Peter Shirley's Raytracing in one weekend
 ## Usage:
 ``
 yapt width=250 spp=100 aggregator=vor sampler=sppp maxdepth=10 nee=true source=/path/to/scene/some_scene.ypt
+
 qtvor width=250 spp=100 aggregator=vor sampler=sppp maxdepth=10 nee=true source=/path/to/scene/some_scene.ypt
 ``
 
