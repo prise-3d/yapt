@@ -172,14 +172,15 @@ protected:
                 std::cout << "                 - strat  => stratified sampling" << std::endl;
                 std::cout << "                 - sppp   => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl;
                 std::cout << " - aggregator => path aggregation method:" << std::endl;
-                std::cout << "                 - mc     => Monte Carlo integration" << std::endl;
-                std::cout << "                 - vor    => Voronoi aggregation (DEFAULT)" << std::endl;
-                std::cout << "                 - cvor   => Clipped Voronoi aggregation" << std::endl;
-                std::cout << "                 - fvor   => Filtering Voronoi aggregation" << std::endl;
-                std::cout << "                 - nvor   => Nico Voronoi aggregation" << std::endl;
-                std::cout << "                 - median => Median aggregation" << std::endl;
-                std::cout << "                 - mon    => MoN (Median Of meaNs) aggregation" << std::endl;
-                std::cout << "                 - winsor =>  Winsorization" << std::endl;
+                std::cout << "                 - mc      => Monte Carlo integration" << std::endl;
+                std::cout << "                 - vor     => Voronoi aggregation (DEFAULT)" << std::endl;
+                std::cout << "                 - cvor    => Clipped Voronoi aggregation" << std::endl;
+                std::cout << "                 - fvor    => Filtering Voronoi aggregation" << std::endl;
+                std::cout << "                 - nvor    => Nico Voronoi aggregation" << std::endl;
+                std::cout << "                 - median  => Median aggregation" << std::endl;
+                std::cout << "                 - mon     => MoN (Median Of meaNs) aggregation" << std::endl;
+                std::cout << "                 - winsor  =>  Winsorization" << std::endl;
+                std::cout << "                 - fbounce =>  First Bounce Voronoi aggregation" << std::endl;
                 std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
                 std::cout << " - source     => Scene model to import" << std::endl;
                 std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -257,6 +258,8 @@ protected:
             aggregatorFactory = std::make_shared<MonAggregatorFactory>(monSize);
         } else if (aggregator == "winsor") {
             aggregatorFactory = std::make_shared<WinsorAggregatorFactory>(winRate, winClip);
+        } else if (aggregator == "fbounce") {
+            aggregatorFactory = std::make_shared<FirstBounceVoronoiFactory>();
         }
 
         if (cameraType == "pixel") {
