@@ -55,6 +55,7 @@ protected:
     std::size_t pixel_x = 0;
     std::size_t pixel_y = 0;
     std::size_t monSize = 5;
+    std::size_t fbv_sample_size = 100;
     bool winClip = false;
     double winRate = .05;
     bool nee = false;
@@ -107,6 +108,7 @@ protected:
         const std::string silentprefix = "silent";
         const std::string seedprefix = "seed=";
         const std::string neeprefix = "nee=";
+        const std::string fbvsamples = "fbvsamples=";
 
         const std::regex pixelcam_coords(R"(cam=pixel-([0-9]+),([0-9]+))");
         const std::regex singlecam_coords(R"(cam=one-([0-9]+),([0-9]+))");
@@ -116,8 +118,9 @@ protected:
             std::string parameter(argv[i]);
             if (parameter.rfind(sppprefix, 0) == 0) {
                 spp = std::stoi(parameter.substr(sppprefix.size()));
+            } else if (parameter.rfind(fbvsamples, 0) == 0) {
+                fbv_sample_size = static_cast<std::size_t>(std::stoi(parameter.substr(fbvsamples.size())));
             }
-
             else if (parameter.rfind(samplerprefix, 0) == 0) {
                 sampler = parameter.substr(samplerprefix.size());
             }
@@ -200,6 +203,7 @@ protected:
                 std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
+                std::cout << " - fbvsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
                 return false;
             }
             if (std::regex_match(parameter, matches, pixelcam_coords)) {
@@ -217,8 +221,6 @@ protected:
         if (silent) {
             freopen("/dev/null", "w", stderr);
         }
-
-
 
         // SAMPLER FACTORY INIT
         if (sampler == "rnd") {
@@ -272,7 +274,7 @@ protected:
         } else if (cameraType == "norm") {
             camera = std::make_shared<NormalCamera>();
         } else if (cameraType == "fbv") {
-            camera = std::make_shared<FBVCamera>();
+            camera = std::make_shared<FBVCamera>(fbv_sample_size);
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
         }

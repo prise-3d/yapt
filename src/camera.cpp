@@ -474,9 +474,7 @@ Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const 
     std::vector<double> weights;
     double total_area = 0.;
 
-    size_t N_SAMPLES = 250;
-
-    for (int i = 0 ; i < N_SAMPLES ; ++i) {
+    for (int i = 0 ; i < direction_count ; ++i) {
         const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
         const Color colorFromScatter = contribution.color;
         auto direction = contribution.outgoing.direction();
@@ -525,7 +523,7 @@ Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const 
 
     Color colorFromScatter(0,0,0);
 
-    for (int i = 0 ; i < N_SAMPLES ; ++i) {
+    for (int i = 0 ; i < direction_count ; ++i) {
         colorFromScatter += weights[i] * contributions[i];
     }
 
