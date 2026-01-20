@@ -25,7 +25,10 @@
 #include "sampling_strategy.h"
 #include "pdf.h"
 
-Color NEESamplingStrategy::compute_scattered_color(
+
+
+
+ScatteredContribution NEESamplingStrategy::compute_scattered_color(
     const SamplingContext& context,
     const std::function<Color(const Ray&, int)>& ray_color_function
 ) const {
@@ -79,10 +82,10 @@ Color NEESamplingStrategy::compute_scattered_color(
                                         scatteringPdf * sampleColor) / brdf_pdf;
     }
 
-    return colorFromScatter;
+    return { colorFromScatter, scattered };
 }
 
-Color MixtureSamplingStrategy::compute_scattered_color(
+ScatteredContribution MixtureSamplingStrategy::compute_scattered_color(
     const SamplingContext& context,
     const std::function<Color(const Ray&, int)>& rayColorFunc
 ) const {
@@ -98,5 +101,8 @@ Color MixtureSamplingStrategy::compute_scattered_color(
 
     const Color sampleColor = rayColorFunc(scattered, context.remaining_depth);
 
-    return (context.scatter_record.attenuation * scatteringPdf * sampleColor) / pdfValue;
+    return {
+        (context.scatter_record.attenuation * scatteringPdf * sampleColor) / pdfValue,
+        scattered
+    };
 }

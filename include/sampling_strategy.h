@@ -30,6 +30,11 @@
 #include "material.h"
 #include <functional>
 
+struct ScatteredContribution {
+    Color color;
+    Ray outgoing;
+};
+
 class SamplingStrategy {
 public:
     virtual ~SamplingStrategy() = default;
@@ -46,7 +51,7 @@ public:
         int remaining_depth;               // Remaining ray bounces
     };
 
-    virtual Color compute_scattered_color(
+    virtual ScatteredContribution compute_scattered_color(
         const SamplingContext& context,
         const std::function<Color(const Ray&, int)>& ray_color_function
     ) const = 0;
@@ -56,7 +61,7 @@ class NEESamplingStrategy : public SamplingStrategy {
 public:
     ~NEESamplingStrategy() override = default;
 
-    Color compute_scattered_color(
+    ScatteredContribution compute_scattered_color(
         const SamplingContext& context,
         const std::function<Color(const Ray&, int)>& ray_color_function
     ) const override;
@@ -66,7 +71,7 @@ class MixtureSamplingStrategy : public SamplingStrategy {
 public:
     ~MixtureSamplingStrategy() override = default;
 
-    Color compute_scattered_color(
+    ScatteredContribution compute_scattered_color(
         const SamplingContext& context,
         const std::function<Color(const Ray&, int)>& rayColorFunc
     ) const override;

@@ -286,13 +286,12 @@ public:
     }
 
     void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
-
         SampleAggregator::sample_from(factory, x, y);
         contributions.clear();
         contributions.reserve(_usable_sample_count);
 
         Traits traits(Point_3(0, 0, 0), 1.0); // Unit sphere
-        SDT dt(traits);
+        dt = SDT(traits);
 
         for (const auto &sample : _samples) {
             dt.insert(sample_to_sphere(sample, false));
@@ -366,11 +365,12 @@ public:
         std::exit(EXIT_SUCCESS);
     }
 
-
     Color aggregate() override {
         return {0, 0, 0};
     }
     void insert_contribution(Color color) override {}
+
+    SDT dt;
 };
 
 class FirstBounceVoronoiFactory: public AggregatorFactory {

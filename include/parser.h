@@ -189,6 +189,7 @@ protected:
                 std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
+                std::cout << "                 - fbv       => First Bounce Voronoi " << std::endl;
                 std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
                 std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
                 std::cout << "                 - test      => test camera" << std::endl;
@@ -270,6 +271,8 @@ protected:
             camera = std::make_shared<BiasedForwardParallelCamera>();
         } else if (cameraType == "norm") {
             camera = std::make_shared<NormalCamera>();
+        } else if (cameraType == "fbv") {
+            camera = std::make_shared<FBVCamera>();
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
         }

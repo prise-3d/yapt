@@ -177,7 +177,8 @@ Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& wor
         return this->rayColor(ray, d, world, lights);
     };
 
-    Color colorFromScatter = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+    const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+    Color colorFromScatter = contribution.color;
 
     return color_from_emission + colorFromScatter;
 }
@@ -387,4 +388,182 @@ Color TestCamera::rayColor(const Ray &r, int depth, const Hittable &world, const
     if (-r.origin().x() + r.origin().y() > 0) {
         return {0, 0, 0};
     } else return {1, 1, 1};
+}
+
+/*Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, Interval(0.001, infinity), rec))
+        return background;
+
+    ScatterRecord scatterRecord;
+    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(r, rec, scatterRecord))
+        return color_from_emission;
+
+    if (scatterRecord.skip_pdf) {
+        return scatterRecord.attenuation * ForwardParallelCamera::rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+    }
+
+    // scattering
+
+    // Delegate to the sampling strategy
+    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
+
+    auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
+        return ForwardParallelCamera::rayColor(ray, d, world, lights);
+    };
+
+    // instancier un aggrégateur voronoi
+    // et pour chacun des samples de cet aggrégateur
+    // calculer l'échantillon
+    // Color colorFromScatter = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+
+    // Color contribution = color_from_emission + colorFromScatter;
+    // et agréger les contributions
+
+
+
+
+
+    Color colorFromScatter = samplingStrategy->compute_scattered_color(ctx, ray_color_function).color;
+
+    return color_from_emission + colorFromScatter;
+}*/
+
+Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, Interval(0.001, infinity), rec))
+        return background;
+
+    ScatterRecord scatterRecord;
+    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(r, rec, scatterRecord))
+        return color_from_emission;
+
+    if (scatterRecord.skip_pdf) {
+        return scatterRecord.attenuation * far_ray_color(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+    }
+
+    // scattering
+
+    // Delegate to the sampling strategy
+    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
+
+    auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
+        return far_ray_color(ray, d, world, lights);
+    };
+
+    // instancier un aggrégateur voronoi
+    // et pour chacun des samples de cet aggrégateur
+    // calculer l'échantillon
+    // Color colorFromScatter = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+
+    // Color contribution = color_from_emission + colorFromScatter;
+    // et agréger les contributions
+
+    FirstBounceVoronoi ag;
+    Traits traits(Point_3(0, 0, 0), 1.0); // Unit sphere
+    auto dt = SDT(traits);
+
+    std::vector<Vec3> directions;
+    std::vector<Color> contributions;
+    std::vector<double> weights;
+    double total_area = 0.;
+
+    size_t N_SAMPLES = 250;
+
+    for (int i = 0 ; i < N_SAMPLES ; ++i) {
+        const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+        const Color colorFromScatter = contribution.color;
+        auto direction = contribution.outgoing.direction();
+        direction /= direction.length();
+        directions.push_back(direction);
+        contributions.push_back(colorFromScatter);
+        dt.insert(Point_3(direction.x(), direction.y(), direction.z()));
+        // std::cout << direction << " -- " << direction.length2() << std::endl;
+    }
+
+    for (auto &direction: directions) {
+        const Vec3 ref = reflect(direction, rec.normal);
+        dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
+    }
+
+    for (auto v = dt.finite_vertices_begin(); v != dt.finite_vertices_end(); ++v) {
+        Point_3 site = v->point();
+        if (site.z() < 0) continue; // only useful contributions
+
+        double cell_solid_angle = 0.0;
+        SDT::Face_circulator fc = dt.incident_faces(v), done(fc);
+
+        std::vector<Point_3> voronoi_vertices;
+        if (fc != nullptr) {
+            do {
+                // if samples are drawn from a hemisphere, dt.is_infinite() may return true
+                if (!dt.is_infinite(fc)) {
+                    Point_3 p = ag.get_spherical_dual(fc);
+                    voronoi_vertices.push_back(p);
+                }
+            } while (++fc != done);
+        }
+        if (!voronoi_vertices.empty()) {
+            for (std::size_t i = 0; i < voronoi_vertices.size(); ++i) {
+                const Point_3& v1 = voronoi_vertices[i];
+                const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
+                cell_solid_angle += ag.solid_angle(site, v1, v2);
+                weights.push_back(cell_solid_angle);
+            }
+        }
+        total_area += cell_solid_angle;
+    }
+
+    // std::cout << "total area  " << total_area << std::endl;
+    // std::exit(0);
+
+    Color colorFromScatter(0,0,0);
+
+    for (int i = 0 ; i < N_SAMPLES ; ++i) {
+        colorFromScatter += weights[i] * contributions[i];
+    }
+
+    colorFromScatter /= total_area;
+
+
+    return color_from_emission + colorFromScatter;
+}
+
+Color FBVCamera::far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return {0, 0, 0};
+
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, Interval(0.001, infinity), rec))
+        return background;
+
+    ScatterRecord scatterRecord;
+    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(r, rec, scatterRecord))
+        return color_from_emission;
+
+    if (scatterRecord.skip_pdf) {
+        return scatterRecord.attenuation * far_ray_color(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+    }
+
+    // Delegate to the sampling strategy
+    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
+
+    auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
+        return this->far_ray_color(ray, d, world, lights);
+    };
+
+    const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+    Color colorFromScatter = contribution.color;
+
+    return color_from_emission + colorFromScatter;
 }

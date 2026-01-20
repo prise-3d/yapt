@@ -68,7 +68,7 @@ public:
     virtual void render_line(const Hittable &world, const Hittable &lights, size_t j);
     void persist_color_to_data(size_t row, size_t column, Color pixel_color);
 
-    virtual std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
+    std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                           size_t column) override;
 
 protected:
@@ -133,6 +133,15 @@ public:
 
     size_t pixel_x;
     size_t pixel_y;
+};
+
+class FBVCamera : public ForwardParallelCamera {
+    // std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
+    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
+    Color far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const;
+
+    shared_ptr<SamplerFactory> fb_sampler_factory;
+    shared_ptr<AggregatorFactory> fb_aggregator_factory;
 };
 
 #endif //YAPT_CAMERA_H
