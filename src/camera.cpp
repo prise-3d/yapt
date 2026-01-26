@@ -453,8 +453,8 @@ Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const 
                 const Point_3& v1 = voronoi_vertices[i];
                 const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
                 cell_solid_angle += ag.solid_angle(site, v1, v2);
-                weights.push_back(cell_solid_angle);
             }
+            weights.push_back(cell_solid_angle);
         }
         total_area += cell_solid_angle;
     }
