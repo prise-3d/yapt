@@ -293,20 +293,6 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
         aggregator->insert_contribution(color);
     }
 
-    // while (aggregator-> has_next()) {
-    //     Sample sample = aggregator->next();
-    //
-    //     Ray r = get_ray(sample.x, sample.y);
-    //
-    //     size_t retries = 0;
-    //     Color color;
-    //
-    //     do {
-    //         color = rayColor(r, static_cast<int>(maxDepth), world, lights);
-    //     } while (color.near_zero() && ++retries < 20);
-    //     aggregator->insert_contribution(color);
-    // }
-
     const Color pixel_color = aggregator->aggregate();
 
     persist_color_to_data(row, column, pixel_color);
@@ -405,8 +391,6 @@ Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const 
     if (scatterRecord.skip_pdf) {
         return scatterRecord.attenuation * far_ray_color(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
     }
-
-
     // end of standard ray tracing algorithm
     // scattering
 
