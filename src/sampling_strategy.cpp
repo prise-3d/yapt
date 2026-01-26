@@ -41,7 +41,7 @@ ScatteredContribution NEESamplingStrategy::compute_scattered_color(
 
     if (light_pdf > 0) {
         HitRecord light_rec;
-        // Check if the light is visible or oocluded
+        // Check if the light is visible or occluded
         context.world.hit(light_ray, Interval(0.001, INFINITY), light_rec);
         if (light_rec.t > 0.9999) {
             Color light_emission = light_rec.mat->emitted(light_ray, light_rec,
