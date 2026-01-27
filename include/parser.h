@@ -192,7 +192,7 @@ protected:
                 std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
-                std::cout << "                 - fbv       => First Bounce Voronoi " << std::endl;
+                std::cout << "                 - fbv       => Nested First Bounce " << std::endl;
                 std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
                 std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
                 std::cout << "                 - test      => test camera" << std::endl;
@@ -203,7 +203,7 @@ protected:
                 std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
-                std::cout << " - fbvsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
+                std::cout << " - fbvsamples => sample count for nested first bounce (DEFAULT = 100)" << std::endl;
                 return false;
             }
             if (std::regex_match(parameter, matches, pixelcam_coords)) {
