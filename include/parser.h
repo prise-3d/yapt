@@ -369,7 +369,9 @@ protected:
             filename += "-";
 
             std::string with_nee = nee ? "-nee" : "";
-            filename += aggregator + "-" + sampler + "-spp-" + std::to_string(spp) + "-w-" + std::to_string(width) + "-d-" + std::to_string(maxDepth) + with_nee + ".exr";
+            std::string fbv_tag = (cameraType == "fbv") ? "-fbv-" + std::to_string(fbv_sample_size) : "";
+            filename += aggregator + "-" + sampler + "-spp-" + std::to_string(spp) + fbv_tag + "-w-" + std::to_string(width) + "-d-" + std::to_string(maxDepth) + with_nee;
+            filename += ".exr";
             path /= filename;
         }
 

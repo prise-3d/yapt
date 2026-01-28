@@ -137,12 +137,10 @@ public:
 
 class FBVCamera : public ForwardParallelCamera {
     public:
-    // std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
     Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
     Color far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const;
     FBVCamera(const size_t direction_count) : direction_count(direction_count) {}
-    // shared_ptr<SamplerFactory> fb_sampler_factory;
-    // shared_ptr<AggregatorFactory> fb_aggregator_factory;
+
     size_t direction_count;
 };
 
