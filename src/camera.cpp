@@ -389,7 +389,7 @@ Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const 
         return color_from_emission;
 
     if (scatterRecord.skip_pdf) {
-        return scatterRecord.attenuation * far_ray_color(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
     }
     // end of standard ray tracing algorithm
     // scattering
