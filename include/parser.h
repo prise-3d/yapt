@@ -268,16 +268,22 @@ protected:
 
         if (cameraType == "pixel") {
             camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
         } else if (cameraType == "single") {
             camera = std::make_shared<SinglePixelCamera>(pixel_x, pixel_y);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
         } else if (cameraType == "biased") {
             camera = std::make_shared<BiasedForwardParallelCamera>();
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
         } else if (cameraType == "norm") {
             camera = std::make_shared<NormalCamera>();
+            camera->scattering_strategy = std::make_shared<NormalRayEvaluator>();
         } else if (cameraType == "fbv") {
             camera = std::make_shared<FBVCamera>(fbv_sample_size);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
         }
 
 
@@ -306,8 +312,8 @@ protected:
             camera->samplingStrategy = make_shared<MixtureSamplingStrategy>();
         }
 
-        //TODO: this is dirty
-        camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+
+
 
         if (source.extension() == ".ypt") {
             YaptSceneLoader loader;

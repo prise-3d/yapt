@@ -12,8 +12,7 @@
 
 class RayEvaluator {
 public:
-    explicit RayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : sampling_strategy(sampling_strategy) {}
-
+    RayEvaluator() = default;
     virtual ~RayEvaluator() = default;
     virtual Color evaluate(
         const Ray&,
@@ -21,12 +20,18 @@ public:
         const Scene& scene,
         const Color &background
     ) = 0;
+};
+
+class SamplingRayEvaluator : public RayEvaluator {
+public:
+    explicit SamplingRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : sampling_strategy(sampling_strategy) {}
+protected:
     shared_ptr<SamplingStrategy> sampling_strategy;
 };
 
-class SimpleRayEvaluator : public RayEvaluator {
+class SimpleRayEvaluator : public SamplingRayEvaluator {
 public:
-    explicit SimpleRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : RayEvaluator(sampling_strategy) {}
+    explicit SimpleRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : SamplingRayEvaluator(sampling_strategy) {}
 
     ~SimpleRayEvaluator() override = default;
 
@@ -37,6 +42,12 @@ public:
             const Color &background
             )
     override;
+};
+
+class NormalRayEvaluator final : public RayEvaluator {
+public:
+    NormalRayEvaluator() = default;
+    Color evaluate(const Ray &, const int depth, const Scene &scene, const Color &background) override;
 };
 
 #endif //YAPT_SCATTERING_STRATEGY_H

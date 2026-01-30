@@ -5,7 +5,6 @@
 #include "ray_evaluator.h"
 
 Color SimpleRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &scene, const Color &background) {
-
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};
@@ -36,5 +35,23 @@ Color SimpleRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &s
     const Color colorFromScatter = contribution.color;
 
     return color_from_emission + colorFromScatter;
-
 }
+
+Color NormalRayEvaluator::evaluate(const Ray &ray, const int depth, const Scene &scene, const Color &background) {
+    if (depth <= 0)
+        return {0, 0, 0};
+
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!scene.geometry.hit(ray, Interval(0.001, infinity), rec))
+        return background;
+
+    const auto n = unit_vector(rec.normal);
+
+    double red = (n.x() + 1.) / 2.;
+    double green = (n.y() + 1.) / 2.;
+    double blue = (n.z() + 1.) / 2.;
+
+    return {red, green, blue};
+}
+

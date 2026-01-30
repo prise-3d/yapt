@@ -119,10 +119,6 @@ protected:
 #endif
 };
 
-class NormalCamera : public ForwardParallelCamera {
-    // Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
-};
-
 class SinglePixelCamera: public ForwardCamera {
 
 public:
