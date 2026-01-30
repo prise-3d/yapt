@@ -129,13 +129,4 @@ public:
     size_t pixel_y;
 };
 
-class FBVCamera : public ForwardParallelCamera {
-    public:
-    // Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
-    // Color far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const;
-    explicit FBVCamera(const size_t direction_count) : direction_count(direction_count) {}
-
-    size_t direction_count;
-};
-
 #endif //YAPT_CAMERA_H

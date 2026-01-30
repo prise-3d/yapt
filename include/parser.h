@@ -296,8 +296,6 @@ protected:
                 fbv_sample_size
             );
         } else if (cameraType == "nest") {
-            // camera = std::make_shared<FBVCamera>(fbv_sample_size);
-            // camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
             camera = std::make_shared<ForwardParallelCamera>();
             camera->scattering_strategy = std::make_shared<NestedRayEvaluator>(
                 sampling_strategy,
