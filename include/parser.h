@@ -266,27 +266,32 @@ protected:
             aggregatorFactory = std::make_shared<FirstBounceVoronoiFactory>();
         }
 
+        shared_ptr<SamplingStrategy> sampling_strategy;
+        if (nee) {
+            sampling_strategy = make_shared<NEESamplingStrategy>();
+        } else {
+            sampling_strategy = make_shared<MixtureSamplingStrategy>();
+        }
+
         if (cameraType == "pixel") {
             camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
         } else if (cameraType == "single") {
             camera = std::make_shared<SinglePixelCamera>(pixel_x, pixel_y);
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
         } else if (cameraType == "biased") {
             camera = std::make_shared<BiasedForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
         } else if (cameraType == "norm") {
-            camera = std::make_shared<NormalCamera>();
+            camera = std::make_shared<ForwardParallelCamera>();
             camera->scattering_strategy = std::make_shared<NormalRayEvaluator>();
         } else if (cameraType == "fbv") {
             camera = std::make_shared<FBVCamera>(fbv_sample_size);
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
         }
-
-
 
         if (width == 0) width = 900;
 
@@ -306,11 +311,7 @@ protected:
         camera->seed           = seed;
 
         // Set the sampling strategy based on nee flag
-        if (nee) {
-            camera->samplingStrategy = make_shared<NEESamplingStrategy>();
-        } else {
-            camera->samplingStrategy = make_shared<MixtureSamplingStrategy>();
-        }
+
 
 
 
