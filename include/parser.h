@@ -34,6 +34,7 @@
 #include "sceneloader.h"
 #include "scene.h"
 #include "exprtk/exprtk.hpp"
+#include "ray_evaluator.h"
 
 class Parser {
 
@@ -279,6 +280,8 @@ protected:
             camera = std::make_shared<ForwardParallelCamera>();
         }
 
+
+
         if (width == 0) width = 900;
 
         camera->numThreads = numThreads;
@@ -302,6 +305,9 @@ protected:
         } else {
             camera->samplingStrategy = make_shared<MixtureSamplingStrategy>();
         }
+
+        //TODO: this is dirty
+        camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
 
         if (source.extension() == ".ypt") {
             YaptSceneLoader loader;

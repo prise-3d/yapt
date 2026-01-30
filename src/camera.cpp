@@ -129,7 +129,7 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &wo
     for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
 
-        const Color color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+        const Color color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), world, lights, background);
         aggregator->insert_contribution(color);
     }
 
@@ -150,38 +150,9 @@ void ForwardCamera::render(const Hittable& world, const Hittable& lights) {
     }
 }
 
-Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
-    // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
-        return {0, 0, 0};
-
-    HitRecord rec;
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, Interval(0.001, infinity), rec))
-        return background;
-
-    ScatterRecord scatterRecord;
-    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
-
-    if (!rec.mat->scatter(r, rec, scatterRecord))
-        return color_from_emission;
-
-    if (scatterRecord.skip_pdf) {
-        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
-    }
-
-    // Delegate to the sampling strategy
-    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
-
-    auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
-        return this->rayColor(ray, d, world, lights);
-    };
-
-    const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
-    Color colorFromScatter = contribution.color;
-
-    return color_from_emission + colorFromScatter;
-}
+// Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
+//     return scattering_strategy->ray_color(r, depth, world, lights, background);
+// }
 
 void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights) {
     initialize();
@@ -267,7 +238,7 @@ std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Hittable
             const double dx = static_cast<double>(x) / static_cast<double>(imageWidth) - .5;
             Ray r = get_ray(dx + static_cast<double>(column), dy + static_cast<double>(row));
 
-            Color pixel_color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+            Color pixel_color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), world, lights, background);
 
             persist_color_to_data(row, column, pixel_color);
         }
@@ -288,7 +259,7 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
         Color color;
 
         do {
-            color = rayColor(r, static_cast<int>(maxDepth), world, lights);
+            color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), world, lights, background);
         } while (color.near_zero() && ++retries < 20);
         aggregator->insert_contribution(color);
     }
@@ -323,23 +294,23 @@ std::shared_ptr<SampleAggregator> FunctionCamera::render_pixel(const Hittable &w
 }
 #endif
 
-Color NormalCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
-    if (depth <= 0)
-        return {0, 0, 0};
-
-    HitRecord rec;
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, Interval(0.001, infinity), rec))
-        return background;
-
-    const auto n = unit_vector(rec.normal);
-
-    double red = (n.x() + 1.) / 2.;
-    double green = (n.y() + 1.) / 2.;
-    double blue = (n.z() + 1.) / 2.;
-
-    return {red, green, blue};
-}
+// Color NormalCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+//     if (depth <= 0)
+//         return {0, 0, 0};
+//
+//     HitRecord rec;
+//     // If the ray hits nothing, return the background color.
+//     if (!world.hit(r, Interval(0.001, infinity), rec))
+//         return background;
+//
+//     const auto n = unit_vector(rec.normal);
+//
+//     double red = (n.x() + 1.) / 2.;
+//     double green = (n.y() + 1.) / 2.;
+//     double blue = (n.z() + 1.) / 2.;
+//
+//     return {red, green, blue};
+// }
 
 void SinglePixelCamera::render(const Hittable &world, const Hittable &lights) {
     initialize();
@@ -370,135 +341,135 @@ Ray TestCamera::get_ray(const double x, const double y) const {
     return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
 }
 
-Color TestCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
-    if (-r.origin().x() + r.origin().y() > 0) {
-        return {0, 0, 0};
-    } else return {1, 1, 1};
-}
+// Color TestCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+//     if (-r.origin().x() + r.origin().y() > 0) {
+//         return {0, 0, 0};
+//     } else return {1, 1, 1};
+// }
 
-Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
-    HitRecord rec;
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, Interval(0.001, infinity), rec))
-        return background;
-
-    ScatterRecord scatterRecord;
-    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
-
-    if (!rec.mat->scatter(r, rec, scatterRecord))
-        return color_from_emission;
-
-    if (scatterRecord.skip_pdf) {
-        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
-    }
-    // end of standard ray tracing algorithm
-    // scattering
-
-    // Delegate to the sampling strategy
-    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
-
-    auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
-        return far_ray_color(ray, d, world, lights);
-    };
-
-    // now this is dirty
-    FirstBounceVoronoi ag;
-    Traits traits(Point_3(0, 0, 0), 1.0); // Unit sphere
-    auto dt = SDT(traits);
-
-    std::vector<Vec3> directions;
-    std::vector<Color> contributions;
-    std::vector<double> weights;
-
-    double total_area = 0.;
-
-    for (int i = 0 ; i < direction_count ; ++i) {
-        const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
-        const Color colorFromScatter = contribution.color;
-        auto direction = contribution.outgoing.direction();
-        direction /= direction.length();
-        directions.push_back(direction);
-        contributions.push_back(colorFromScatter);
-        dt.insert(Point_3(direction.x(), direction.y(), direction.z()));
-        // std::cout << direction << " -- " << direction.length2() << std::endl;
-    }
-
-    for (auto &direction: directions) {
-        const Vec3 ref = reflect(direction, rec.normal);
-        dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
-    }
-
-    for (auto v = dt.vertices_begin(); v != dt.vertices_end() ; ++v) {
-        Point_3 site = v->point();
-        // if (site.z() < 0) continue; // only useful contributions
-        Vec3 p(site.x(), site.y(), site.z());
-        if (dot(p, rec.normal) <= 0) continue;
-
-
-        double cell_solid_angle = 0.0;
-        SDT::Face_circulator fc = dt.incident_faces(v), done(fc);
-
-        std::vector<Point_3> voronoi_vertices;
-        if (fc != nullptr) {
-            do {
-                // if samples are drawn from a hemisphere, dt.is_infinite() may return true
-                if (!dt.is_infinite(fc)) {
-                    Point_3 p = ag.get_spherical_dual(fc);
-                    voronoi_vertices.push_back(p);
-                }
-            } while (++fc != done);
-        }
-        if (!voronoi_vertices.empty()) {
-            for (std::size_t i = 0; i < voronoi_vertices.size(); ++i) {
-                const Point_3& v1 = voronoi_vertices[i];
-                const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
-                cell_solid_angle += ag.solid_angle(site, v1, v2);
-            }
-            weights.push_back(cell_solid_angle);
-        }
-        total_area += cell_solid_angle;
-    }
-
-    Color colorFromScatter(0,0,0);
-
-    for (int i = 0 ; i < direction_count ; ++i) {
-        colorFromScatter += weights[i] * contributions[i];
-    }
-
-    colorFromScatter /= total_area;
-
-    return color_from_emission + colorFromScatter;
-}
-
-Color FBVCamera::far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
-    // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
-        return {0, 0, 0};
-
-    HitRecord rec;
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, Interval(0.001, infinity), rec))
-        return background;
-
-    ScatterRecord scatterRecord;
-    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
-
-    if (!rec.mat->scatter(r, rec, scatterRecord))
-        return color_from_emission;
-
-    if (scatterRecord.skip_pdf) {
-        return scatterRecord.attenuation * far_ray_color(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
-    }
-
-    // Delegate to the sampling strategy
-    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
-
-    auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
-        return this->far_ray_color(ray, d, world, lights);
-    };
-
-    const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
-    Color colorFromScatter = contribution.color;
-
-    return color_from_emission + colorFromScatter;
-}
+// Color FBVCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
+//     HitRecord rec;
+//     // If the ray hits nothing, return the background color.
+//     if (!world.hit(r, Interval(0.001, infinity), rec))
+//         return background;
+//
+//     ScatterRecord scatterRecord;
+//     const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+//
+//     if (!rec.mat->scatter(r, rec, scatterRecord))
+//         return color_from_emission;
+//
+//     if (scatterRecord.skip_pdf) {
+//         return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+//     }
+//     // end of standard ray tracing algorithm
+//     // scattering
+//
+//     // Delegate to the sampling strategy
+//     SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
+//
+//     auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
+//         return far_ray_color(ray, d, world, lights);
+//     };
+//
+//     // now this is dirty
+//     FirstBounceVoronoi ag;
+//     Traits traits(Point_3(0, 0, 0), 1.0); // Unit sphere
+//     auto dt = SDT(traits);
+//
+//     std::vector<Vec3> directions;
+//     std::vector<Color> contributions;
+//     std::vector<double> weights;
+//
+//     double total_area = 0.;
+//
+//     for (int i = 0 ; i < direction_count ; ++i) {
+//         const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+//         const Color colorFromScatter = contribution.color;
+//         auto direction = contribution.outgoing.direction();
+//         direction /= direction.length();
+//         directions.push_back(direction);
+//         contributions.push_back(colorFromScatter);
+//         dt.insert(Point_3(direction.x(), direction.y(), direction.z()));
+//         // std::cout << direction << " -- " << direction.length2() << std::endl;
+//     }
+//
+//     for (auto &direction: directions) {
+//         const Vec3 ref = reflect(direction, rec.normal);
+//         dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
+//     }
+//
+//     for (auto v = dt.vertices_begin(); v != dt.vertices_end() ; ++v) {
+//         Point_3 site = v->point();
+//         // if (site.z() < 0) continue; // only useful contributions
+//         Vec3 p(site.x(), site.y(), site.z());
+//         if (dot(p, rec.normal) <= 0) continue;
+//
+//
+//         double cell_solid_angle = 0.0;
+//         SDT::Face_circulator fc = dt.incident_faces(v), done(fc);
+//
+//         std::vector<Point_3> voronoi_vertices;
+//         if (fc != nullptr) {
+//             do {
+//                 // if samples are drawn from a hemisphere, dt.is_infinite() may return true
+//                 if (!dt.is_infinite(fc)) {
+//                     Point_3 p = ag.get_spherical_dual(fc);
+//                     voronoi_vertices.push_back(p);
+//                 }
+//             } while (++fc != done);
+//         }
+//         if (!voronoi_vertices.empty()) {
+//             for (std::size_t i = 0; i < voronoi_vertices.size(); ++i) {
+//                 const Point_3& v1 = voronoi_vertices[i];
+//                 const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
+//                 cell_solid_angle += ag.solid_angle(site, v1, v2);
+//             }
+//             weights.push_back(cell_solid_angle);
+//         }
+//         total_area += cell_solid_angle;
+//     }
+//
+//     Color colorFromScatter(0,0,0);
+//
+//     for (int i = 0 ; i < direction_count ; ++i) {
+//         colorFromScatter += weights[i] * contributions[i];
+//     }
+//
+//     colorFromScatter /= total_area;
+//
+//     return color_from_emission + colorFromScatter;
+// }
+//
+// Color FBVCamera::far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
+//     // If we've exceeded the ray bounce limit, no more light is gathered.
+//     if (depth <= 0)
+//         return {0, 0, 0};
+//
+//     HitRecord rec;
+//     // If the ray hits nothing, return the background color.
+//     if (!world.hit(r, Interval(0.001, infinity), rec))
+//         return background;
+//
+//     ScatterRecord scatterRecord;
+//     const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+//
+//     if (!rec.mat->scatter(r, rec, scatterRecord))
+//         return color_from_emission;
+//
+//     if (scatterRecord.skip_pdf) {
+//         return scatterRecord.attenuation * far_ray_color(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+//     }
+//
+//     // Delegate to the sampling strategy
+//     SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, world, lights, depth - 1};
+//
+//     auto ray_color_function = [this, &world, &lights](const Ray& ray, int d) {
+//         return this->far_ray_color(ray, d, world, lights);
+//     };
+//
+//     const ScatteredContribution contribution = samplingStrategy->compute_scattered_color(ctx, ray_color_function);
+//     Color colorFromScatter = contribution.color;
+//
+//     return color_from_emission + colorFromScatter;
+// }

@@ -115,6 +115,7 @@ add_executable(yapt ${SOURCES}
         include/scene.h
         include/sampling_strategy.h
         src/sampling_strategy.cpp
+        include/ray_evaluator.h
 )
 
 find_package(Threads REQUIRED)
@@ -135,8 +136,12 @@ add_custom_target(clean-all
         COMMAND ${CMAKE_COMMAND} -E remove CMakeCache.txt
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 COMPONENTS Core Widgets Gui REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets Gui OpenGLWidgets REQUIRED)
+#target_link_libraries(MonProjet PRIVATE Qt6::Widgets Qt6::OpenGLWidgets)
 
 add_executable(qtvor ${SOURCES}
         src/qtvor.cpp
@@ -190,9 +195,11 @@ add_executable(qtvor ${SOURCES}
         include/qtvor/voronoicellitem.h
         include/qtvor/zoomableimageview.h
         include/qtvor/utils.h
+        include/qtvor/hemisphere.h
         include/functions.h
         include/sampling_strategy.h
         src/sampling_strategy.cpp
+        include/ray_evaluator.h
 )
 
 target_link_libraries(qtvor
@@ -200,6 +207,7 @@ target_link_libraries(qtvor
         Qt6::Core
         Qt6::Widgets
         Qt6::Gui
+        Qt6::OpenGLWidgets
         ${PNG_LIBRARIES}
         Threads::Threads
         assimp
@@ -260,6 +268,7 @@ add_executable(eval ${SOURCES}
         src/eval.cpp
         include/sampling_strategy.h
         src/sampling_strategy.cpp
+        include/ray_evaluator.h
 )
 
 target_link_libraries(eval
@@ -275,6 +284,7 @@ target_link_libraries(eval
 
 add_executable(test_torch
         src/test_torch.cpp
+        include/ray_evaluator.h
 )
 
 target_link_libraries(test_torch

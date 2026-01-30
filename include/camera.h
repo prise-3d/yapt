@@ -7,12 +7,11 @@
 #include "sampler.h"
 #include "aggregators.h"
 #include "sampling_strategy.h"
+#include "ray_evaluator.h"
 
 #ifdef FUNCTION_PARSING
     #include "functions.h"
 #endif
-
-#include "path.h"
 
 class Camera {
 public:
@@ -43,6 +42,8 @@ public:
     virtual std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                           size_t column) = 0;
 
+    shared_ptr<RayEvaluator> scattering_strategy;
+
     virtual void initialize();
 
 protected:
@@ -70,10 +71,6 @@ public:
 
     std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row,
                                                           size_t column) override;
-
-protected:
-
-    [[nodiscard]] virtual Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const;
 };
 
 class ForwardParallelCamera: public ForwardCamera {
@@ -90,7 +87,7 @@ public:
 
 class TestCamera final : public ForwardParallelCamera {
     [[nodiscard]] Ray get_ray(const double x, const double y) const override;
-    [[nodiscard]] Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
+    // [[nodiscard]] Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
 };
 
 class CartographyCamera final : public ForwardCamera {
@@ -122,7 +119,7 @@ protected:
 };
 
 class NormalCamera : public ForwardParallelCamera {
-    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
+    // Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
 };
 
 class SinglePixelCamera: public ForwardCamera {
@@ -137,12 +134,10 @@ public:
 
 class FBVCamera : public ForwardParallelCamera {
     public:
-    // std::shared_ptr<SampleAggregator> render_pixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) override;
-    Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
-    Color far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const;
-    FBVCamera(const size_t direction_count) : direction_count(direction_count) {}
-    // shared_ptr<SamplerFactory> fb_sampler_factory;
-    // shared_ptr<AggregatorFactory> fb_aggregator_factory;
+    // Color rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const override;
+    // Color far_ray_color(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const;
+    explicit FBVCamera(const size_t direction_count) : direction_count(direction_count) {}
+
     size_t direction_count;
 };
 
