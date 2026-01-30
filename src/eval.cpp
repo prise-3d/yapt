@@ -26,16 +26,18 @@
 
 int main(int argc, char *argv[]) {
     Parser parser;
-    Scene scene;
+    ContentDescription description;
+    Scene scene = description.scene;
+    shared_ptr<Camera> camera = description.camera;
 
     // load the scene description and camera
-    if (!parser.parseScene(argc, argv, scene)) return 0;
+    if (!parser.parseScene(argc, argv, description)) return 0;
 
-    scene.camera->imageWidth = 1;
-    scene.camera->initialize();
+    camera->imageWidth = 1;
+    camera->initialize();
 
-    scene.camera->render_pixel(*scene.content, *scene.lights, 0, 0);
-    auto data = scene.camera->data();
+    description.camera->render_pixel(scene, 0, 0);
+    auto data = description.camera->data();
     auto v = data->data[0];
 
     std::cout << std::endl << v << std::endl;

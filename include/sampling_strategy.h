@@ -29,6 +29,7 @@
 #include "hittable.h"
 #include "material.h"
 #include <functional>
+#include "scene.h"
 
 struct ScatteredContribution {
     Color color;
@@ -46,8 +47,7 @@ public:
         const Ray& incoming_ray;           // The ray that hit the surface
         const HitRecord& hit_record;       // Information about the hit point
         const ScatterRecord& scatter_record; // BRDF information from the material
-        const Hittable& world;             // The scene geometry
-        const Hittable& lights;            // Light sources for sampling
+        const Scene &scene;                // Light sources for sampling
         int remaining_depth;               // Remaining ray bounces
     };
 

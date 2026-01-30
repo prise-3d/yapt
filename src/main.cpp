@@ -26,14 +26,14 @@
 
 int main(const int argc, char* argv[]) {
     Parser parser;
-    Scene scene;
+    ContentDescription content;
 
     // load the scene description and camera
-    if (!parser.parseScene(argc, argv, scene)) return 0;
+    if (!parser.parseScene(argc, argv, content)) return 0;
 
     parser.startTimer();
-    scene.camera->render(*scene.content, *scene.lights);
+    content.camera->render(content.scene);
     parser.stopTimer();
 
-    parser.exportImage(argc, argv, scene);
+    parser.exportImage(argc, argv, content);
 }

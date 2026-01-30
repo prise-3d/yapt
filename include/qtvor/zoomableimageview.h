@@ -33,7 +33,7 @@
 
 class ZoomableImageView : public ZoomableGraphicsView {
 public:
-    explicit ZoomableImageView(Scene yaptScene, QWidget *parent = nullptr): ZoomableGraphicsView(parent),
+    explicit ZoomableImageView(ContentDescription yaptScene, QWidget *parent = nullptr): ZoomableGraphicsView(parent),
                                                                             yaptScene(yaptScene) {
         setMouseTracking(true);
         viewport()->installEventFilter(this);
@@ -93,7 +93,7 @@ protected:
         }
     }
 
-    Scene yaptScene;
+    ContentDescription yaptScene;
 };
 
 inline QImage convertToQImage(const ImageData &imageData) {

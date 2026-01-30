@@ -99,9 +99,9 @@ Point3 Camera::defocusDiskSample() const {
 }
 
 
-void ForwardCamera::render_line(const Hittable &world, const Hittable &lights, size_t j) {
+void ForwardCamera::render_line(const Scene &scene, size_t j) {
     for (size_t column = 0; column < imageWidth; ++column) {
-        render_pixel(world, lights, j, column);
+        render_pixel(scene, j, column);
     }
 }
 
@@ -119,7 +119,7 @@ void ForwardCamera::persist_color_to_data(const size_t row, const size_t column,
     imageData.data[idx + 2] = pixel_color.z();  // B
 }
 
-std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &world, const Hittable &lights,
+std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Scene &scene,
                                                              const size_t row, const size_t column) {
     random_seed(combine(seed, row, column));
 
@@ -129,7 +129,7 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &wo
     for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
 
-        const Color color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), world, lights, background);
+        const Color color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), scene, background);
         aggregator->insert_contribution(color);
     }
 
@@ -141,12 +141,12 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Hittable &wo
 }
 
 
-void ForwardCamera::render(const Hittable& world, const Hittable& lights) {
+void ForwardCamera::render(const Scene &scene) {
     initialize();
 
     for (int j = 0; j < imageHeight; j++) {
         std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
-        render_line(world, lights, j);
+        render_line(scene, j);
     }
 }
 
@@ -154,7 +154,7 @@ void ForwardCamera::render(const Hittable& world, const Hittable& lights) {
 //     return scattering_strategy->ray_color(r, depth, world, lights, background);
 // }
 
-void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights) {
+void ForwardParallelCamera::render(const Scene &scene) {
     initialize();
 
     std::mutex queue_mutex;
@@ -194,7 +194,7 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
             const int end_j = task.second;
 
             for (int j = start_j; j <= end_j; ++j) {
-                render_line(world, lights, j);
+                render_line(scene, j);
             }
         }
     };
@@ -213,9 +213,9 @@ void ForwardParallelCamera::render(const Hittable &world, const Hittable &lights
 
 CartographyCamera::CartographyCamera(const size_t pixel_x, const size_t pixel_y): pixel_x(pixel_x), pixel_y(pixel_y) {}
 
-void CartographyCamera::render(const Hittable &world, const Hittable &lights) {
+void CartographyCamera::render(const Scene &scene) {
     initialize();
-    render_pixel(world, lights, pixel_y, pixel_x);
+    render_pixel(scene, pixel_y, pixel_x);
 }
 
 void CartographyCamera::initialize() {
@@ -229,7 +229,7 @@ void CartographyCamera::initialize() {
  * @param row
  * @param column
  */
-std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Hittable &world, const Hittable &lights,
+std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Scene& scene,
                                                                  const size_t row, const size_t column) {
     std::clog << "Rendering pixel @ " << column << ", " << row << std::endl;
     for (size_t y = 0 ; y < imageHeight ; ++y) {
@@ -238,7 +238,7 @@ std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Hittable
             const double dx = static_cast<double>(x) / static_cast<double>(imageWidth) - .5;
             Ray r = get_ray(dx + static_cast<double>(column), dy + static_cast<double>(row));
 
-            Color pixel_color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), world, lights, background);
+            Color pixel_color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), scene, background);
 
             persist_color_to_data(row, column, pixel_color);
         }
@@ -248,7 +248,7 @@ std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Hittable
 }
 
 std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
-    const Hittable &world, const Hittable &lights, size_t row, size_t column) {
+    const Scene &scene, size_t row, size_t column) {
     const auto aggregator = samplerAggregator->create();
     aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
 
@@ -259,7 +259,7 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
         Color color;
 
         do {
-            color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), world, lights, background);
+            color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), scene, background);
         } while (color.near_zero() && ++retries < 20);
         aggregator->insert_contribution(color);
     }
@@ -312,10 +312,10 @@ std::shared_ptr<SampleAggregator> FunctionCamera::render_pixel(const Hittable &w
 //     return {red, green, blue};
 // }
 
-void SinglePixelCamera::render(const Hittable &world, const Hittable &lights) {
+void SinglePixelCamera::render(const Scene &scene) {
     initialize();
 
-    render_pixel(world, lights, pixel_y, pixel_x);
+    render_pixel(scene, pixel_y, pixel_x);
 
     const size_t idx = 3 * (pixel_x + pixel_y * imageWidth);
 

@@ -27,15 +27,28 @@
 
 #include "yapt.h"
 #include "hittable_list.h"
-#include "camera.h"
+
+class Camera;
+
 
 class Scene {
 public:
-    Scene() {}
-    Scene(std::shared_ptr<HittableList> content, std::shared_ptr<HittableList> lights, std::shared_ptr<Camera> camera): content(content), lights(lights), camera(camera) {}
-    ~Scene() = default;
-    std::shared_ptr<HittableList> content;
-    std::shared_ptr<HittableList> lights;
+    HittableList geometry;
+    HittableList lights;
+    Color background_color;
+
+    Scene() = default;
+
+    Scene(const HittableList &geometry, const HittableList &lights, Color background_color) :
+        geometry(geometry), lights(lights), background_color(background_color) {}
+};
+
+class ContentDescription {
+public:
+    ContentDescription() {};
+    ~ContentDescription() = default;
+    ContentDescription(const Scene &scene, const std::shared_ptr<Camera> &camera): scene(scene), camera(camera) {}
+    Scene scene;
     std::shared_ptr<Camera> camera;
 };
 

@@ -91,7 +91,7 @@ protected:
         render_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     }
 
-    bool parseScene(int argc, char* argv[], Scene& scene) {
+    bool parseScene(int argc, char* argv[], ContentDescription& content_description) {
         seed = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
         const std::string sppprefix = "spp=";
@@ -338,14 +338,16 @@ protected:
             return false;
         }
 
-        scene.camera = camera;
-        scene.lights = lights;
-        scene.content = content;
+        content_description = ContentDescription(
+            Scene(*content, *lights, Color(0, 0, 0))
+            , camera);
+        content_description.scene = Scene(*content, *lights, Color(0, 0, 0));
+        content_description.camera = camera;
 
         return true;
     }
 
-    bool exportImage(const int argc, char* argv[], const Scene& scene) const {
+    bool exportImage(const int argc, char* argv[], const ContentDescription& scene) const {
 
         std::filesystem::path dir;
         std::filesystem::path path;

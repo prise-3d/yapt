@@ -35,14 +35,14 @@ ScatteredContribution NEESamplingStrategy::compute_scattered_color(
     Color colorFromScatter{0, 0, 0};
 
     // Next Event Estimation: Sample a point on the light
-    auto light_ptr = make_shared<HittablePDF>(context.lights, context.hit_record.p);
-    Ray light_ray(context.hit_record.p, light_ptr->generate());
+    const auto light_ptr = make_shared<HittablePDF>(context.scene.lights, context.hit_record.p);
+    const Ray light_ray(context.hit_record.p, light_ptr->generate());
     double light_pdf = light_ptr->value(light_ray.direction());
 
     if (light_pdf > 0) {
         HitRecord light_rec;
         // Check if the light is visible or occluded
-        context.world.hit(light_ray, Interval(0.001, INFINITY), light_rec);
+        context.scene.geometry.hit(light_ray, Interval(0.001, INFINITY), light_rec);
         if (light_rec.t > 0.9999) {
             Color light_emission = light_rec.mat->emitted(light_ray, light_rec,
                                                           light_rec.u, light_rec.v, light_rec.p);
@@ -51,9 +51,9 @@ ScatteredContribution NEESamplingStrategy::compute_scattered_color(
                     context.incoming_ray, context.hit_record, light_ray);
 
                 // POWER HEURISTIC (beta = 2)
-                double light_pdf_2 = light_pdf * light_pdf;
-                double scattering_pdf_2 = scattering_pdf * scattering_pdf;
-                double weight_nee = light_pdf_2 / (light_pdf_2 + scattering_pdf_2);
+                const double light_pdf_2 = light_pdf * light_pdf;
+                const double scattering_pdf_2 = scattering_pdf * scattering_pdf;
+                const double weight_nee = light_pdf_2 / (light_pdf_2 + scattering_pdf_2);
 
                 colorFromScatter += weight_nee * context.scatter_record.attenuation *
                                    scattering_pdf * light_emission / light_pdf;
@@ -70,7 +70,7 @@ ScatteredContribution NEESamplingStrategy::compute_scattered_color(
             context.incoming_ray, context.hit_record, scattered);
         const Color sampleColor = ray_color_function(scattered, context.remaining_depth);
 
-        auto light_ptr_for_weight = make_shared<HittablePDF>(context.lights, context.hit_record.p);
+        auto light_ptr_for_weight = make_shared<HittablePDF>(context.scene.lights, context.hit_record.p);
         double light_pdf_for_this_direction = light_ptr_for_weight->value(scattered.direction());
 
         // POWER HEURISTIC (beta = 2)
@@ -90,7 +90,7 @@ ScatteredContribution MixtureSamplingStrategy::compute_scattered_color(
     const std::function<Color(const Ray&, int)>& rayColorFunc
 ) const {
     // Standard path tracing using a mixture of light and BRDF sampling
-    const auto light_ptr = make_shared<HittablePDF>(context.lights, context.hit_record.p);
+    const auto light_ptr = make_shared<HittablePDF>(context.scene.lights, context.hit_record.p);
     const MixturePDF p(light_ptr, context.scatter_record.pdf_ptr);
 
     const auto scattered = Ray(context.hit_record.p, p.generate());

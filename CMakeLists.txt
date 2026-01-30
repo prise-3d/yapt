@@ -116,6 +116,7 @@ add_executable(yapt ${SOURCES}
         include/sampling_strategy.h
         src/sampling_strategy.cpp
         include/ray_evaluator.h
+        src/ray_evaluator.cpp
 )
 
 find_package(Threads REQUIRED)
@@ -200,6 +201,7 @@ add_executable(qtvor ${SOURCES}
         include/sampling_strategy.h
         src/sampling_strategy.cpp
         include/ray_evaluator.h
+        src/ray_evaluator.cpp
 )
 
 target_link_libraries(qtvor
@@ -269,6 +271,7 @@ add_executable(eval ${SOURCES}
         include/sampling_strategy.h
         src/sampling_strategy.cpp
         include/ray_evaluator.h
+        src/ray_evaluator.cpp
 )
 
 target_link_libraries(eval
@@ -285,6 +288,7 @@ target_link_libraries(eval
 add_executable(test_torch
         src/test_torch.cpp
         include/ray_evaluator.h
+        src/ray_evaluator.cpp
 )
 
 target_link_libraries(test_torch
