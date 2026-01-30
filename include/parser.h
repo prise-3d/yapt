@@ -109,7 +109,7 @@ protected:
         const std::string silentprefix = "silent";
         const std::string seedprefix = "seed=";
         const std::string neeprefix = "nee=";
-        const std::string fbvsamples = "fbvsamples=";
+        const std::string nestsamples = "nestsamples=";
 
         const std::regex pixelcam_coords(R"(cam=pixel-([0-9]+),([0-9]+))");
         const std::regex singlecam_coords(R"(cam=one-([0-9]+),([0-9]+))");
@@ -119,8 +119,8 @@ protected:
             std::string parameter(argv[i]);
             if (parameter.rfind(sppprefix, 0) == 0) {
                 spp = std::stoi(parameter.substr(sppprefix.size()));
-            } else if (parameter.rfind(fbvsamples, 0) == 0) {
-                fbv_sample_size = static_cast<std::size_t>(std::stoi(parameter.substr(fbvsamples.size())));
+            } else if (parameter.rfind(nestsamples, 0) == 0) {
+                fbv_sample_size = static_cast<std::size_t>(std::stoi(parameter.substr(nestsamples.size())));
             }
             else if (parameter.rfind(samplerprefix, 0) == 0) {
                 sampler = parameter.substr(samplerprefix.size());
@@ -193,7 +193,8 @@ protected:
                 std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
-                std::cout << "                 - fbv       => First Bounce Voronoi " << std::endl;
+                std::cout << "                 - nest      => MC Nesting" << std::endl;
+                std::cout << "                 - fbv       => First Bounce Voronoi Nesting" << std::endl;
                 std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
                 std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
                 std::cout << "                 - test      => test camera" << std::endl;
@@ -204,7 +205,7 @@ protected:
                 std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
-                std::cout << " - fbvsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
+                std::cout << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
                 return false;
             }
             if (std::regex_match(parameter, matches, pixelcam_coords)) {
@@ -285,9 +286,24 @@ protected:
         } else if (cameraType == "norm") {
             camera = std::make_shared<ForwardParallelCamera>();
             camera->scattering_strategy = std::make_shared<NormalRayEvaluator>();
-        } else if (cameraType == "fbv") {
-            camera = std::make_shared<FBVCamera>(fbv_sample_size);
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
+        } else if (cameraType == "cvnest") {
+            // camera = std::make_shared<FBVCamera>(fbv_sample_size);
+            // camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
+            camera = std::make_shared<ForwardParallelCamera>();
+            camera->scattering_strategy = std::make_shared<CVorNestedRayEvaluator>(
+                sampling_strategy,
+                make_shared<SimpleRayEvaluator>(sampling_strategy),
+                fbv_sample_size
+            );
+        } else if (cameraType == "nest") {
+            // camera = std::make_shared<FBVCamera>(fbv_sample_size);
+            // camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
+            camera = std::make_shared<ForwardParallelCamera>();
+            camera->scattering_strategy = std::make_shared<NestedRayEvaluator>(
+                sampling_strategy,
+                make_shared<SimpleRayEvaluator>(sampling_strategy),
+                fbv_sample_size
+            );
         } else {
             camera = std::make_shared<ForwardParallelCamera>();
             camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
