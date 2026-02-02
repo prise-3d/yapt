@@ -64,21 +64,6 @@ Point_3 SphericalVoronoiIntegrator::get_spherical_dual(const SDT::Face_handle & 
 
     return CGAL::ORIGIN + normal;
 }
-Point_3 SphericalVoronoiIntegrator::sample_to_sphere(Sample sample, bool under) {
-    double t = sample.dx * M_PI; // [-PI / 2 ; PI / 2)
-    if (under) t += M_PI;
-    const double p = 2 * sample.dy * M_PI; // [-PI ; PI)
-    const double sint = std::sin(t);
-    const double cosp = std::cos(p);
-    const double sinp = std::sin(p);
-    double cost = std::cos(t);
-
-    return {
-        sint * cosp,
-        sint * sinp,
-        cost
-    };
-}
 
 SphericalVoronoiIntegrator::SphericalVoronoiIntegrator(const Vec3 &normal)  : normal(normal) {
     traits = Traits(Point_3(0, 0, 0), 1.0); // Unit sphere
@@ -98,7 +83,7 @@ Color SphericalVoronoiIntegrator::integrate() {
         dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
     }
 
-    double total_area = 0.0;
+    total_area = 0.0;
 
     for (auto v = dt.vertices_begin(); v != dt.vertices_end() ; ++v) {
         const Point_3 site = v->point();
@@ -137,5 +122,33 @@ Color SphericalVoronoiIntegrator::integrate() {
 
     contribution /= total_area;
 
+    // if (observers.size() > 0) {
+    //     for (const auto &observer : observers) {
+    //         observer->on_computation_complete(
+    //             contribution,
+    //             normal,
+    //             total_area,
+    //             directions,
+    //             contributions,
+    //             weights
+    //         );
+    //     }
+    // }
+
+    return contribution;
+}
+
+Color ObservableSphericalVoronoiIntegrator::integrate() {
+    SphericalVoronoiIntegrator::integrate();
+    for (const auto &observer : observers) {
+        observer->on_computation_complete(
+            contribution,
+            normal,
+            total_area,
+            directions,
+            contributions,
+            weights
+        );
+    }
     return contribution;
 }

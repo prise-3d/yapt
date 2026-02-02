@@ -32,13 +32,26 @@ typedef CGAL::Delaunay_triangulation_on_sphere_2<Traits> SDT;
 typedef K::Point_3 Point_3;
 typedef K::Vector_3 Vector_3;
 
+class SphericalVoronoiIntegratorObserver {
+public:
+    virtual ~SphericalVoronoiIntegratorObserver() = default;
+    virtual void on_computation_complete(
+        const Color &total_contribution,
+        const Vec3 &normal,
+        const double total_area,
+        const std::vector<Vec3> directions,
+        const std::vector<Color> contributions,
+        const std::vector<double> weights);
+};
+
 class SphericalVoronoiIntegrator {
 public:
+    virtual ~SphericalVoronoiIntegrator() = default;
+
     static double solid_angle(const Point_3& p1, const Point_3& p2, const Point_3& p3);
     static Point_3 get_spherical_dual(const SDT::Face_handle& f);
-    static Point_3 sample_to_sphere(Sample sample, bool under);
     void add_contribution(const Vec3 &direction, const Color &contribution);
-    Color integrate();
+    virtual Color integrate();
     explicit SphericalVoronoiIntegrator(const Vec3 &normal);
 
 protected:
@@ -48,6 +61,17 @@ protected:
     std::vector<Color> contributions;
     std::vector<double> weights;
     Vec3 normal;
+    double total_area;
+    Color contribution;
+};
+
+class ObservableSphericalVoronoiIntegrator : public SphericalVoronoiIntegrator {
+public:
+    explicit ObservableSphericalVoronoiIntegrator(const Vec3 &normal, const std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers): SphericalVoronoiIntegrator(normal), observers(observers) {}
+    Color integrate() override;
+
+protected:
+    std::vector<std::shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
 };
 
 #endif //YAPT_SPHERICAL_VORONOI_H
