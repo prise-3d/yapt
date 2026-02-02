@@ -78,7 +78,7 @@ public:
         dt.insert(Point_3(direction.x(), direction.y(), direction.z()));
     }
 
-    Color integrate(const Vec3 &normal) {
+    Color integrate() {
         for (auto &direction: directions) {
             const Vec3 ref = reflect(direction, normal);
             dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
@@ -126,7 +126,7 @@ public:
         return contribution;
     }
 
-    SphericalVoronoiIntegrator() {
+    SphericalVoronoiIntegrator(const Vec3 &normal) : normal(normal) {
         traits = Traits(Point_3(0, 0, 0), 1.0); // Unit sphere
         dt = SDT(traits);
     }
@@ -137,6 +137,7 @@ protected:
     std::vector<Vec3> directions;
     std::vector<Color> contributions;
     std::vector<double> weights;
+    Vec3 normal;
 };
 
 #endif //YAPT_SPHERICAL_VORONOI_H
