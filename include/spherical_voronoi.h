@@ -12,9 +12,9 @@ typedef CGAL::Delaunay_triangulation_on_sphere_2<Traits> SDT;
 typedef K::Point_3 Point_3;
 typedef K::Vector_3 Vector_3;
 
-class FirstBounceVoronoi: public SampleAggregator {
+class SphericalVoronoiIntegrator {
 public:
-    double solid_angle(const Point_3& p1, const Point_3& p2, const Point_3& p3) {
+    static double solid_angle(const Point_3& p1, const Point_3& p2, const Point_3& p3) {
         const Vector_3 a = p1 - CGAL::ORIGIN;
         const Vector_3 b = p2 - CGAL::ORIGIN;
         const Vector_3 c = p3 - CGAL::ORIGIN;
@@ -27,7 +27,7 @@ public:
         return std::abs(2.0 * std::atan2(numerator, denominator));
     }
 
-    Point_3 get_spherical_dual(const SDT::Face_handle& f) {
+    static Point_3 get_spherical_dual(const SDT::Face_handle& f) {
         const Point_3& p0 = f->vertex(0)->point();
         const Point_3& p1 = f->vertex(1)->point();
         const Point_3& p2 = f->vertex(2)->point();
@@ -56,7 +56,7 @@ public:
         return CGAL::ORIGIN + normal;
     }
 
-    inline Point_3 sample_to_sphere(Sample sample, bool under) {
+    static inline Point_3 sample_to_sphere(Sample sample, bool under) {
         double t = sample.dx * M_PI; // [-PI / 2 ; PI / 2)
         if (under) t += M_PI;
         const double p = 2 * sample.dy * M_PI; // [-PI ; PI)
@@ -72,100 +72,71 @@ public:
         };
     }
 
-    void sample_from(std::shared_ptr<SamplerFactory> factory, double x, double y) override {
-        SampleAggregator::sample_from(factory, x, y);
-        contributions.clear();
-        contributions.reserve(_usable_sample_count);
+    void add_contribution(const Vec3 &direction, const Color &contribution) {
+        directions.push_back(direction);
+        contributions.push_back(contribution);
+        dt.insert(Point_3(direction.x(), direction.y(), direction.z()));
+    }
 
-        Traits traits(Point_3(0, 0, 0), 1.0); // Unit sphere
-        dt = SDT(traits);
-
-        for (const auto &sample : _samples) {
-            dt.insert(sample_to_sphere(sample, false));
-
-            // Let A = (0,0,-1) \in S, the unit sphere
-            // Let p = (x,y,0) an extra point from a SPPP distribution
-            // Let us transform p by intersecting the line (Ax) with S into a point M \in S, M != A
-            // M verifies : M = A + k(p - A) for some k > 0
-            // ie           M = (kx, ky, k-1) for some k > 0
-            // and M \in S =>   (kx)² + (ky)² + (k-1)² = 1
-            //             => k²(x²+y²+1) - 2k = 0
-            //             => k(k(x²+y²+1) -2) = 0
-            //             => k(x²+y²+1) -2 = 0 (because M != A => k !=0)
-            //             => k = 2 / (x²+y²+1)
-            // Note that in our context, (x,y,0) is outside S, meaning that
-            //                (x²+y²+1) > 2, hence
-            //                k < 1, which complies with intuition
-        }
-
-        for (const auto &sample: _samples) {
-            dt.insert(sample_to_sphere(sample, true)); // clipping
+    Color integrate(const Vec3 &normal) {
+        for (auto &direction: directions) {
+            const Vec3 ref = reflect(direction, normal);
+            dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
         }
 
         double total_area = 0.0;
 
-        // we visit every vertex of the DT
-        for (auto v = dt.finite_vertices_begin(); v != dt.finite_vertices_end(); ++v) {
-            Point_3 site = v->point();
-            if (site.z() < 0) continue;
+        for (auto v = dt.vertices_begin(); v != dt.vertices_end() ; ++v) {
+            const Point_3 site = v->point();
+            const Vec3 p(site.x(), site.y(), site.z());
+            if (dot(p, normal) <= 0) continue;
 
             double cell_solid_angle = 0.0;
             SDT::Face_circulator fc = dt.incident_faces(v), done(fc);
-            std::vector<Point_3> voronoi_vertices;
 
+            std::vector<Point_3> voronoi_vertices;
             if (fc != nullptr) {
                 do {
                     // if samples are drawn from a hemisphere, dt.is_infinite() may return true
                     if (!dt.is_infinite(fc)) {
-                        Point_3 p = get_spherical_dual(fc);
-                        voronoi_vertices.push_back(p);
+                        Point_3 dual = get_spherical_dual(fc);
+                        voronoi_vertices.push_back(dual);
                     }
                 } while (++fc != done);
             }
-
-            // to compute the solid angle of a Voronoi cell, we compute
-            // the sum of every spherical triangle solid angle
             if (!voronoi_vertices.empty()) {
                 for (std::size_t i = 0; i < voronoi_vertices.size(); ++i) {
                     const Point_3& v1 = voronoi_vertices[i];
                     const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
-                    cell_solid_angle +=  solid_angle(site, v1, v2);
+                    cell_solid_angle += solid_angle(site, v1, v2);
                 }
+                weights.push_back(cell_solid_angle);
             }
-
-            std::cout << "Site (" << site << ") -> Solid angle = " << cell_solid_angle << " sr" << std::endl;
             total_area += cell_solid_angle;
         }
 
-        std::cout << "------------------------------------------------" << std::endl;
-        std::cout << "Total area : " << total_area << " (Expected : " << 4 * M_PI << ")" << std::endl;
+        Color contribution(0, 0, 0);
 
-        std::cout << "    points = np.array([" << std::endl;
-        for (auto v = dt.finite_vertices_begin(); v != dt.finite_vertices_end(); ++v) {
-            Point_3 p = v->point();
-
-            std::cout << "        [" << p.x() << ", " << p.y() << ", " << p.z() << "]," << std::endl;
-
+        for (int i = 0 ; i < directions.size() ; ++i) {
+            contribution += weights[i] * contributions[i];
         }
-        std::cout << "    ])" << std::endl;
 
-        std::exit(EXIT_SUCCESS);
+        contribution /= total_area;
+
+        return contribution;
     }
 
-    Color aggregate() override {
-        return {0, 0, 0};
+    SphericalVoronoiIntegrator() {
+        traits = Traits(Point_3(0, 0, 0), 1.0); // Unit sphere
+        dt = SDT(traits);
     }
-    void insert_contribution(Color color) override {}
 
+protected:
     SDT dt;
-};
-
-class FirstBounceVoronoiFactory: public AggregatorFactory {
-public:
-    FirstBounceVoronoiFactory() = default;
-    shared_ptr<SampleAggregator> create() override {
-        return make_shared<FirstBounceVoronoi>();
-    }
+    Traits traits;
+    std::vector<Vec3> directions;
+    std::vector<Color> contributions;
+    std::vector<double> weights;
 };
 
 #endif //YAPT_SPHERICAL_VORONOI_H
