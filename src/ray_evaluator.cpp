@@ -119,7 +119,7 @@ Color CVorNestedRayEvaluator::evaluate(const Ray &r, const int depth, const Scen
          return next_step->evaluate(ray, d, scene, background);
      };
 
-     SphericalVoronoiIntegrator integrator;
+     SphericalVoronoiIntegrator integrator(rec.normal);
 
      for (int i = 0 ; i < sample_size ; ++i) {
          const ScatteredContribution contribution = sampling_strategy->compute_scattered_color(ctx, ray_color_function);
@@ -129,7 +129,7 @@ Color CVorNestedRayEvaluator::evaluate(const Ray &r, const int depth, const Scen
          integrator.add_contribution(direction, colorFromScatter);
      }
 
-     return color_from_emission + integrator.integrate(rec.normal);
+     return color_from_emission + integrator.integrate();
 }
 
 
