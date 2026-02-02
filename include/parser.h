@@ -184,7 +184,6 @@ protected:
                 std::cout << "                 - median  => Median aggregation" << std::endl;
                 std::cout << "                 - mon     => MoN (Median Of meaNs) aggregation" << std::endl;
                 std::cout << "                 - winsor  =>  Winsorization" << std::endl;
-                std::cout << "                 - fbounce =>  First Bounce Voronoi aggregation" << std::endl;
                 std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
                 std::cout << " - source     => Scene model to import" << std::endl;
                 std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -263,8 +262,6 @@ protected:
             aggregatorFactory = std::make_shared<MonAggregatorFactory>(monSize);
         } else if (aggregator == "winsor") {
             aggregatorFactory = std::make_shared<WinsorAggregatorFactory>(winRate, winClip);
-        } else if (aggregator == "fbounce") {
-            aggregatorFactory = std::make_shared<FirstBounceVoronoiFactory>();
         }
 
         shared_ptr<SamplingStrategy> sampling_strategy;

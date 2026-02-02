@@ -3,6 +3,7 @@
 //
 
 #include "ray_evaluator.h"
+#include "spherical_voronoi.h"
 
 Color SimpleRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &scene, const Color &background) {
     // If we've exceeded the ray bounce limit, no more light is gathered.

@@ -150,10 +150,6 @@ void ForwardCamera::render(const Scene &scene) {
     }
 }
 
-// Color ForwardCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) const {
-//     return scattering_strategy->ray_color(r, depth, world, lights, background);
-// }
-
 void ForwardParallelCamera::render(const Scene &scene) {
     initialize();
 
@@ -322,9 +318,3 @@ Ray TestCamera::get_ray(const double x, const double y) const {
 
     return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
 }
-
-// Color TestCamera::rayColor(const Ray &r, int depth, const Hittable &world, const Hittable &lights) const {
-//     if (-r.origin().x() + r.origin().y() > 0) {
-//         return {0, 0, 0};
-//     } else return {1, 1, 1};
-// }
