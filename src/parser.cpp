@@ -92,7 +92,8 @@ void RenderFactory::init() {
     cameraRegistry[CameraType::ClippedVoronoiNested] = [](const RenderConfig& cfg) {
         auto camera = std::make_shared<ForwardParallelCamera>();
         finalize_camera(cfg, camera);
-        camera->scattering_strategy = std::make_shared<NestedRayEvaluator>(
+
+        camera->scattering_strategy = std::make_shared<CVorNestedRayEvaluator>(
             camera->samplingStrategy,
             make_shared<SimpleRayEvaluator>(camera->samplingStrategy),
             cfg.nested_sample_size

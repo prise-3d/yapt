@@ -133,7 +133,6 @@ target_link_libraries(yapt
         ${TORCH_LIBRARIES}
 )
 
-
 add_custom_target(clean-all
         COMMAND ${CMAKE_BUILD_TOOL} clean
         COMMAND ${CMAKE_COMMAND} -E remove_directory CMakeFiles
@@ -145,7 +144,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 COMPONENTS Core Widgets Gui OpenGLWidgets REQUIRED)
-#target_link_libraries(MonProjet PRIVATE Qt6::Widgets Qt6::OpenGLWidgets)
 
 add_executable(qtvor ${SOURCES}
         src/qtvor.cpp

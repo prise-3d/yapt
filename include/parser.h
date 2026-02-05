@@ -86,7 +86,6 @@ struct RenderConfig {
     std::size_t numThreads = 0; // 0 = auto
     long seed = 0; // 0 = random
     bool silent = false;
-    // bool nee = false; // Next Event Estimation
     SamplingStrategyType sampling_strategy_type = SamplingStrategyType::MixturePDF;
     bool help = false;
 
@@ -98,9 +97,6 @@ struct RenderConfig {
 
     // Specific parameters
     double confidence = 0.999;
-    // std::size_t monSize = 5;
-    // double winRate = 0.05;
-    // bool winClip = false;
     std::size_t nested_sample_size = 100;
 
     // Camera-specific parameters
@@ -121,9 +117,6 @@ inline void display_help(const RenderConfig& config) {
                 std::cout << "                 - cvor    => Clipped Voronoi aggregation" << std::endl;
                 std::cout << "                 - fvor    => Filtering Voronoi aggregation" << std::endl;
                 std::cout << "                 - nvor    => Nico Voronoi aggregation" << std::endl;
-                // std::cout << "                 - median  => Median aggregation" << std::endl;
-                // std::cout << "                 - mon     => MoN (Median Of meaNs) aggregation" << std::endl;
-                // std::cout << "                 - winsor  =>  Winsorization" << std::endl;
                 std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
                 std::cout << " - source     => Scene model to import" << std::endl;
                 std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -133,14 +126,9 @@ inline void display_help(const RenderConfig& config) {
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
                 std::cout << "                 - nest      => MC Nesting" << std::endl;
+                std::cout << "                 - cvnest    => Clipped Voronoi Nesting" << std::endl;
                 std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
-                // std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
-                // std::cout << "                 - test      => test camera" << std::endl;
-                // std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
                 std::cout << "                 - one-x,y   => renders only one pixel @coords (x,y)" << std::endl;
-                // std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
-                // std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
-                // std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
                 std::cout << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
@@ -177,10 +165,6 @@ public:
                     handled = true;
                     break;
                 }
-            }
-
-            if (!handled) {
-                handleComplexArgs(arg, config);
             }
         }
         return config;
@@ -237,10 +221,6 @@ public:
                 static const std::regex oneCam(R"(one-([0-9]+),([0-9]+))");
                 std::smatch matches;
 
-                // if (std::regex_match(v, matches, pixelCam)) { /
-                //     c.camera = CameraType::Pixel;
-                //     c.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
-                // } else
                 if (std::regex_match(v, matches, oneCam)) {
                     c.camera = CameraType::Single;
                     c.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
@@ -265,21 +245,6 @@ public:
                 std::exit(1);
             }
         };
-    }
-
-    void handleComplexArgs(const std::string& arg, RenderConfig& config) {
-        std::cout << "trying to process complex stuff here" << std::endl;
-        // static const std::regex pixelCam(R"(cam=pixel-([0-9]+),([0-9]+))");
-        // static const std::regex oneCam(R"(cam=one-([0-9]+),([0-9]+))");
-        // std::smatch matches;
-        //
-        // if (std::regex_match(arg, matches, pixelCam)) {
-        //     config.camera = CameraType::Pixel;
-        //     config.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
-        // } else if (std::regex_match(arg, matches, oneCam)) {
-        //     config.camera = CameraType::Single;
-        //     config.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
-        // }
     }
 };
 
