@@ -36,139 +36,79 @@
 #include "exprtk/exprtk.hpp"
 #include "ray_evaluator.h"
 
-class Parser {
+enum class SamplerType {
+    Uniform,
+    Stratified,
+    SkewedPPP
+};
+enum class AggregatorType {
+    MonteCarlo,
+    Voronoi,
+    ClippedVoronoi,
+    FilteringVoronoi,
+    NicoVoronoi,
+    Median,
+    MoN,
+    Winsor
+};
+enum class CameraType {
+    Parallel,
+    Nested,
+    ClippedVoronoiNested,
+    Single,
+    Pixel
+};
+enum class StratType {
+    Standard,
+    Normals,
+    Nested,
+    CVorNested
+};
 
-protected:
-    std::shared_ptr<Camera> camera = std::make_shared<ForwardParallelCamera>();
-    std::shared_ptr<HittableList> content = make_shared<HittableList>();
-    std::shared_ptr<HittableList> lights = make_shared<HittableList>();
-    std::shared_ptr<SamplerFactory> samplerFactory;
-    std::shared_ptr<AggregatorFactory> aggregatorFactory;
-    std::filesystem::path source = "../scenes/cornell.ypt";
-    std::string cameraType = "std";
-    std::string aggregator = "vor";
-    std::string sampler = "sppp";
+enum class SceneFormatType {
+    YAPT
+};
+
+enum class SamplingStrategyType {
+    NextEventEstimation,
+    MixturePDF
+};
+
+struct RenderConfig {
+    std::filesystem::path sourcePath = "../scenes/cornell.ypt";
+    std::filesystem::path outputPath; // Optional
+    std::filesystem::path outputDir;  // Optional
+
+    // Rendering parameters
     std::size_t spp = 100;
-    double confidence = .999;
+    std::size_t width = 900;
     std::size_t maxDepth = 25;
-    std::size_t numThreads = 0;
-    std::size_t width = 0;
-    std::size_t pixel_x = 0;
-    std::size_t pixel_y = 0;
-    std::size_t monSize = 5;
-    std::size_t fbv_sample_size = 100;
-    bool winClip = false;
-    double winRate = .05;
-    bool nee = false;
-
-    long seed;
+    std::size_t numThreads = 0; // 0 = auto
+    long seed = 0; // 0 = random
     bool silent = false;
+    // bool nee = false; // Next Event Estimation
+    SamplingStrategyType sampling_strategy_type = SamplingStrategyType::MixturePDF;
+    bool help = false;
 
-    std::chrono::time_point<std::chrono::system_clock> start;
-    std::chrono::time_point<std::chrono::system_clock> end;
-    std::chrono::duration<long, std::ratio<1, 1000>> render_time;
+    // algorithms
+    SamplerType sampler = SamplerType::SkewedPPP;
+    AggregatorType aggregator = AggregatorType::Voronoi;
+    CameraType camera = CameraType::Parallel;
+    SceneFormatType sceneFormatType = SceneFormatType::YAPT;
 
-    public:
-    Parser() = default;
-    ~Parser() = default;
+    // Specific parameters
+    double confidence = 0.999;
+    // std::size_t monSize = 5;
+    // double winRate = 0.05;
+    // bool winClip = false;
+    std::size_t nested_sample_size = 100;
 
-    shared_ptr<Camera> getCamera() { return camera; }
-    shared_ptr<HittableList> getContent() { return content; }
-    shared_ptr<HittableList> getLights() { return lights; }
-    shared_ptr<SamplerFactory> getSamplerFactory() { return samplerFactory; }
-    shared_ptr<AggregatorFactory> getAggregatorFactory() { return aggregatorFactory; }
+    // Camera-specific parameters
+    std::pair<int, int> pixelCoords = {0, 0};
+};
 
-    long getSeed() const { return seed; }
-    std::size_t getWidth() const { return width; }
-    std::size_t getSPP() const { return spp; }
-
-    void startTimer() {
-        start = std::chrono::system_clock::now();
-    }
-
-    void stopTimer() {
-        end = std::chrono::high_resolution_clock::now();
-        render_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    }
-
-    bool parseScene(int argc, char* argv[], ContentDescription& content_description) {
-        seed = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-        const std::string sppprefix = "spp=";
-        const std::string samplerprefix = "sampler=";
-        const std::string aggregatorprefix = "aggregator=";
-        const std::string confidenceprefix = "confidence=";
-        const std::string sourceprefix = "source=";
-        const std::string maxDepthprefix = "maxdepth=";
-        const std::string numThreadsprefix = "threads=";
-        const std::string widthprefix = "width=";
-        const std::string camprefix = "cam=";
-        const std::string monsizeprefix = "monsize=";
-        const std::string winclipprefix = "winclip=";
-        const std::string winrateprefix = "winrate=";
-        const std::string silentprefix = "silent";
-        const std::string seedprefix = "seed=";
-        const std::string neeprefix = "nee=";
-        const std::string nestsamples = "nestsamples=";
-
-        const std::regex pixelcam_coords(R"(cam=pixel-([0-9]+),([0-9]+))");
-        const std::regex singlecam_coords(R"(cam=one-([0-9]+),([0-9]+))");
-        std::smatch matches;
-
-        for (int i = 1 ; i < argc ; i++) {
-            std::string parameter(argv[i]);
-            if (parameter.rfind(sppprefix, 0) == 0) {
-                spp = std::stoi(parameter.substr(sppprefix.size()));
-            } else if (parameter.rfind(nestsamples, 0) == 0) {
-                fbv_sample_size = static_cast<std::size_t>(std::stoi(parameter.substr(nestsamples.size())));
-            }
-            else if (parameter.rfind(samplerprefix, 0) == 0) {
-                sampler = parameter.substr(samplerprefix.size());
-            }
-            else if (parameter.rfind(aggregatorprefix, 0) == 0) {
-                aggregator = parameter.substr(aggregatorprefix.size());
-            }
-            else if (parameter.rfind(confidenceprefix, 0) == 0) {
-                confidence = std::stod(parameter.substr(confidenceprefix.size()));
-            }
-            else if (parameter.rfind(sourceprefix, 0) == 0) {
-                source = parameter.substr(sourceprefix.size());
-            }
-            else if (parameter.rfind(maxDepthprefix, 0) == 0) {
-                maxDepth = std::stoi(parameter.substr(maxDepthprefix.size()));
-            }
-            else if (parameter.rfind(numThreadsprefix, 0) == 0) {
-                numThreads = std::stoi(parameter.substr(numThreadsprefix.size()));
-            }
-            else if (parameter.rfind(widthprefix, 0) == 0) {
-                width = std::stoi(parameter.substr(widthprefix.size()));
-            }
-
-            else if (parameter.rfind(camprefix, 0) == 0) {
-                cameraType = parameter.substr(camprefix.size());
-            }
-            else if (parameter.rfind(monsizeprefix, 0) == 0) {
-                monSize = std::stoi(parameter.substr(monsizeprefix.size()));
-            }
-            else if (parameter.rfind(winrateprefix, 0) == 0) {
-                winRate = std::stod(parameter.substr(winrateprefix.size()));
-            }
-            else if (parameter.rfind(winclipprefix, 0) == 0) {
-                std::string b = parameter.substr(winclipprefix.size());
-                winClip = (b == "true");
-            }
-            else if (parameter.rfind(neeprefix, 0) == 0) {
-                std::string b = parameter.substr(neeprefix.size());
-                nee = (b == "true");
-            }
-            else if (parameter.rfind(silentprefix, 0) == 0) {
-                silent = true;
-            }
-            else if (parameter.rfind(seedprefix, 0) == 0) {
-                seed = std::stol(parameter.substr(seedprefix.size()));
-            }
-            else if (parameter.rfind("help", 0) == 0) {
-                std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
+inline void display_help(const RenderConfig& config) {
+    std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl;
                 std::cout << " - path       => path to render output (optional)" << std::endl;
                 std::cout << " - spp        => samples per pixel (DEFAULT=500)" << std::endl;
                 std::cout << " - sampler    => pixel sampling method:" << std::endl;
@@ -181,9 +121,9 @@ protected:
                 std::cout << "                 - cvor    => Clipped Voronoi aggregation" << std::endl;
                 std::cout << "                 - fvor    => Filtering Voronoi aggregation" << std::endl;
                 std::cout << "                 - nvor    => Nico Voronoi aggregation" << std::endl;
-                std::cout << "                 - median  => Median aggregation" << std::endl;
-                std::cout << "                 - mon     => MoN (Median Of meaNs) aggregation" << std::endl;
-                std::cout << "                 - winsor  =>  Winsorization" << std::endl;
+                // std::cout << "                 - median  => Median aggregation" << std::endl;
+                // std::cout << "                 - mon     => MoN (Median Of meaNs) aggregation" << std::endl;
+                // std::cout << "                 - winsor  =>  Winsorization" << std::endl;
                 std::cout << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl;
                 std::cout << " - source     => Scene model to import" << std::endl;
                 std::cout << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl;
@@ -193,235 +133,288 @@ protected:
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
                 std::cout << "                 - nest      => MC Nesting" << std::endl;
-                std::cout << "                 - fbv       => First Bounce Voronoi Nesting" << std::endl;
                 std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
-                std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
-                std::cout << "                 - test      => test camera" << std::endl;
-                std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
+                // std::cout << "                 - biased    => biased, low non-contribution camera" << std::endl;
+                // std::cout << "                 - test      => test camera" << std::endl;
+                // std::cout << "                 - pixel-x,y => pixel cartography camera @coords (x,y)" << std::endl;
                 std::cout << "                 - one-x,y   => renders only one pixel @coords (x,y)" << std::endl;
-                std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
-                std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
-                std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
+                // std::cout << " - monsize    => number of MoN blocks (DEFAULT = 5)" << std::endl;
+                // std::cout << " - winrate    => Winsor reject rate (DEFAULT = 0.05)" << std::endl;
+                // std::cout << " - winclip    => Winsor clipping (DEFAULT = false)" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
                 std::cout << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
-                return false;
-            }
-            if (std::regex_match(parameter, matches, pixelcam_coords)) {
-                cameraType = "pixel";
-                pixel_x = std::stoi(matches[1]);
-                pixel_y = std::stoi(matches[2]);
-            } else if (std::regex_match(parameter, matches, singlecam_coords)) {
-                cameraType = "single";
-                pixel_x = std::stoi(matches[1]);
-                pixel_y = std::stoi(matches[2]);
-                std::cout << " \n\n  SINGLE = " << pixel_x << " ; " << pixel_y << std::endl << std::endl << std::endl;
-            }
-        }
+}
 
-        if (silent) {
-            freopen("/dev/null", "w", stderr);
-        }
+#include <map>
+#include <functional>
+#include <memory>
+#include <iostream>
+#include <cmath>
 
-        // SAMPLER FACTORY INIT
-        if (sampler == "rnd") {
-            samplerFactory = std::make_shared<TrivialSamplerFactory>(spp);
-        } else if (sampler == "strat") {
-            auto sqrtSpp = static_cast<std::size_t>(sqrt(spp));
-            samplerFactory = std::make_shared<StratifiedSamplerFactory>(sqrtSpp);
-            if ((sqrtSpp * sqrtSpp) < spp) {
-                std::cout << "WARNING: spp is not a square. using spp=" << sqrtSpp * sqrtSpp << std::endl;
-            }
-            spp = sqrtSpp * sqrtSpp;
-        } else if (sampler == "sppp") {
-            samplerFactory = std::make_shared<SkewedPPPSamplerFactory>(spp, confidence);
-        }
+class CommandLineParser {
+    using ArgumentConsumer = std::function<void(const std::string&, RenderConfig&)>;
+    std::map<std::string, ArgumentConsumer> handlers;
 
-        // AGGREGATOR FACTORY INIT
-        if (aggregator == "mc") {
-            aggregatorFactory = std::make_shared<MCAggregatorFactory>();
-        } else if (aggregator == "vor") {
-            aggregatorFactory = std::make_shared<VoronoiAggregatorFactory>();
-        } else if (aggregator == "cvor") {
-            aggregatorFactory = std::make_shared<ClippedVoronoiAggregatorFactory>();
-        } else if (aggregator == "fvor" || aggregator == "nvor") {
-
-            auto sampler = samplerFactory->create(0, 0);
-            auto sppp_sampler = dynamic_cast<SkewedPPPSampler*>(sampler.get());
-
-            double margin = .1;
-            if (sppp_sampler != nullptr) {
-                margin = sppp_sampler->margin;
-            }
-
-            if (aggregator == "fvor") aggregatorFactory = std::make_shared<FilteringVoronoiAggregatorFactory>(margin);
-            if (aggregator == "nvor") aggregatorFactory = std::make_shared<NicoVoronoiAggregatorFactory>(margin);
-        } else if (aggregator == "median") {
-            aggregatorFactory = std::make_shared<MedianAggregatorFactory>();
-        } else if (aggregator == "mon") {
-            aggregatorFactory = std::make_shared<MonAggregatorFactory>(monSize);
-        } else if (aggregator == "winsor") {
-            aggregatorFactory = std::make_shared<WinsorAggregatorFactory>(winRate, winClip);
-        }
-
-        shared_ptr<SamplingStrategy> sampling_strategy;
-        if (nee) {
-            sampling_strategy = make_shared<NEESamplingStrategy>();
-        } else {
-            sampling_strategy = make_shared<MixtureSamplingStrategy>();
-        }
-
-        if (cameraType == "pixel") {
-            camera = std::make_shared<CartographyCamera>(pixel_x, pixel_y);
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
-        } else if (cameraType == "single") {
-            camera = std::make_shared<SinglePixelCamera>(pixel_x, pixel_y);
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
-        } else if (cameraType == "biased") {
-            camera = std::make_shared<BiasedForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
-        } else if (cameraType == "norm") {
-            camera = std::make_shared<ForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<NormalRayEvaluator>();
-        } else if (cameraType == "cvnest") {
-            // camera = std::make_shared<FBVCamera>(fbv_sample_size);
-            // camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
-            camera = std::make_shared<ForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<CVorNestedRayEvaluator>(
-                sampling_strategy,
-                make_shared<SimpleRayEvaluator>(sampling_strategy),
-                fbv_sample_size
-            );
-        } else if (cameraType == "nest") {
-            camera = std::make_shared<ForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<NestedRayEvaluator>(
-                sampling_strategy,
-                make_shared<SimpleRayEvaluator>(sampling_strategy),
-                fbv_sample_size
-            );
-        } else {
-            camera = std::make_shared<ForwardParallelCamera>();
-            camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(sampling_strategy);
-        }
-
-        if (width == 0) width = 900;
-
-        camera->numThreads = numThreads;
-        camera->maxDepth = maxDepth;
-        camera->samplerAggregator = aggregatorFactory;
-        camera->pixelSamplerFactory = samplerFactory;
-        camera->imageWidth = width;
-
-        camera->aspect_ratio   = 1.0;
-        camera->background     = Color(0, 0, 0);
-        camera->vfov           = 40;
-        camera->lookFrom       = Point3(278, 278, -800);
-        camera->lookAt         = Point3(278, 278, 0);
-        camera->vup            = Vec3(0, 1, 0);
-        camera->defocusAngle   = 0;
-        camera->seed           = seed;
-
-        // Set the sampling strategy based on nee flag
-
-
-
-
-
-        if (source.extension() == ".ypt") {
-            YaptSceneLoader loader;
-            loader.load(source, content, lights, camera);
-            if (silent) {
-                freopen("/dev/tty", "w", stderr);
-            }
-        } else if (source.extension() == ".obj") {
-            camera->background = Color(1., .5, .5);
-        }
-
-#ifdef FUNCTION_PARSING
-        else if (source.extension() == ".func") {
-
-            camera = std::make_shared<FunctionCamera>(Function::from_file(source.string()));
-            camera->background = Color(0., .0, .0);
-            camera->aspect_ratio = 1.;
-            camera->seed = seed;
-            camera->numThreads = numThreads;
-            camera->maxDepth = maxDepth;
-            camera->samplerAggregator = aggregatorFactory;
-            camera->pixelSamplerFactory = samplerFactory;
-            camera->imageWidth = width;
-        }
-#endif
-        else {
-            std::cerr << "Unrecognized source extension: " << source.extension() << std::endl;
-            return false;
-        }
-
-        content_description = ContentDescription(
-            Scene(*content, *lights, Color(0, 0, 0))
-            , camera);
-        content_description.scene = Scene(*content, *lights, Color(0, 0, 0));
-        content_description.camera = camera;
-
-        return true;
+public:
+    CommandLineParser() {
+        registerHandlers();
     }
 
-    bool exportImage(const int argc, char* argv[], const ContentDescription& scene) const {
+    RenderConfig parse(int argc, char* argv[]) {
+        RenderConfig config;
 
-        std::filesystem::path dir;
-        std::filesystem::path path;
+        config.seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 
-        const std::string pathprefix = "path=";
-        const std::string dirprefix = "dir=";
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+            bool handled = false;
 
-        const std::regex coords(R"(cam=pixel-([0-9]+),([0-9]+))");
-        std::smatch matches;
+            for (const auto& [prefix, consumer] : handlers) {
+                if (arg.rfind(prefix, 0) == 0) { // Si commence par prefix
+                    std::string value = arg.substr(prefix.length());
+                    consumer(value, config);
+                    handled = true;
+                    break;
+                }
+            }
 
-        for (int i = 1 ; i < argc ; i++) {
-            std::string parameter(argv[i]);
-
-            if (parameter.rfind(pathprefix, 0) == 0) {
-                path = parameter.substr(pathprefix.size());
-            } else if (parameter.rfind(dirprefix, 0) == 0) {
-                dir = parameter.substr(dirprefix.size());
+            if (!handled) {
+                handleComplexArgs(arg, config);
             }
         }
+        return config;
+    }
 
-        if (path.empty()) {
-            if (!dir.empty())
-                path = dir;
+    void registerHandlers() {
+        handlers["maxdepth="] = [](const std::string& v, RenderConfig& c) { c.maxDepth = std::stoi(v);};
+        handlers["spp="] = [](const std::string& v, RenderConfig& c) { c.spp = std::stoi(v);};
+        handlers["width="] = [](const std::string& v, RenderConfig& c) { c.width = std::stoi(v);};
+        handlers["source="] = [](const std::string& v, RenderConfig& c) { c.sourcePath = v;};
+        handlers["path="] = [](const std::string& v, RenderConfig& c) {c.outputPath = v; };
+        // handlers["confidence="] = [](const std::string& v, RenderConfig& c) { c.confidence = std::stod(v);};
+        handlers["seed="] = [](const std::string& v, RenderConfig& c) { c.seed = std::stoi(v); };
+        handlers["nestsamples="] = [](const std::string& v, RenderConfig& c) { c.nested_sample_size = std::stoi(v); };
+        handlers["threads="] = [](const std::string& v, RenderConfig& c) { c.numThreads = std::stoi(v); };
+        handlers["nee="] = [](const std::string& v, RenderConfig& c) { c.sampling_strategy_type = ((v=="true") ? SamplingStrategyType::NextEventEstimation : SamplingStrategyType::MixturePDF); };
+        handlers["help"] = [](const std::string&, RenderConfig& c) { c.help = true; };
+        // handlers["silent"] = [](const std::string&, RenderConfig& c) { c.silent = true; };
+
+        handlers["sampler="] = [](const std::string& v, RenderConfig& c) {
+            if (v == "rnd") c.sampler = SamplerType::Uniform;
+            // else if (v == "strat") c.sampler = SamplerType::Stratified; // IS BUGGY ?!
+            else if (v == "sppp") c.sampler = SamplerType::SkewedPPP;
+            else {
+                std::cerr << "Unknown sampler: " << v << std::endl;
+                std::exit(1);
+            }
+        };
+
+        handlers["aggregator="] = [](const std::string& v, RenderConfig& c) {
+            if (v == "mc") c.aggregator = AggregatorType::MonteCarlo;
+            else if (v == "vor") c.aggregator = AggregatorType::Voronoi;
+            else if (v == "cvor") c.aggregator = AggregatorType::ClippedVoronoi;
+            else if (v == "fvor") c.aggregator = AggregatorType::FilteringVoronoi;
+            else if (v == "nvor") c.aggregator = AggregatorType::NicoVoronoi;
+            // median
+            // mon
+            // winsor
+            else {
+                std::cerr << "Unknown aggregator: " << v << std::endl;
+                std::exit(1);
+            }
+        };
+
+        handlers["cam="] = [](const std::string& v, RenderConfig& c) {
+            if (v == "std") c.camera = CameraType::Parallel;
+            else if (v == "nest") {
+                c.camera = CameraType::Nested;
+            }
+            else if (v == "cvnest") {
+                c.camera = CameraType::ClippedVoronoiNested;
+            } else {
+                static const std::regex pixelCam(R"(pixel-([0-9]+),([0-9]+))");
+                static const std::regex oneCam(R"(one-([0-9]+),([0-9]+))");
+                std::smatch matches;
+
+                // if (std::regex_match(v, matches, pixelCam)) { /
+                //     c.camera = CameraType::Pixel;
+                //     c.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
+                // } else
+                if (std::regex_match(v, matches, oneCam)) {
+                    c.camera = CameraType::Single;
+                    c.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
+                }
+                else {
+                    std::cerr << "Unknown camera: " << v << std::endl;
+                    std::exit(1);
+                }
+            }
+            // else {
+            //     std::cerr << "Unknown camera: " << v << std::endl;
+            //     std::exit(1);
+            // }
+        };
+
+        handlers["source="] = [](const std::string& v, RenderConfig& c) {
+            c.sourcePath = v;
+            if (c.sourcePath.extension() == ".ypt") {
+                c.sceneFormatType = SceneFormatType::YAPT;
+            } else {
+                std::cerr << "Unknown source format: " << v << std::endl;
+                std::exit(1);
+            }
+        };
+    }
+
+    void handleComplexArgs(const std::string& arg, RenderConfig& config) {
+        std::cout << "trying to process complex stuff here" << std::endl;
+        // static const std::regex pixelCam(R"(cam=pixel-([0-9]+),([0-9]+))");
+        // static const std::regex oneCam(R"(cam=one-([0-9]+),([0-9]+))");
+        // std::smatch matches;
+        //
+        // if (std::regex_match(arg, matches, pixelCam)) {
+        //     config.camera = CameraType::Pixel;
+        //     config.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
+        // } else if (std::regex_match(arg, matches, oneCam)) {
+        //     config.camera = CameraType::Single;
+        //     config.pixelCoords = {std::stoi(matches[1]), std::stoi(matches[2])};
+        // }
+    }
+};
+
+class RenderFactory {
+public:
+    using SamplerCreator = std::function<std::shared_ptr<SamplerFactory>(const RenderConfig&)>;
+    using AggregatorCreator = std::function<std::shared_ptr<AggregatorFactory>(const RenderConfig&, std::shared_ptr<SamplerFactory>&)>;
+    using CameraCreator = std::function<std::shared_ptr<Camera>(const RenderConfig&)>;
+    using SceneCreator = std::function<std::shared_ptr<ContentDescription>(const RenderConfig&)>;
+    using SamplingStrategyCreator = std::function<std::shared_ptr<SamplingStrategy>(const RenderConfig&)>;
+
+    static void finalize_camera(const RenderConfig& cfg, const std::shared_ptr<Camera>& camera);
+
+    static void init();
+
+    static std::shared_ptr<SamplerFactory> createSampler(const RenderConfig& cfg);
+
+    static std::shared_ptr<AggregatorFactory> createAggregator(const RenderConfig& cfg, std::shared_ptr<SamplerFactory> &samplerFactory);
+
+    static std::shared_ptr<Camera> createCamera(const RenderConfig& cfg);
+
+    static std::shared_ptr<ContentDescription> createContent(const RenderConfig& cfg);
+
+private:
+    inline static std::map<SamplerType, SamplerCreator> samplerRegistry;
+    inline static std::map<AggregatorType, AggregatorCreator> aggregatorRegistry;
+    inline static std::map<CameraType, CameraCreator> cameraRegistry;
+    inline static std::map<SceneFormatType, SceneCreator> sceneRegistry;
+    inline static std::map<SamplingStrategyType, SamplingStrategyCreator> samplingStrategyRegistry;
+};
+
+inline void export_image(RenderConfig& cfg) {
+
+}
+
+
+
+
+class OutputManager {
+protected:
+    std::chrono::time_point<std::chrono::system_clock> start;
+    std::chrono::time_point<std::chrono::system_clock> end;
+    std::chrono::duration<long, std::ratio<1, 1000>> render_time;
+
+public:
+    explicit OutputManager(const RenderConfig& config)  {
+        initialize(config);
+    }
+    void initialize(const RenderConfig& config) {
+        sampler_descriptions[SamplerType::Uniform] = "rnd";
+        sampler_descriptions[SamplerType::Stratified] = "strat";
+        sampler_descriptions[SamplerType::SkewedPPP] = "sppp";
+
+        aggregator_descriptions[AggregatorType::MonteCarlo] = "mc";
+        aggregator_descriptions[AggregatorType::Voronoi] = "vor";
+        aggregator_descriptions[AggregatorType::FilteringVoronoi] = "mc";
+        aggregator_descriptions[AggregatorType::NicoVoronoi] = "nvor";
+        aggregator_descriptions[AggregatorType::ClippedVoronoi] = "cvor";
+
+        camera_descriptions[CameraType::Parallel] = "";
+        camera_descriptions[CameraType::Single] = "single";
+        camera_descriptions[CameraType::Nested] = "nest";
+        camera_descriptions[CameraType::ClippedVoronoiNested] = "cvnest";
+    }
+
+    void start_timer() {
+        start = std::chrono::system_clock::now();
+    }
+
+    void stop_timer() {
+        end = std::chrono::high_resolution_clock::now();
+        render_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    }
+
+    bool export_image(RenderConfig& config, const std::shared_ptr<Camera> &camera) {
+        if (config.outputPath.empty()) {
+            if (!config.outputDir.empty())
+                config.outputPath = config.outputDir;
+
             std::filesystem::path filename;
 
-            filename += source.stem();
+            filename += config.sourcePath.stem();
             filename += "-";
 
-            std::string with_nee = nee ? "-nee" : "";
-            std::string fbv_tag = (cameraType == "fbv") ? "-fbv-" + std::to_string(fbv_sample_size) : "";
-            filename += aggregator + "-" + sampler + "-spp-" + std::to_string(spp) + fbv_tag + "-w-" + std::to_string(width) + "-d-" + std::to_string(maxDepth) + with_nee;
+            const std::string with_nee = (config.sampling_strategy_type == SamplingStrategyType::NextEventEstimation) ? "-nee" : "";
+            std::string cam_tag;
+            if (config.camera == CameraType::ClippedVoronoiNested || config.camera == CameraType::Nested) {
+                cam_tag += "-" + camera_descriptions[config.camera] + "-" + std::to_string(config.nested_sample_size);
+            } else if (config.camera == CameraType::Single) {
+                cam_tag += "-" + camera_descriptions[config.camera] + "(" + std::to_string(config.pixelCoords.first) + "," + std::to_string(config.pixelCoords.second) + ")";
+            }
+
+            filename +=
+                aggregator_descriptions[config.aggregator] + "-" +
+                sampler_descriptions[config.sampler] +
+                "-spp-" + std::to_string(config.spp) +
+                cam_tag +
+                "-w-" + std::to_string(config.width) +
+                "-d-" + std::to_string(config.maxDepth)
+                + with_nee;
+
+            filename += "-seed-";
+            filename += std::to_string(config.seed);
+
             filename += ".exr";
-            path /= filename;
+            config.outputPath /= filename;
         }
 
         std::shared_ptr<ImageExporter> exporter;
-        std::string destination_extension = path.extension();
+        const std::string destination_extension = config.outputPath.extension();
 
         if (destination_extension == ".exr") {
-            exporter = make_shared<EXRImageExporter>(scene.camera->data());
+            exporter = make_shared<EXRImageExporter>(camera->data());
         } else if (destination_extension == ".png") {
-            exporter = make_shared<PNGImageExporter>(scene.camera->data());
+            exporter = make_shared<PNGImageExporter>(camera->data());
         }
 
         if (!exporter) {
             std::cerr << "Unrecognized destination extension: \"" << destination_extension << "\"." << std::endl << "Terminating." << std::endl;
-            return false;
+            std::exit(1);
         }
 
         exporter->set_render_time(static_cast<size_t>(render_time.count()));
         std::cout << "Rendering duration: " << static_cast<double>(render_time.count()) / 1000. << " s" << std::endl;
-        exporter->write(path);
+        exporter->write(config.outputPath);
 
-        std::cout << "Image saved to: " << path << std::endl;
+        std::cout << "Image saved to: " << config.outputPath << std::endl;
 
         return true;
     }
+
+private:
+    std::map<SamplerType, std::string> sampler_descriptions;
+    std::map<AggregatorType, std::string> aggregator_descriptions;
+    std::map<CameraType, std::string> camera_descriptions;
 };
+
 #endif //PARSER_H

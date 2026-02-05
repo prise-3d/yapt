@@ -25,13 +25,33 @@
 #include "parser.h"
 #include "qtvor/zoomableimageview.h"
 
+
+#include "qtvor/hemisphere.h"
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
+int test(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+
+    SolidSphereView window;
+    window.resize(800, 600);
+    window.setWindowTitle("Qt6 C++ - Hémisphère (Z > 0)");
+    window.updateVoronoi();
+    window.show();
+
+    return a.exec();
+}
+
 inline std::string to_string(const Point& point) {
     return "(" + std::to_string(point.x()) + ", " + std::to_string(point.y()) + ")";
 }
 
 int main(int argc, char **argv) {
+
+    return test(argc, argv);
+
     Parser parser;
-    Scene yaptScene;
+    ContentDescription yaptScene;
     if (!parser.parseScene(argc, argv, yaptScene)) return 0;
     yaptScene.camera->render(*yaptScene.content, *yaptScene.lights);
 

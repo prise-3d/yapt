@@ -119,6 +119,7 @@ add_executable(yapt ${SOURCES}
         src/ray_evaluator.cpp
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
+        src/parser.cpp
 )
 
 find_package(Threads REQUIRED)
@@ -206,6 +207,7 @@ add_executable(qtvor ${SOURCES}
         src/ray_evaluator.cpp
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
+        src/parser.cpp
 )
 
 target_link_libraries(qtvor
@@ -278,6 +280,7 @@ add_executable(eval ${SOURCES}
         src/ray_evaluator.cpp
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
+        src/parser.cpp
 )
 
 target_link_libraries(eval
@@ -297,6 +300,7 @@ add_executable(test_torch
         src/ray_evaluator.cpp
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
+        src/parser.cpp
 )
 
 target_link_libraries(test_torch

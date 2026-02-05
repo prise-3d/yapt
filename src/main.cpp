@@ -25,15 +25,22 @@
 #include "parser.h"
 
 int main(const int argc, char* argv[]) {
-    Parser parser;
-    ContentDescription content;
+    RenderFactory::init();
+    CommandLineParser commandLineParser;
+    RenderConfig config = commandLineParser.parse(argc, argv);
+    if (config.help) {
+        display_help(config);
+        std::exit(0);
+    }
+    const auto content = RenderFactory::createContent(config);
+    const auto camera = content->camera;
+    const auto scene = content->scene;
 
-    // load the scene description and camera
-    if (!parser.parseScene(argc, argv, content)) return 0;
+    OutputManager manager(config);
 
-    parser.startTimer();
-    content.camera->render(content.scene);
-    parser.stopTimer();
+    manager.start_timer();
+    camera->render(scene);
+    manager.stop_timer();
 
-    parser.exportImage(argc, argv, content);
+    manager.export_image(config, camera);
 }
