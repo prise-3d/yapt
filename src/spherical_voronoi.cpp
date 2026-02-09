@@ -32,7 +32,8 @@ double SphericalVoronoiIntegrator::solid_angle(const Point_3& p1, const Point_3&
     // see pbrt v4 for solid angle of a spherical triangle
     // https://www.pbr-book.org/4ed/Geometry_and_Transformations/Spherical_Geometry#SphericalPolygons
     const double numerator = CGAL::scalar_product(a, CGAL::cross_product(b, c));
-    const double denominator = 1.0 + (a * b) + (a * c) + (b * c);
+    const double denominator =
+        1.0 + CGAL::scalar_product(a, b) + CGAL::scalar_product(a, c) + CGAL::scalar_product(b, c);
 
     return std::abs(2.0 * std::atan2(numerator, denominator));
 }
@@ -78,12 +79,13 @@ void SphericalVoronoiIntegrator::add_contribution(const Vec3 &direction, const C
 }
 
 Color SphericalVoronoiIntegrator::integrate() {
+    contribution = {0, 0, 0};
+    total_area = 0.0;
+
     for (auto &direction: directions) {
         const Vec3 ref = reflect(direction, normal);
         dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
     }
-
-    total_area = 0.0;
 
     for (auto v = dt.vertices_begin(); v != dt.vertices_end() ; ++v) {
         const Point_3 site = v->point();
@@ -98,7 +100,7 @@ Color SphericalVoronoiIntegrator::integrate() {
             do {
                 // if samples are drawn from a hemisphere, dt.is_infinite() may return true
                 if (!dt.is_infinite(fc)) {
-                    Point_3 dual = get_spherical_dual(fc);
+                    const Point_3 dual = get_spherical_dual(fc);
                     voronoi_vertices.push_back(dual);
                 }
             } while (++fc != done);
