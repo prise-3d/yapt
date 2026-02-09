@@ -48,30 +48,48 @@ inline std::string to_string(const Point& point) {
 
 int main(int argc, char **argv) {
 
-    return test(argc, argv);
+    // return test(argc, argv);
 
-    Parser parser;
-    ContentDescription yaptScene;
-    if (!parser.parseScene(argc, argv, yaptScene)) return 0;
-    yaptScene.camera->render(*yaptScene.content, *yaptScene.lights);
+    RenderFactory::init();
+    CommandLineParser commandLineParser;
+
+    RenderConfig config = commandLineParser.parse(argc, argv);
+    if (config.help) {
+        display_help(config);
+        std::exit(0);
+    }
+
+    const auto content = RenderFactory::createContent(config);
+    const auto camera = content->camera;
+    const auto scene = content->scene;
+
+    OutputManager manager(config);
+
+    manager.start_timer();
+    camera->render(scene);
+    manager.stop_timer();
 
     QApplication app(argc, argv);
 
-    const ImageData imageData = *yaptScene.camera->data();
+
+
+    const ImageData imageData = *camera->data();
     const QImage image = convertToQImage(imageData);
 
-    QGraphicsScene scene;
+    QGraphicsScene qgScene;
     auto *item = new QGraphicsPixmapItem(QPixmap::fromImage(image));
-    scene.addItem(item);
+    qgScene.addItem(item);
 
-    ZoomableImageView view(yaptScene, nullptr);
+
+
+    ZoomableImageView view(*content, nullptr);
     view.setDragMode(QGraphicsView::ScrollHandDrag);
     view.viewport()->setCursor(Qt::ArrowCursor);
-    view.setScene(&scene);
+    view.setScene(&qgScene);
     view.setRenderHint(QPainter::Antialiasing);
     view.setWindowTitle("QtVor");
     view.resize(800, 800);
-    view.fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+    view.fitInView(qgScene.sceneRect(), Qt::KeepAspectRatio);
     view.show();
 
     return app.exec();
