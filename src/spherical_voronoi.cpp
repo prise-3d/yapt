@@ -65,15 +65,15 @@ Point_3 SphericalVoronoiIntegrator::get_spherical_dual(const SDT::Face_handle & 
     return CGAL::ORIGIN + normal;
 }
 
-SphericalVoronoiIntegrator::SphericalVoronoiIntegrator(const Vec3 &normal)  : normal(normal) {
+SphericalVoronoiIntegrator::SphericalVoronoiIntegrator(const Vec3 &normal)  : normal(normal), total_area(0.0) {
     traits = Traits(Point_3(0, 0, 0), 1.0); // Unit sphere
     dt = SDT(traits);
 }
 
 
-void SphericalVoronoiIntegrator::add_contribution(const Vec3 &direction, const Color &contribution) {
+void SphericalVoronoiIntegrator::add_contribution(const Vec3 &direction, const Color &new_contribution) {
     directions.push_back(direction);
-    contributions.push_back(contribution);
+    contributions.push_back(new_contribution);
     dt.insert(Point_3(direction.x(), direction.y(), direction.z()));
 }
 
@@ -114,26 +114,11 @@ Color SphericalVoronoiIntegrator::integrate() {
         total_area += cell_solid_angle;
     }
 
-    Color contribution(0, 0, 0);
-
     for (int i = 0 ; i < directions.size() ; ++i) {
         contribution += weights[i] * contributions[i];
     }
 
     contribution /= total_area;
-
-    // if (observers.size() > 0) {
-    //     for (const auto &observer : observers) {
-    //         observer->on_computation_complete(
-    //             contribution,
-    //             normal,
-    //             total_area,
-    //             directions,
-    //             contributions,
-    //             weights
-    //         );
-    //     }
-    // }
 
     return contribution;
 }
