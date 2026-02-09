@@ -54,6 +54,7 @@ enum class AggregatorType {
 enum class CameraType {
     Parallel,
     Nested,
+    Nested4,
     ClippedVoronoiNested,
     Single,
     Pixel
@@ -126,6 +127,7 @@ inline void display_help(const RenderConfig& config) {
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
                 std::cout << "                 - nest      => MC Nesting" << std::endl;
+                std::cout << "                 - nest4     => MC Nesting (depth 4)" << std::endl;
                 std::cout << "                 - cvnest    => Clipped Voronoi Nesting" << std::endl;
                 std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
                 std::cout << "                 - one-x,y   => renders only one pixel @coords (x,y)" << std::endl;
@@ -176,13 +178,11 @@ public:
         handlers["width="] = [](const std::string& v, RenderConfig& c) { c.width = std::stoi(v);};
         handlers["source="] = [](const std::string& v, RenderConfig& c) { c.sourcePath = v;};
         handlers["path="] = [](const std::string& v, RenderConfig& c) {c.outputPath = v; };
-        // handlers["confidence="] = [](const std::string& v, RenderConfig& c) { c.confidence = std::stod(v);};
         handlers["seed="] = [](const std::string& v, RenderConfig& c) { c.seed = std::stoi(v); };
         handlers["nestsamples="] = [](const std::string& v, RenderConfig& c) { c.nested_sample_size = std::stoi(v); };
         handlers["threads="] = [](const std::string& v, RenderConfig& c) { c.numThreads = std::stoi(v); };
         handlers["nee="] = [](const std::string& v, RenderConfig& c) { c.sampling_strategy_type = ((v=="true") ? SamplingStrategyType::NextEventEstimation : SamplingStrategyType::MixturePDF); };
         handlers["help"] = [](const std::string&, RenderConfig& c) { c.help = true; };
-        // handlers["silent"] = [](const std::string&, RenderConfig& c) { c.silent = true; };
 
         handlers["sampler="] = [](const std::string& v, RenderConfig& c) {
             if (v == "rnd") c.sampler = SamplerType::Uniform;
@@ -214,6 +214,9 @@ public:
             else if (v == "nest") {
                 c.camera = CameraType::Nested;
             }
+            else if (v == "nest4") {
+                c.camera = CameraType::Nested4;
+            }
             else if (v == "cvnest") {
                 c.camera = CameraType::ClippedVoronoiNested;
             } else {
@@ -230,10 +233,6 @@ public:
                     std::exit(1);
                 }
             }
-            // else {
-            //     std::cerr << "Unknown camera: " << v << std::endl;
-            //     std::exit(1);
-            // }
         };
 
         handlers["source="] = [](const std::string& v, RenderConfig& c) {
@@ -307,6 +306,7 @@ public:
         camera_descriptions[CameraType::Parallel] = "";
         camera_descriptions[CameraType::Single] = "single";
         camera_descriptions[CameraType::Nested] = "nest";
+        camera_descriptions[CameraType::Nested4] = "nest4";
         camera_descriptions[CameraType::ClippedVoronoiNested] = "cvnest";
     }
 
@@ -331,7 +331,7 @@ public:
 
             const std::string with_nee = (config.sampling_strategy_type == SamplingStrategyType::NextEventEstimation) ? "-nee" : "";
             std::string cam_tag;
-            if (config.camera == CameraType::ClippedVoronoiNested || config.camera == CameraType::Nested) {
+            if (config.camera == CameraType::ClippedVoronoiNested || config.camera == CameraType::Nested || config.camera == CameraType::Nested4) {
                 cam_tag += "-" + camera_descriptions[config.camera] + "-" + std::to_string(config.nested_sample_size);
             } else if (config.camera == CameraType::Single) {
                 cam_tag += "-" + camera_descriptions[config.camera] + "(" + std::to_string(config.pixelCoords.first) + "," + std::to_string(config.pixelCoords.second) + ")";
