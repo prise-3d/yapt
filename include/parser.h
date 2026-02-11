@@ -59,11 +59,11 @@ enum class CameraType {
     Single,
     Pixel
 };
-enum class StratType {
+enum class EvaluatorType {
     Standard,
     Normals,
     Nested,
-    CVorNested
+    ClippedVoronoiNested
 };
 
 enum class SceneFormatType {
@@ -95,6 +95,7 @@ struct RenderConfig {
     AggregatorType aggregator = AggregatorType::Voronoi;
     CameraType camera = CameraType::Parallel;
     SceneFormatType sceneFormatType = SceneFormatType::YAPT;
+    EvaluatorType evaluatorType = EvaluatorType::Standard;
 
     // Specific parameters
     double confidence = 0.999;
@@ -126,11 +127,14 @@ inline void display_help(const RenderConfig& config) {
                 std::cout << " - width      => force image width (DEFAULT=scene dependent)" << std::endl;
                 std::cout << " - cam        => camera type" << std::endl;
                 std::cout << "                 - std       => standard camera type (DEFAULT) " << std::endl;
-                std::cout << "                 - nest      => MC Nesting" << std::endl;
-                std::cout << "                 - nest4     => MC Nesting (depth 4)" << std::endl;
-                std::cout << "                 - cvnest    => Clipped Voronoi Nesting" << std::endl;
-                std::cout << "                 - norm      => renders normals to surfaces " << std::endl;
+                std::cout << "                 - nest      => MC Nesting (DEPRECATED)" << std::endl;
+                std::cout << "                 - nest4     => MC Nesting (depth 4, DEPRECATED)" << std::endl;
+                std::cout << "                 - cvnest    => Clipped Voronoi Nesting (DEPRECATED)" << std::endl;
+                std::cout << "                 - normals   => renders normals to surfaces " << std::endl;
                 std::cout << "                 - one-x,y   => renders only one pixel @coords (x,y)" << std::endl;
+                std::cout << " - eval       => ray evaluation method" << std::endl;
+                std::cout << "                 - nest      => MC Nesting" << std::endl;
+                std::cout << "                 - cvnest    => Clipped Voronoi Nesting" << std::endl;
                 std::cout << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl;
                 std::cout << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl;
                 std::cout << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
@@ -158,13 +162,11 @@ public:
 
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
-            bool handled = false;
 
             for (const auto& [prefix, consumer] : handlers) {
                 if (arg.rfind(prefix, 0) == 0) { // Si commence par prefix
                     std::string value = arg.substr(prefix.length());
                     consumer(value, config);
-                    handled = true;
                     break;
                 }
             }
@@ -212,13 +214,19 @@ public:
         handlers["cam="] = [](const std::string& v, RenderConfig& c) {
             if (v == "std") c.camera = CameraType::Parallel;
             else if (v == "nest") {
-                c.camera = CameraType::Nested;
+                // c.camera = CameraType::Nested;
+                // we preserve backward compatibility
+                c.evaluatorType = EvaluatorType::Nested;
+                c.camera = CameraType::Parallel;
             }
             else if (v == "nest4") {
                 c.camera = CameraType::Nested4;
             }
             else if (v == "cvnest") {
-                c.camera = CameraType::ClippedVoronoiNested;
+                // c.camera = CameraType::ClippedVoronoiNested;
+                // we preserve backward compatibility
+                c.evaluatorType = EvaluatorType::ClippedVoronoiNested;
+                c.camera = CameraType::Parallel;
             } else {
                 static const std::regex pixelCam(R"(pixel-([0-9]+),([0-9]+))");
                 static const std::regex oneCam(R"(one-([0-9]+),([0-9]+))");
@@ -244,6 +252,21 @@ public:
                 std::exit(1);
             }
         };
+
+        handlers["eval="] = [](const std::string& v, RenderConfig& c) {
+            if (v == "nest") {
+                c.evaluatorType = EvaluatorType::Nested;
+            } else if (v == "cvnest") {
+                c.evaluatorType = EvaluatorType::ClippedVoronoiNested;
+            } else if (v == "normals") {
+                c.evaluatorType = EvaluatorType::Normals;
+            } else if (v == "standard") {
+                c.evaluatorType = EvaluatorType::Standard;
+            } else {
+                std::cerr << "Unknown evaluator type: " << v << std::endl;
+                std::exit(1);
+            }
+        };
     }
 };
 
@@ -254,6 +277,7 @@ public:
     using CameraCreator = std::function<std::shared_ptr<Camera>(const RenderConfig&)>;
     using SceneCreator = std::function<std::shared_ptr<ContentDescription>(const RenderConfig&)>;
     using SamplingStrategyCreator = std::function<std::shared_ptr<SamplingStrategy>(const RenderConfig&)>;
+    using EvaluatorTypeCreator = std::function<std::shared_ptr<RayEvaluator>(const RenderConfig&, const shared_ptr<SamplingStrategy>&)>;
 
     static void finalize_camera(const RenderConfig& cfg, const std::shared_ptr<Camera>& camera);
 
@@ -267,20 +291,20 @@ public:
 
     static std::shared_ptr<ContentDescription> createContent(const RenderConfig& cfg);
 
+    static std::shared_ptr<RayEvaluator> createEvaluator(const RenderConfig& cfg, const std::shared_ptr<SamplingStrategy>&);
+
 private:
     inline static std::map<SamplerType, SamplerCreator> samplerRegistry;
     inline static std::map<AggregatorType, AggregatorCreator> aggregatorRegistry;
     inline static std::map<CameraType, CameraCreator> cameraRegistry;
     inline static std::map<SceneFormatType, SceneCreator> sceneRegistry;
     inline static std::map<SamplingStrategyType, SamplingStrategyCreator> samplingStrategyRegistry;
+    inline static std::map<EvaluatorType, EvaluatorTypeCreator> evaluatorRegistry;
 };
 
 inline void export_image(RenderConfig& cfg) {
 
 }
-
-
-
 
 class OutputManager {
 protected:
@@ -308,6 +332,11 @@ public:
         camera_descriptions[CameraType::Nested] = "nest";
         camera_descriptions[CameraType::Nested4] = "nest4";
         camera_descriptions[CameraType::ClippedVoronoiNested] = "cvnest";
+
+        evaluator_descriptions[EvaluatorType::Standard] = "";
+        evaluator_descriptions[EvaluatorType::Normals] = "normals";
+        evaluator_descriptions[EvaluatorType::Nested] = "nest";
+        evaluator_descriptions[EvaluatorType::ClippedVoronoiNested] = "cvnest";
     }
 
     void start_timer() {
@@ -337,11 +366,19 @@ public:
                 cam_tag += "-" + camera_descriptions[config.camera] + "(" + std::to_string(config.pixelCoords.first) + "," + std::to_string(config.pixelCoords.second) + ")";
             }
 
+            std::string eval_tag;
+            if (config.evaluatorType == EvaluatorType::ClippedVoronoiNested || config.evaluatorType == EvaluatorType::Nested) {
+                eval_tag += "-" + evaluator_descriptions[config.evaluatorType] + "-" + std::to_string(config.nested_sample_size);
+            } else if (config.evaluatorType == EvaluatorType::Normals) {
+                eval_tag += "-" + evaluator_descriptions[config.evaluatorType];
+            }
+
             filename +=
                 aggregator_descriptions[config.aggregator] + "-" +
                 sampler_descriptions[config.sampler] +
                 "-spp-" + std::to_string(config.spp) +
                 cam_tag +
+                eval_tag +
                 "-w-" + std::to_string(config.width) +
                 "-d-" + std::to_string(config.maxDepth)
                 + with_nee;
@@ -380,6 +417,7 @@ private:
     std::map<SamplerType, std::string> sampler_descriptions;
     std::map<AggregatorType, std::string> aggregator_descriptions;
     std::map<CameraType, std::string> camera_descriptions;
+    std::map<EvaluatorType, std::string> evaluator_descriptions;
 };
 
 #endif //PARSER_H

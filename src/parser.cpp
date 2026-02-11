@@ -74,7 +74,8 @@ void RenderFactory::init() {
     cameraRegistry[CameraType::Parallel] = [](const RenderConfig& cfg) {
         auto camera = std::make_shared<ForwardParallelCamera>();
         finalize_camera(cfg, camera);
-        camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+        // camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+        camera->scattering_strategy = createEvaluator(cfg, camera->samplingStrategy);
         return camera;
     };
     cameraRegistry[CameraType::Nested] = [](const RenderConfig& cfg) {
@@ -135,6 +136,27 @@ void RenderFactory::init() {
         return camera;
     };
 
+    evaluatorRegistry[EvaluatorType::Nested] = [](const RenderConfig &cfg, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+        return std::make_shared<NestedRayEvaluator>(
+            sampling_strategy,
+            make_shared<SimpleRayEvaluator>(sampling_strategy),
+            cfg.nested_sample_size
+        );
+    };
+    evaluatorRegistry[EvaluatorType::ClippedVoronoiNested] = [](const RenderConfig &cfg, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+        return std::make_shared<CVorNestedRayEvaluator>(
+            sampling_strategy,
+            make_shared<SimpleRayEvaluator>(sampling_strategy),
+            cfg.nested_sample_size
+        );
+    };
+    evaluatorRegistry[EvaluatorType::Normals] = [](const RenderConfig &, const shared_ptr<SamplingStrategy>&) {
+        return std::make_shared<NormalRayEvaluator>();
+    };
+    evaluatorRegistry[EvaluatorType::Standard] = [](const RenderConfig &, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+        return std::make_shared<SimpleRayEvaluator>(sampling_strategy);
+    };
+
     samplingStrategyRegistry[SamplingStrategyType::MixturePDF] = [](const RenderConfig &) {
         return std::make_shared<MixtureSamplingStrategy>();
     };
@@ -191,6 +213,16 @@ std::shared_ptr<ContentDescription> RenderFactory::createContent(const RenderCon
         std::exit(1);
     }
 }
+
+std::shared_ptr<RayEvaluator> RenderFactory::createEvaluator(const RenderConfig &cfg, const std::shared_ptr<SamplingStrategy> &sampling_strategy) {
+    try {
+        return evaluatorRegistry[cfg.evaluatorType](cfg, sampling_strategy);
+    } catch (const std::bad_function_call& e) {
+        std::cerr << "Cannot instantiate Aggregator " << e.what() << std::endl;
+        std::exit(1);
+    }
+}
+
 
 
 
