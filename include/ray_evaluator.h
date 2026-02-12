@@ -9,6 +9,7 @@
 #include "yapt.h"
 #include "sampling_strategy.h"
 #include "scene.h"
+#include "spherical_voronoi.h"
 
 class RayEvaluator {
 public:
@@ -77,6 +78,17 @@ public:
     Color evaluate(const Ray &, const int depth, const Scene &scene, const Color &background) override;
 
     size_t sample_size;
+};
+
+class ObservableCVorNestedRayEvaluator final : public StepRayEvaluator {
+public:
+    ObservableCVorNestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, size_t sample_size, const std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers) : StepRayEvaluator(sampling_strategy), sample_size(sample_size), observers(observers) {}
+    ObservableCVorNestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size, std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size), observers(observers) {}
+
+    Color evaluate(const Ray &, const int depth, const Scene &scene, const Color &background) override;
+
+    size_t sample_size;
+    std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
 };
 
 #endif //YAPT_SCATTERING_STRATEGY_H

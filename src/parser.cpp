@@ -150,6 +150,13 @@ void RenderFactory::init() {
             cfg.nested_sample_size
         );
     };
+    evaluatorRegistry[EvaluatorType::ClippedVoronoiNestedDebug] = [](const RenderConfig &cfg, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+        return std::make_shared<CVorNestedRayEvaluator>(
+            sampling_strategy,
+            make_shared<SimpleRayEvaluator>(sampling_strategy),
+            cfg.nested_sample_size
+        );
+    };
     evaluatorRegistry[EvaluatorType::Normals] = [](const RenderConfig &, const shared_ptr<SamplingStrategy>&) {
         return std::make_shared<NormalRayEvaluator>();
     };

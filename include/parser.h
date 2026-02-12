@@ -63,7 +63,8 @@ enum class EvaluatorType {
     Standard,
     Normals,
     Nested,
-    ClippedVoronoiNested
+    ClippedVoronoiNested,
+    ClippedVoronoiNestedDebug
 };
 
 enum class SceneFormatType {
@@ -258,6 +259,8 @@ public:
                 c.evaluatorType = EvaluatorType::Nested;
             } else if (v == "cvnest") {
                 c.evaluatorType = EvaluatorType::ClippedVoronoiNested;
+            } else if (v == "dcvnest") {
+                c.evaluatorType = EvaluatorType::ClippedVoronoiNestedDebug;
             } else if (v == "normals") {
                 c.evaluatorType = EvaluatorType::Normals;
             } else if (v == "standard") {
@@ -337,6 +340,7 @@ public:
         evaluator_descriptions[EvaluatorType::Normals] = "normals";
         evaluator_descriptions[EvaluatorType::Nested] = "nest";
         evaluator_descriptions[EvaluatorType::ClippedVoronoiNested] = "cvnest";
+        evaluator_descriptions[EvaluatorType::ClippedVoronoiNestedDebug] = "cvnest";
     }
 
     void start_timer() {

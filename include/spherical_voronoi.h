@@ -41,7 +41,9 @@ public:
         const double total_area,
         const std::vector<Vec3> directions,
         const std::vector<Color> contributions,
-        const std::vector<double> weights);
+        const std::vector<double> weights,
+        const SDT &delaunay,
+        const std::vector<std::vector<std::vector<Point_3>>>&) = 0;
 };
 
 class SphericalVoronoiIntegrator {
@@ -59,6 +61,7 @@ protected:
     Traits traits;
     std::vector<Vec3> directions;
     std::vector<Color> contributions;
+    std::vector<Color> auxiliary_contributions;
     std::vector<double> weights;
     Vec3 normal;
     double total_area;
@@ -72,6 +75,21 @@ public:
 
 protected:
     std::vector<std::shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
+};
+
+class SphericalVoronoiIntegratorFactory {
+public:
+    SphericalVoronoiIntegratorFactory() = default;
+
+    virtual ~SphericalVoronoiIntegratorFactory() = default;
+    virtual shared_ptr<SphericalVoronoiIntegrator> create(const Vec3 &normal);
+};
+
+class ObservableSphericalVoronoiIntegratorFactory : public SphericalVoronoiIntegratorFactory {
+public:
+    ObservableSphericalVoronoiIntegratorFactory() = default;
+    ~ObservableSphericalVoronoiIntegratorFactory() override = default;
+    shared_ptr<SphericalVoronoiIntegrator> create(const Vec3 &normal) override;
 };
 
 #endif //YAPT_SPHERICAL_VORONOI_H

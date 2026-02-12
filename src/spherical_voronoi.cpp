@@ -84,6 +84,7 @@ Color SphericalVoronoiIntegrator::integrate() {
 
     for (auto &direction: directions) {
         const Vec3 ref = reflect(direction, normal);
+        auxiliary_contributions.push_back(ref);
         dt.insert(Point_3(ref.x(), ref.y(), ref.z()));
     }
 
@@ -122,11 +123,53 @@ Color SphericalVoronoiIntegrator::integrate() {
 
     contribution /= total_area;
 
+    for (auto c : auxiliary_contributions) directions.push_back(c);
+
     return contribution;
 }
 
 Color ObservableSphericalVoronoiIntegrator::integrate() {
     SphericalVoronoiIntegrator::integrate();
+    std::vector<std::vector<std::vector<Point_3>>> faces;
+
+    // THIS IS DIRTY
+    for (auto v = dt.vertices_begin(); v != dt.vertices_end() ; ++v) {
+        const Point_3 site = v->point();
+        const Vec3 p(site.x(), site.y(), site.z());
+        if (dot(p, normal) <= 0) continue;
+
+        double cell_solid_angle = 0.0;
+        SDT::Face_circulator fc = dt.incident_faces(v), done(fc);
+
+        std::vector<Point_3> voronoi_vertices;
+        if (fc != nullptr) {
+            do {
+                // if samples are drawn from a hemisphere, dt.is_infinite() may return true
+                if (!dt.is_infinite(fc)) {
+                    const Point_3 dual = get_spherical_dual(fc);
+                    voronoi_vertices.push_back(dual);
+                }
+            } while (++fc != done);
+        }
+        if (!voronoi_vertices.empty()) {
+            std::vector<std::vector<Point_3>> face;
+            for (std::size_t i = 0; i < voronoi_vertices.size(); ++i) {
+                std::vector<Point_3> triangle;
+
+                const Point_3& v1 = voronoi_vertices[i];
+                const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
+                triangle.push_back(site);
+                triangle.push_back(v1);
+                triangle.push_back(v2);
+                face.push_back(triangle);
+                cell_solid_angle += solid_angle(site, v1, v2);
+            }
+            faces.push_back(face);
+            weights.push_back(cell_solid_angle);
+        }
+        total_area += cell_solid_angle;
+    }
+
     for (const auto &observer : observers) {
         observer->on_computation_complete(
             contribution,
@@ -134,7 +177,9 @@ Color ObservableSphericalVoronoiIntegrator::integrate() {
             total_area,
             directions,
             contributions,
-            weights
+            weights,
+            dt,
+            faces
         );
     }
     return contribution;
