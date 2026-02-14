@@ -31,6 +31,7 @@
 
 #include "spherical_voronoi.h"
 #include <QKeyEvent>
+#include <clocale>
 
 int test(int argc, char *argv[])
 {
@@ -432,15 +433,14 @@ private:
     bool draw_frame;
 };
 
-int go_for_it(int argc, char *argv[]) {
-    QApplication app(argc, argv);
-    Scene3D window;
-    window.show();
-    return app.exec();
-}
-
 int main(int argc, char **argv) {
-    qputenv("QT_QPA_PLATFORM", "xcb"); // we try our best to bypass wayland
+    try
+    {
+        qputenv("QT_QPA_PLATFORM", "xcb"); // we try our best to bypass wayland
+    } catch (std::exception &e)
+    {
+
+    }
     RenderFactory::init();
     CommandLineParser commandLineParser;
 
@@ -452,6 +452,7 @@ int main(int argc, char **argv) {
 
     {
         QApplication app(argc, argv);
+        std::setlocale(LC_NUMERIC, "C");
         const auto content = RenderFactory::createContent(config);
         const auto camera = content->camera;
         const auto scene = content->scene;
