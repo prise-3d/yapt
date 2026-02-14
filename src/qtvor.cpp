@@ -473,6 +473,7 @@ int go_for_it(int argc, char *argv[]) {
 // }
 
 int main(int argc, char **argv) {
+    qputenv("QT_QPA_PLATFORM", "xcb"); // we try our best to bypass wayland
     RenderFactory::init();
     CommandLineParser commandLineParser;
 
