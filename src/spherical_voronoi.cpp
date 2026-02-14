@@ -153,14 +153,26 @@ Color ObservableSphericalVoronoiIntegrator::integrate() {
         }
         if (!voronoi_vertices.empty()) {
             std::vector<std::vector<Point_3>> face;
+            const Vector_3 n = site - CGAL::ORIGIN;
             for (std::size_t i = 0; i < voronoi_vertices.size(); ++i) {
                 std::vector<Point_3> triangle;
 
                 const Point_3& v1 = voronoi_vertices[i];
                 const Point_3& v2 = voronoi_vertices[(i + 1) % voronoi_vertices.size()];
+                const auto a = v1 - CGAL::ORIGIN;
+                // const auto v = n - 2 * CGAL::scalar_product(n, a) * a;
+                // const auto b = CGAL::ORIGIN + v;
+
+                const auto c = v2 - CGAL::ORIGIN;
+                //const auto w = n - 2 * CGAL::scalar_product(n, c) * c;
+                //const auto d = CGAL::ORIGIN + w;
+
                 triangle.push_back(site);
                 triangle.push_back(v1);
                 triangle.push_back(v2);
+                // triangle.push_back(b);
+                // triangle.push_back(d);
+
                 face.push_back(triangle);
                 cell_solid_angle += solid_angle(site, v1, v2);
             }
