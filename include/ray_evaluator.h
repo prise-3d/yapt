@@ -89,6 +89,8 @@ public:
 
     size_t sample_size;
     std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
+
+    void clear_observers();
 };
 
 #endif //YAPT_SCATTERING_STRATEGY_H

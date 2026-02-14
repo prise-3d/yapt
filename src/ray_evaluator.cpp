@@ -189,5 +189,10 @@ Color ObservableCVorNestedRayEvaluator::evaluate(const Ray &r, const int depth, 
     return color_from_emission + integrator.integrate();
 }
 
+void ObservableCVorNestedRayEvaluator::clear_observers()
+{
+    observers.clear();
+}
+
 
 

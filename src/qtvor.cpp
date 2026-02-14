@@ -30,6 +30,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "spherical_voronoi.h"
+#include <QKeyEvent>
 
 int test(int argc, char *argv[])
 {
@@ -76,6 +77,15 @@ public:
 
         setWindowTitle("Voronoi nesting sampling");
         resize(800, 600);
+        setFocusPolicy(Qt::StrongFocus);
+        draw_frame = false;
+    }
+
+    ~Scene3D()
+    {
+        makeCurrent();
+
+        doneCurrent();
     }
 
 protected:
@@ -144,20 +154,24 @@ protected:
         glRotatef(m_xRot, 1.0f, 0.0f, 0.0f);
         glRotatef(m_yRot, 0.0f, 1.0f, 0.0f);
 
-        // -- A. DESSINER DES SEGMENTS (Les Axes XYZ) --
         glLineWidth(2.0f);
-        glBegin(GL_LINES);
-            // Axe X (Rouge)
-            // glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
-            // // Axe Y (Vert)
-            // glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
-            // // Axe Z (Bleu)
-            // glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
+        // -- A. DESSINER DES SEGMENTS (Les Axes XYZ) --
 
+
+        glBegin(GL_LINES);
+        if (draw_frame)
+        {
+            // Axe X (Rouge)
+            glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
+            // Axe Y (Vert)
+            glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
+            // Axe Z (Bleu)
+            glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
+        }
         for (size_t i = 0 ; i < contributions.size() ; ++i) {
             const Vec3 contribution = contributions[i];
             const double weight = weights[i];
-            Vec3 direction = 1.2*directions[i];
+            Vec3 direction = 1.2 * directions[i];
 
             glColor3f(
                 static_cast<float>(contribution.x()),
@@ -185,9 +199,6 @@ protected:
 
         glEnd();
 
-        // début dessin d'un quad
-
-        // À placer dans paintGL()
         QVector3D n(
             static_cast<float>(normal.x()),
             static_cast<float>(normal.y()),
@@ -197,32 +208,20 @@ protected:
 
         // 1. Calcul de la rotation pour passer de l'axe Z (0,0,1) à votre vecteur n
         // On utilise QQuaternion qui fait les maths complexes pour nous.
-        QQuaternion rotation = QQuaternion::rotationTo(QVector3D(0.0f, 0.0f, 1.0f), n);
+        const QQuaternion rotation = QQuaternion::rotationTo(QVector3D(0.0f, 0.0f, 1.0f), n);
 
         float angle;
         QVector3D axis;
         rotation.getAxisAndAngle(&axis, &angle);
 
-        // 2. Application de la transformation
         glPushMatrix(); // Sauvegarde la matrice actuelle
 
         // On tourne la scène de l'angle calculé
         glRotatef(angle, axis.x(), axis.y(), axis.z());
 
-        // 3. On dessine un Quad plat "par défaut" sur le plan Z=0
-        // Grâce à la rotation, il apparaîtra perpendiculaire à n.
-        float size = 5.0f;
 
         // Optionnel : Désactiver le "Culling" pour voir le plan des deux côtés
         glDisable(GL_CULL_FACE);
-
-        // glColor4f(0.5f, 0.8f, 0.2f, 0.6f); // Vert semi-transparent
-        // glBegin(GL_QUADS);
-        // glVertex3f(-size, -size, 0.0f);
-        // glVertex3f( size, -size, 0.0f);
-        // glVertex3f( size,  size, 0.0f);
-        // glVertex3f(-size,  size, 0.0f);
-        // glEnd();
 
         glEnable(GL_CULL_FACE); // Bonne pratique : réactiver après
 
@@ -230,23 +229,6 @@ protected:
 
         drawPolygons();
 
-        // // -- B. DESSINER UN POLYGONE OPAQUE --
-        // // Un triangle jaune décalé sur la gauche
-        // glBegin(GL_TRIANGLES);
-        //     glColor3f(1.0f, 1.0f, 0.0f); // Jaune
-        //     glVertex3f(-1.5f, 0.0f, 0.0f);
-        //     glVertex3f(-2.5f, 0.0f, 0.0f);
-        //     glVertex3f(-2.0f, 1.5f, 0.0f);
-        // glEnd();
-
-
-        // -- C. DESSINER UNE SPHÈRE SEMI-TRANSPARENTE --
-        // Note: Pour une transparence correcte, il faut idéalement dessiner
-        // les objets transparents EN DERNIER.
-
-        // On sauvegarde la matrice actuelle pour bouger la sphère sans bouger le reste
-        // On désactive GL_COLOR_MATERIAL pour que la sphère utilise
-        // précisément les paramètres de matériau qu'on va définir, et non glColor.
         glDisable(GL_COLOR_MATERIAL);
 
         glPushMatrix();
@@ -278,6 +260,50 @@ protected:
 
         // On réactive le comportement standard pour les prochaines frames/objets
         glEnable(GL_COLOR_MATERIAL);
+    }
+
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        switch (event->key()) {
+        case Qt::Key_F:
+            draw_frame = !draw_frame;
+            break;
+
+        case Qt::Key_Up:
+        case Qt::Key_Z: // Z pour ZQSD
+            m_xRot -= 5.0f;
+            break;
+
+        case Qt::Key_Down:
+        case Qt::Key_S:
+            m_xRot += 5.0f;
+            break;
+
+        case Qt::Key_Left:
+        case Qt::Key_Q:
+            m_yRot -= 5.0f;
+            break;
+
+        case Qt::Key_Right:
+        case Qt::Key_D:
+            m_yRot += 5.0f;
+            break;
+
+        case Qt::Key_Plus:
+            m_dist -= 0.5f;
+            if(m_dist < 0.1f) m_dist = 0.1f;
+            break;
+
+        case Qt::Key_Minus:
+            m_dist += 0.5f;
+            break;
+
+        default:
+            // Laisser passer les autres touches (ex: Alt+F4)
+            QOpenGLWidget::keyPressEvent(event);
+            return;
+        }
+        update();
     }
 
     void drawPolygons() {
@@ -354,14 +380,12 @@ protected:
         }
     }
 
-    // --- 4. Gestion de la Souris (Interactions) ---
-
-    // Quand on clique
+    // Mouse management
     void mousePressEvent(QMouseEvent *event) override {
         m_lastPos = event->pos();
     }
 
-    // Quand on bouge la souris en cliquant (Orbite)
+    // Orbit
     void mouseMoveEvent(QMouseEvent *event) override {
         const int dx = event->pos().x() - m_lastPos.x();
         const int dy = event->pos().y() - m_lastPos.y();
@@ -369,7 +393,7 @@ protected:
         if (event->buttons() & Qt::LeftButton) {
             m_xRot += static_cast<float>(dy); // Rotation axe X
             m_yRot += static_cast<float>(dx); // Rotation axe Y
-            update();     // Demande à Qt de redessiner
+            update();
         }
         m_lastPos = event->pos();
     }
@@ -405,6 +429,7 @@ private:
     Vec3 normal;
     SDT dt;
     std::vector<std::vector<std::vector<Point_3>>> faces;
+    bool draw_frame;
 };
 
 int go_for_it(int argc, char *argv[]) {
@@ -413,64 +438,6 @@ int go_for_it(int argc, char *argv[]) {
     window.show();
     return app.exec();
 }
-
-// class MyWidget : public QWidget {
-// public:
-//     MyWidget(QWidget *parent = nullptr) : QWidget(parent) {
-//         resize(400, 400);
-//         setWindowTitle("Qt6 example");
-//     }
-//
-// protected:
-//     // called automatically when the widget needs to be redrawn
-//     void paintEvent(QPaintEvent *event) override {
-//         Q_UNUSED(event);
-//
-//         QPainter painter(this);
-//
-//         painter.setRenderHint(QPainter::Antialiasing);
-//
-//         // points
-//         QPen point_pen(Qt::red);
-//         point_pen.setWidth(5);
-//         painter.setPen(point_pen);
-//
-//         painter.drawPoint(50, 50);
-//         painter.drawPoint(100, 50);
-//         painter.drawPoint(150, 50);
-//
-//         // line
-//         QPen line_pen(Qt::blue);
-//         line_pen.setWidth(3);
-//         line_pen.setStyle(Qt::DashLine);
-//         painter.setPen(line_pen);
-//
-//         painter.drawLine(50, 100, 350, 100);
-//
-//         // Polygon
-//         QBrush brush(Qt::green);
-//         brush.setStyle(Qt::SolidPattern);
-//
-//         painter.setPen(QPen(Qt::black, 2, Qt::SolidLine));
-//         painter.setBrush(brush);
-//
-//         QPolygon polygon;
-//         polygon << QPoint(50, 200)
-//                 << QPoint(150, 350)
-//                 << QPoint(250, 200);
-//
-//         painter.drawPolygon(polygon);
-//     }
-// };
-//
-// int go_for_it(int argc, char *argv[]) {
-//     QApplication app(argc, argv);
-//
-//     MyWidget window;
-//     window.show();
-//
-//     return app.exec();
-// }
 
 int main(int argc, char **argv) {
     qputenv("QT_QPA_PLATFORM", "xcb"); // we try our best to bypass wayland
@@ -483,73 +450,36 @@ int main(int argc, char **argv) {
         std::exit(0);
     }
 
-    const auto content = RenderFactory::createContent(config);
-    const auto camera = content->camera;
-    const auto scene = content->scene;
+    {
+        QApplication app(argc, argv);
+        const auto content = RenderFactory::createContent(config);
+        const auto camera = content->camera;
+        const auto scene = content->scene;
 
-    const auto sampling_strategy = camera->samplingStrategy;
+        const auto sampling_strategy = camera->samplingStrategy;
 
-    std::vector<std::shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
+        std::vector<std::shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
 
-    QApplication app(argc, argv);
-    // Scene3D window;
-    auto window = std::make_shared<Scene3D>();
-    observers.push_back(window);
-    camera->scattering_strategy =
-        std::make_shared<ObservableCVorNestedRayEvaluator>(
-            sampling_strategy,
-            make_shared<SimpleRayEvaluator>(sampling_strategy),
-            config.nested_sample_size,
-            observers
-        );
-    camera->render(scene);
-    window->show();
-    return app.exec();
+        auto window = std::make_shared<Scene3D>();
 
-    // return go_for_it(argc, argv);
-    // return test(argc, argv);
+        observers.push_back(window);
 
-    // RenderFactory::init();
-    // CommandLineParser commandLineParser;
-    //
-    // RenderConfig config = commandLineParser.parse(argc, argv);
-    // if (config.help) {
-    //     display_help(config);
-    //     std::exit(0);
-    // }
-    //
-    // const auto content = RenderFactory::createContent(config);
-    // const auto camera = content->camera;
-    // const auto scene = content->scene;
-    //
-    // OutputManager manager(config);
-    //
-    // manager.start_timer();
-    // camera->render(scene);
-    // manager.stop_timer();
-    //
-    // QApplication app(argc, argv);
-    //
-    //
-    //
-    // const ImageData imageData = *camera->data();
-    // const QImage image = convertToQImage(imageData);
-    //
-    // QGraphicsScene qgScene;
-    // auto *item = new QGraphicsPixmapItem(QPixmap::fromImage(image));
-    // qgScene.addItem(item);
-    //
-    //
-    //
-    // ZoomableImageView view(*content, nullptr);
-    // view.setDragMode(QGraphicsView::ScrollHandDrag);
-    // view.viewport()->setCursor(Qt::ArrowCursor);
-    // view.setScene(&qgScene);
-    // view.setRenderHint(QPainter::Antialiasing);
-    // view.setWindowTitle("QtVor");
-    // view.resize(800, 800);
-    // view.fitInView(qgScene.sceneRect(), Qt::KeepAspectRatio);
-    // view.show();
-    //
-    // return app.exec();
+        auto scattering_strategy = std::make_shared<ObservableCVorNestedRayEvaluator>(
+                sampling_strategy,
+                make_shared<SimpleRayEvaluator>(sampling_strategy),
+                config.nested_sample_size,
+                observers
+            );
+        camera->scattering_strategy = scattering_strategy;
+        camera->render(scene);
+        window->show();
+
+        app.exec();
+
+        scattering_strategy->clear_observers();
+        observers.clear();
+
+        window.reset();
+    }
+    return 0;
 }
