@@ -113,8 +113,8 @@ add_executable(yapt ${SOURCES}
         src/path.cpp
         include/parser.h
         include/scene.h
-        include/sampling_strategy.h
-        src/sampling_strategy.cpp
+        include/scattering_strategy.h
+        src/scattering_strategy.cpp
         include/ray_evaluator.h
         src/ray_evaluator.cpp
         include/spherical_voronoi.h
@@ -199,8 +199,8 @@ add_executable(qtvor ${SOURCES}
         include/qtvor/utils.h
         include/qtvor/hemisphere.h
         include/functions.h
-        include/sampling_strategy.h
-        src/sampling_strategy.cpp
+        include/scattering_strategy.h
+        src/scattering_strategy.cpp
         include/ray_evaluator.h
         src/ray_evaluator.cpp
         include/spherical_voronoi.h
@@ -272,8 +272,8 @@ add_executable(eval ${SOURCES}
         include/scene.h
         include/functions.h
         src/eval.cpp
-        include/sampling_strategy.h
-        src/sampling_strategy.cpp
+        include/scattering_strategy.h
+        src/scattering_strategy.cpp
         include/ray_evaluator.h
         src/ray_evaluator.cpp
         include/spherical_voronoi.h

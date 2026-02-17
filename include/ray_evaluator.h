@@ -7,7 +7,7 @@
 
 
 #include "yapt.h"
-#include "sampling_strategy.h"
+#include "scattering_strategy.h"
 #include "scene.h"
 #include "spherical_voronoi.h"
 

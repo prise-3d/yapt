@@ -43,7 +43,7 @@ public:
     /**
      * Context structure, used for computing scattered light
      */
-    struct SamplingContext {
+    struct ScatteringContext {
         const Ray& incoming_ray;           // The ray that hit the surface
         const HitRecord& hit_record;       // Information about the hit point
         const ScatterRecord& scatter_record; // BRDF information from the material
@@ -52,27 +52,27 @@ public:
     };
 
     virtual ScatteredContribution compute_scattered_color(
-        const SamplingContext& context,
+        const ScatteringContext& context,
         const std::function<Color(const Ray&, int)>& ray_color_function
     ) const = 0;
 };
 
-class NEESamplingStrategy : public ScatteringStrategy {
+class NEEScatteringStrategy : public ScatteringStrategy {
 public:
-    ~NEESamplingStrategy() override = default;
+    ~NEEScatteringStrategy() override = default;
 
     ScatteredContribution compute_scattered_color(
-        const SamplingContext& context,
+        const ScatteringContext& context,
         const std::function<Color(const Ray&, int)>& ray_color_function
     ) const override;
 };
 
-class MixtureSamplingStrategy : public ScatteringStrategy {
+class MixtureScatteringStrategy : public ScatteringStrategy {
 public:
-    ~MixtureSamplingStrategy() override = default;
+    ~MixtureScatteringStrategy() override = default;
 
     ScatteredContribution compute_scattered_color(
-        const SamplingContext& context,
+        const ScatteringContext& context,
         const std::function<Color(const Ray&, int)>& rayColorFunc
     ) const override;
 };

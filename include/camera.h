@@ -6,7 +6,7 @@
 #include "image_data.h"
 #include "sampler.h"
 #include "aggregators.h"
-#include "sampling_strategy.h"
+#include "scattering_strategy.h"
 #include "ray_evaluator.h"
 #include "scene.h"
 

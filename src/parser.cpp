@@ -165,10 +165,10 @@ void RenderFactory::init() {
     };
 
     samplingStrategyRegistry[SamplingStrategyType::MixturePDF] = [](const RenderConfig &) {
-        return std::make_shared<MixtureSamplingStrategy>();
+        return std::make_shared<MixtureScatteringStrategy>();
     };
     samplingStrategyRegistry[SamplingStrategyType::NextEventEstimation] = [](const RenderConfig &) {
-        return std::make_shared<NEESamplingStrategy>();
+        return std::make_shared<NEEScatteringStrategy>();
     };
 
     sceneRegistry[SceneFormatType::YAPT] = [](const RenderConfig& cfg) {

@@ -22,14 +22,14 @@
  * Program grant you additional permission to convey the resulting work.
  */
 
-#include "sampling_strategy.h"
+#include "scattering_strategy.h"
 #include "pdf.h"
 
 
 
 
-ScatteredContribution NEESamplingStrategy::compute_scattered_color(
-    const SamplingContext& context,
+ScatteredContribution NEEScatteringStrategy::compute_scattered_color(
+    const ScatteringContext& context,
     const std::function<Color(const Ray&, int)>& ray_color_function
 ) const {
     Color colorFromScatter{0, 0, 0};
@@ -85,8 +85,8 @@ ScatteredContribution NEESamplingStrategy::compute_scattered_color(
     return { colorFromScatter, scattered };
 }
 
-ScatteredContribution MixtureSamplingStrategy::compute_scattered_color(
-    const SamplingContext& context,
+ScatteredContribution MixtureScatteringStrategy::compute_scattered_color(
+    const ScatteringContext& context,
     const std::function<Color(const Ray&, int)>& rayColorFunc
 ) const {
     // Standard path tracing using a mixture of light and BRDF sampling
