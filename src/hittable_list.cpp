@@ -59,7 +59,7 @@ bool HittableList::hit(const Ray &r, Interval ray_t, HitRecord &record) const {
 AABB HittableList::bounding_box() const { return bbox; }
 
 double HittableList::pdfValue(const Point3 &origin, const Vec3 &direction) const {
-    auto weight = 1.0 / objects.size();
+    const auto weight = 1.0 / static_cast<double>(objects.size());
     auto sum = 0.0;
 
     for (const auto &object: objects)

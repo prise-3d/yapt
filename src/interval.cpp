@@ -30,7 +30,7 @@ const Interval Interval::future   = Interval(0, +infinity);
 
 Interval::Interval() : min(+infinity), max(-infinity) {}
 
-Interval::Interval(double min, double max) : min(min), max(max) {}
+Interval::Interval(const double min, const double max) : min(min), max(max) {}
 
 Interval::Interval(const Interval &a, const Interval &b) {
     // Create the interval tightly enclosing the two input intervals.
@@ -56,15 +56,15 @@ double Interval::clamp(double x) const {
     return x;
 }
 
-Interval Interval::expand(double delta) const {
-    auto padding = delta/2;
-    return Interval(min - padding, max + padding);
+Interval Interval::expand(const double delta) const {
+    const auto padding = delta / 2;
+    return {min - padding, max + padding};
 }
 
 Interval operator+(const Interval& interval, double displacement) {
-    return Interval(interval.min + displacement, interval.max + displacement);
+    return {interval.min + displacement, interval.max + displacement};
 }
 
-Interval operator+(double displacement, const Interval& interval) {
+Interval operator+(const double displacement, const Interval& interval) {
     return interval + displacement;
 }
