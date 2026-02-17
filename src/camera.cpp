@@ -129,7 +129,7 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Scene &scene
     for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
 
-        const Color color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), scene, background);
+        const Color color = ray_evaluator->evaluate(r, static_cast<int>(maxDepth), scene, background);
         aggregator->insert_contribution(color);
     }
 
@@ -234,7 +234,7 @@ std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Scene& s
             const double dx = static_cast<double>(x) / static_cast<double>(imageWidth) - .5;
             Ray r = get_ray(dx + static_cast<double>(column), dy + static_cast<double>(row));
 
-            Color pixel_color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), scene, background);
+            Color pixel_color = ray_evaluator->evaluate(r, static_cast<int>(maxDepth), scene, background);
 
             persist_color_to_data(row, column, pixel_color);
         }
@@ -255,7 +255,7 @@ std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
         Color color;
 
         do {
-            color = scattering_strategy->evaluate(r, static_cast<int>(maxDepth), scene, background);
+            color = ray_evaluator->evaluate(r, static_cast<int>(maxDepth), scene, background);
         } while (color.near_zero() && ++retries < 20);
         aggregator->insert_contribution(color);
     }

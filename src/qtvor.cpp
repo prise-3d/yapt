@@ -471,7 +471,7 @@ int main(int argc, char **argv) {
                 config.nested_sample_size,
                 observers
             );
-        camera->scattering_strategy = scattering_strategy;
+        camera->ray_evaluator = scattering_strategy;
         camera->render(scene);
         window->show();
 

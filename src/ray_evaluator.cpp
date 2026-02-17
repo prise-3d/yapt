@@ -57,25 +57,24 @@ Color NormalRayEvaluator::evaluate(const Ray &ray, const int depth, const Scene 
 }
 
 Color NestedRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &scene, const Color &background) {
-    if (depth <= 0)
-        return {0, 0, 0};
+    if (depth <= 0) return {0, 0, 0};
 
     HitRecord rec;
     // If the ray hits nothing, return the background color.
-    if (!scene.geometry.hit(r, Interval(0.001, infinity), rec))
-        return background;
+    if (!scene.geometry.hit(r, Interval(0.001, infinity), rec)) return background;
 
-    ScatterRecord scatterRecord;
     const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
 
-    if (!rec.mat->scatter(r, rec, scatterRecord))
-        return color_from_emission;
+    ScatterRecord scatterRecord;
+
+    if (!rec.mat->scatter(r, rec, scatterRecord)) return color_from_emission;
 
     if (scatterRecord.skip_pdf) {
         return scatterRecord.attenuation * evaluate(scatterRecord.skip_pdf_ray, depth - 1, scene, background);
     }
     // end of standard ray tracing algorithm
     // scattering
+    Color colorFromScatter(0,0,0);
 
     // Delegate to the sampling strategy
     SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
@@ -83,8 +82,6 @@ Color NestedRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &s
     auto ray_color_function = [this, &scene, background](const Ray& ray, const int d) {
         return next_step->evaluate(ray, d, scene, background);
     };
-
-    Color colorFromScatter(0,0,0);
 
     for (int i = 0 ; i < sample_size ; ++i) {
         const ScatteredContribution contribution = sampling_strategy->compute_scattered_color(ctx, ray_color_function);

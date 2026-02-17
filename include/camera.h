@@ -43,7 +43,7 @@ public:
     virtual std::shared_ptr<SampleAggregator> render_pixel(const Scene &scene, size_t row,
                                                           size_t column) = 0;
 
-    shared_ptr<RayEvaluator> scattering_strategy;
+    shared_ptr<RayEvaluator> ray_evaluator;
 
     virtual void initialize();
 
