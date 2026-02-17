@@ -29,8 +29,8 @@ void RenderFactory::finalize_camera(const RenderConfig &cfg, const std::shared_p
     std::shared_ptr<SamplerFactory> sampler_factory = createSampler(cfg);
     camera->numThreads = cfg.numThreads;
     camera->maxDepth = cfg.maxDepth;
-    camera->samplerAggregator = createAggregator(cfg, sampler_factory);
-    camera->pixelSamplerFactory = sampler_factory;
+    camera->aggregator_factory = createAggregator(cfg, sampler_factory);
+    camera->sampler_factory = sampler_factory;
     camera->imageWidth = cfg.width;
 
     camera->aspect_ratio   = 1.0;
@@ -41,7 +41,7 @@ void RenderFactory::finalize_camera(const RenderConfig &cfg, const std::shared_p
     camera->vup            = Vec3(0, 1, 0);
     camera->defocusAngle   = 0;
     camera->seed           = cfg.seed;
-    camera->samplingStrategy = samplingStrategyRegistry[cfg.sampling_strategy_type](cfg);;
+    camera->scattering_strategy = samplingStrategyRegistry[cfg.sampling_strategy_type](cfg);;
 }
 
 void RenderFactory::init() {
@@ -75,7 +75,7 @@ void RenderFactory::init() {
         auto camera = std::make_shared<ForwardParallelCamera>();
         finalize_camera(cfg, camera);
         // camera->scattering_strategy = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
-        camera->ray_evaluator = createEvaluator(cfg, camera->samplingStrategy);
+        camera->ray_evaluator = createEvaluator(cfg, camera->scattering_strategy);
         return camera;
     };
     cameraRegistry[CameraType::Nested] = [](const RenderConfig& cfg) {
@@ -83,8 +83,8 @@ void RenderFactory::init() {
         finalize_camera(cfg, camera);
 
         camera->ray_evaluator = std::make_shared<NestedRayEvaluator>(
-            camera->samplingStrategy,
-            make_shared<SimpleRayEvaluator>(camera->samplingStrategy),
+            camera->scattering_strategy,
+            make_shared<SimpleRayEvaluator>(camera->scattering_strategy),
             cfg.nested_sample_size
         );
 
@@ -95,14 +95,14 @@ void RenderFactory::init() {
         finalize_camera(cfg, camera);
 
         camera->ray_evaluator = std::make_shared<NestedRayEvaluator>(
-            camera->samplingStrategy,
+            camera->scattering_strategy,
             make_shared<NestedRayEvaluator>(
-                camera->samplingStrategy,
+                camera->scattering_strategy,
                 std::make_shared<NestedRayEvaluator>(
-                    camera->samplingStrategy,
+                    camera->scattering_strategy,
                     std::make_shared<NestedRayEvaluator>(
-                        camera->samplingStrategy,
-                        make_shared<SimpleRayEvaluator>(camera->samplingStrategy),
+                        camera->scattering_strategy,
+                        make_shared<SimpleRayEvaluator>(camera->scattering_strategy),
                         cfg.nested_sample_size),
                     cfg.nested_sample_size),
                 cfg.nested_sample_size
@@ -117,8 +117,8 @@ void RenderFactory::init() {
         finalize_camera(cfg, camera);
 
         camera->ray_evaluator = std::make_shared<CVorNestedRayEvaluator>(
-            camera->samplingStrategy,
-            make_shared<SimpleRayEvaluator>(camera->samplingStrategy),
+            camera->scattering_strategy,
+            make_shared<SimpleRayEvaluator>(camera->scattering_strategy),
             cfg.nested_sample_size
         );
         return camera;
@@ -126,41 +126,41 @@ void RenderFactory::init() {
     cameraRegistry[CameraType::Pixel] = [](const RenderConfig& cfg) {
         auto camera = std::make_shared<CartographyCamera>(cfg.pixelCoords.first, cfg.pixelCoords.second);
         finalize_camera(cfg, camera);
-        camera->ray_evaluator = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+        camera->ray_evaluator = std::make_shared<SimpleRayEvaluator>(camera->scattering_strategy);
         return camera;
     };
     cameraRegistry[CameraType::Single] = [](const RenderConfig& cfg) {
         auto camera = std::make_shared<SinglePixelCamera>(cfg.pixelCoords.first, cfg.pixelCoords.second);
         finalize_camera(cfg, camera);
-        camera->ray_evaluator = std::make_shared<SimpleRayEvaluator>(camera->samplingStrategy);
+        camera->ray_evaluator = std::make_shared<SimpleRayEvaluator>(camera->scattering_strategy);
         return camera;
     };
 
-    evaluatorRegistry[EvaluatorType::Nested] = [](const RenderConfig &cfg, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+    evaluatorRegistry[EvaluatorType::Nested] = [](const RenderConfig &cfg, const shared_ptr<ScatteringStrategy>& sampling_strategy) {
         return std::make_shared<NestedRayEvaluator>(
             sampling_strategy,
             make_shared<SimpleRayEvaluator>(sampling_strategy),
             cfg.nested_sample_size
         );
     };
-    evaluatorRegistry[EvaluatorType::ClippedVoronoiNested] = [](const RenderConfig &cfg, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+    evaluatorRegistry[EvaluatorType::ClippedVoronoiNested] = [](const RenderConfig &cfg, const shared_ptr<ScatteringStrategy>& sampling_strategy) {
         return std::make_shared<CVorNestedRayEvaluator>(
             sampling_strategy,
             make_shared<SimpleRayEvaluator>(sampling_strategy),
             cfg.nested_sample_size
         );
     };
-    evaluatorRegistry[EvaluatorType::ClippedVoronoiNestedDebug] = [](const RenderConfig &cfg, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+    evaluatorRegistry[EvaluatorType::ClippedVoronoiNestedDebug] = [](const RenderConfig &cfg, const shared_ptr<ScatteringStrategy>& sampling_strategy) {
         return std::make_shared<CVorNestedRayEvaluator>(
             sampling_strategy,
             make_shared<SimpleRayEvaluator>(sampling_strategy),
             cfg.nested_sample_size
         );
     };
-    evaluatorRegistry[EvaluatorType::Normals] = [](const RenderConfig &, const shared_ptr<SamplingStrategy>&) {
+    evaluatorRegistry[EvaluatorType::Normals] = [](const RenderConfig &, const shared_ptr<ScatteringStrategy>&) {
         return std::make_shared<NormalRayEvaluator>();
     };
-    evaluatorRegistry[EvaluatorType::Standard] = [](const RenderConfig &, const shared_ptr<SamplingStrategy>& sampling_strategy) {
+    evaluatorRegistry[EvaluatorType::Standard] = [](const RenderConfig &, const shared_ptr<ScatteringStrategy>& sampling_strategy) {
         return std::make_shared<SimpleRayEvaluator>(sampling_strategy);
     };
 
@@ -221,7 +221,7 @@ std::shared_ptr<ContentDescription> RenderFactory::createContent(const RenderCon
     }
 }
 
-std::shared_ptr<RayEvaluator> RenderFactory::createEvaluator(const RenderConfig &cfg, const std::shared_ptr<SamplingStrategy> &sampling_strategy) {
+std::shared_ptr<RayEvaluator> RenderFactory::createEvaluator(const RenderConfig &cfg, const std::shared_ptr<ScatteringStrategy> &sampling_strategy) {
     try {
         return evaluatorRegistry[cfg.evaluatorType](cfg, sampling_strategy);
     } catch (const std::bad_function_call& e) {

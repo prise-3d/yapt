@@ -457,7 +457,7 @@ int main(int argc, char **argv) {
         const auto camera = content->camera;
         const auto scene = content->scene;
 
-        const auto sampling_strategy = camera->samplingStrategy;
+        const auto sampling_strategy = camera->scattering_strategy;
 
         std::vector<std::shared_ptr<SphericalVoronoiIntegratorObserver>> observers;
 

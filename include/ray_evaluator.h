@@ -25,14 +25,14 @@ public:
 
 class SamplingRayEvaluator : public RayEvaluator {
 public:
-    explicit SamplingRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : sampling_strategy(sampling_strategy) {}
+    explicit SamplingRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy) : sampling_strategy(sampling_strategy) {}
 protected:
-    shared_ptr<SamplingStrategy> sampling_strategy;
+    shared_ptr<ScatteringStrategy> sampling_strategy;
 };
 
 class SimpleRayEvaluator final : public SamplingRayEvaluator {
 public:
-    explicit SimpleRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : SamplingRayEvaluator(sampling_strategy) {}
+    explicit SimpleRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy) : SamplingRayEvaluator(sampling_strategy) {}
 
     ~SimpleRayEvaluator() override = default;
 
@@ -53,8 +53,8 @@ public:
 
 class StepRayEvaluator : public SamplingRayEvaluator {
 public:
-    explicit StepRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy) : SamplingRayEvaluator(sampling_strategy) {}
-    StepRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step) :
+    explicit StepRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy) : SamplingRayEvaluator(sampling_strategy) {}
+    StepRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step) :
         SamplingRayEvaluator(sampling_strategy), next_step(next_step) {}
 
     shared_ptr<RayEvaluator> next_step;
@@ -62,8 +62,8 @@ public:
 
 class NestedRayEvaluator final : public StepRayEvaluator {
 public:
-    NestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, size_t sample_size) : StepRayEvaluator(sampling_strategy), sample_size(sample_size) {}
-    NestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size) {}
+    NestedRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, size_t sample_size) : StepRayEvaluator(sampling_strategy), sample_size(sample_size) {}
+    NestedRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size) {}
 
     Color evaluate(const Ray &, const int depth, const Scene &scene, const Color &background) override;
 
@@ -72,8 +72,8 @@ public:
 
 class CVorNestedRayEvaluator final : public StepRayEvaluator {
 public:
-    CVorNestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, size_t sample_size) : StepRayEvaluator(sampling_strategy), sample_size(sample_size) {}
-    CVorNestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size) {}
+    CVorNestedRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, size_t sample_size) : StepRayEvaluator(sampling_strategy), sample_size(sample_size) {}
+    CVorNestedRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size) {}
 
     Color evaluate(const Ray &, const int depth, const Scene &scene, const Color &background) override;
 
@@ -82,8 +82,8 @@ public:
 
 class ObservableCVorNestedRayEvaluator final : public StepRayEvaluator {
 public:
-    ObservableCVorNestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, size_t sample_size, const std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers) : StepRayEvaluator(sampling_strategy), sample_size(sample_size), observers(observers) {}
-    ObservableCVorNestedRayEvaluator(const shared_ptr<SamplingStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size, std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size), observers(observers) {}
+    ObservableCVorNestedRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, size_t sample_size, const std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers) : StepRayEvaluator(sampling_strategy), sample_size(sample_size), observers(observers) {}
+    ObservableCVorNestedRayEvaluator(const shared_ptr<ScatteringStrategy> &sampling_strategy, const shared_ptr<RayEvaluator> &next_step, size_t sample_size, std::vector<shared_ptr<SphericalVoronoiIntegratorObserver>> &observers) : StepRayEvaluator(sampling_strategy, next_step), sample_size(sample_size), observers(observers) {}
 
     Color evaluate(const Ray &, const int depth, const Scene &scene, const Color &background) override;
 

@@ -279,8 +279,8 @@ public:
     using AggregatorCreator = std::function<std::shared_ptr<AggregatorFactory>(const RenderConfig&, std::shared_ptr<SamplerFactory>&)>;
     using CameraCreator = std::function<std::shared_ptr<Camera>(const RenderConfig&)>;
     using SceneCreator = std::function<std::shared_ptr<ContentDescription>(const RenderConfig&)>;
-    using SamplingStrategyCreator = std::function<std::shared_ptr<SamplingStrategy>(const RenderConfig&)>;
-    using EvaluatorTypeCreator = std::function<std::shared_ptr<RayEvaluator>(const RenderConfig&, const shared_ptr<SamplingStrategy>&)>;
+    using SamplingStrategyCreator = std::function<std::shared_ptr<ScatteringStrategy>(const RenderConfig&)>;
+    using EvaluatorTypeCreator = std::function<std::shared_ptr<RayEvaluator>(const RenderConfig&, const shared_ptr<ScatteringStrategy>&)>;
 
     static void finalize_camera(const RenderConfig& cfg, const std::shared_ptr<Camera>& camera);
 
@@ -294,7 +294,7 @@ public:
 
     static std::shared_ptr<ContentDescription> createContent(const RenderConfig& cfg);
 
-    static std::shared_ptr<RayEvaluator> createEvaluator(const RenderConfig& cfg, const std::shared_ptr<SamplingStrategy>&);
+    static std::shared_ptr<RayEvaluator> createEvaluator(const RenderConfig& cfg, const std::shared_ptr<ScatteringStrategy>&);
 
 private:
     inline static std::map<SamplerType, SamplerCreator> samplerRegistry;

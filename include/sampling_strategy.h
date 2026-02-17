@@ -36,9 +36,9 @@ struct ScatteredContribution {
     Ray outgoing;
 };
 
-class SamplingStrategy {
+class ScatteringStrategy {
 public:
-    virtual ~SamplingStrategy() = default;
+    virtual ~ScatteringStrategy() = default;
 
     /**
      * Context structure, used for computing scattered light
@@ -57,7 +57,7 @@ public:
     ) const = 0;
 };
 
-class NEESamplingStrategy : public SamplingStrategy {
+class NEESamplingStrategy : public ScatteringStrategy {
 public:
     ~NEESamplingStrategy() override = default;
 
@@ -67,7 +67,7 @@ public:
     ) const override;
 };
 
-class MixtureSamplingStrategy : public SamplingStrategy {
+class MixtureSamplingStrategy : public ScatteringStrategy {
 public:
     ~MixtureSamplingStrategy() override = default;
 

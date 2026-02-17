@@ -123,8 +123,8 @@ std::shared_ptr<SampleAggregator> ForwardCamera::render_pixel(const Scene &scene
                                                              const size_t row, const size_t column) {
     random_seed(combine(seed, row, column));
 
-    const auto aggregator = samplerAggregator->create();
-    aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    const auto aggregator = aggregator_factory->create();
+    aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
 
     for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
@@ -245,8 +245,8 @@ std::shared_ptr<SampleAggregator> CartographyCamera::render_pixel(const Scene& s
 
 std::shared_ptr<SampleAggregator> BiasedForwardParallelCamera::render_pixel(
     const Scene &scene, size_t row, size_t column) {
-    const auto aggregator = samplerAggregator->create();
-    aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    const auto aggregator = aggregator_factory->create();
+    aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
 
     for (const Sample& sample : *aggregator) {
         Ray r = get_ray(sample.x, sample.y);
@@ -274,8 +274,8 @@ FunctionCamera::FunctionCamera(shared_ptr<Function> function): ForwardParallelCa
 std::shared_ptr<SampleAggregator> FunctionCamera::render_pixel(const Hittable &world, const Hittable &lights, size_t row, size_t column) {
     random_seed(combine(seed, row, column));
 
-    const auto aggregator = samplerAggregator->create();
-    aggregator->sample_from(pixelSamplerFactory, static_cast<double>(column), static_cast<double>(row));
+    const auto aggregator = aggregator_factory->create();
+    aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
     for (const Sample& sample : *aggregator) {
         const double value = function->compute(sample.dx, sample.dy);
         const Color color(value, value, value);

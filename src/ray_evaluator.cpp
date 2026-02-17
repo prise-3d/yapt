@@ -26,7 +26,7 @@ Color SimpleRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &s
     }
 
     // Delegate to the sampling strategy
-    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
+    ScatteringStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
 
     auto ray_color_function = [this, &scene, background](const Ray& ray, const int d) {
         return this->evaluate(ray, d, scene, background);
@@ -77,7 +77,7 @@ Color NestedRayEvaluator::evaluate(const Ray &r, const int depth, const Scene &s
     Color colorFromScatter(0,0,0);
 
     // Delegate to the sampling strategy
-    SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
+    ScatteringStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
 
     auto ray_color_function = [this, &scene, background](const Ray& ray, const int d) {
         return next_step->evaluate(ray, d, scene, background);
@@ -116,7 +116,7 @@ Color CVorNestedRayEvaluator::evaluate(const Ray &r, const int depth, const Scen
     // scattering
 
     // Delegate to the sampling strategy
-    const SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
+    const ScatteringStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
 
     auto ray_color_function = [this, &scene, &background](const Ray& ray, const int d) {
         return next_step->evaluate(ray, d, scene, background);
@@ -167,7 +167,7 @@ Color ObservableCVorNestedRayEvaluator::evaluate(const Ray &r, const int depth, 
     // scattering
 
     // Delegate to the sampling strategy
-    const SamplingStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
+    const ScatteringStrategy::SamplingContext ctx{r, rec, scatterRecord, scene, depth - 1};
 
     auto ray_color_function = [this, &scene, &background](const Ray& ray, const int d) {
         return next_step->evaluate(ray, d, scene, background);
