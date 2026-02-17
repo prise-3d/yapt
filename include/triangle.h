@@ -34,24 +34,23 @@ public:
     Point3 v[3];
     Vec3 i, j, n;
 
-    Triangle(Point3 a, Vec3 ab, Vec3 ac, shared_ptr<Material> mat): mat(mat), i(ab), j(ac) {
+    Triangle(const Point3 &a, const Vec3 &ab, const Vec3 &ac, const std::shared_ptr<Material> &mat): mat(mat), i(ab), j(ac) {
         n = cross(i, j);
         area = n.length();
         n /= area; area /= 2;
         v[0] = a;
-        v[1] = a +i ;
+        v[1] = a + i ;
         v[2] = a + j;
 
-        double minX, minY, minZ, maxX, maxY, maxZ;
-        minX = a.x();
-        minY = a.y();
-        minZ = a.z();
-        maxX = a.x();
-        maxY = a.y();
-        maxZ = a.z();
+        double minX = a.x();
+        double minY = a.y();
+        double minZ = a.z();
+        double maxX = a.x();
+        double maxY = a.y();
+        double maxZ = a.z();
 
-        for (int i = 1 ; i < 3 ; i++) {
-            Point3 p = v[i];
+        for (std::size_t k = 1 ; k < 3 ; k++) {
+            Point3 p = v[k];
             minX = minX < p.x() ? minX: p.x();
             minY = minY < p.y() ? minY: p.y();
             minZ = minZ < p.z() ? minZ: p.z();
@@ -85,37 +84,37 @@ public:
         if (!this->hit(Ray(origin, direction), Interval(0.001, infinity), rec))
             return 0;
 
-        auto distance_squared = rec.t * rec.t * direction.length2();
-        auto cosine = fabs(dot(direction, rec.normal) / direction.length());
+        const auto distance_squared = rec.t * rec.t * direction.length2();
+        const auto cosine = fabs(dot(direction, rec.normal) / direction.length());
 
         return distance_squared / (cosine * area);
     }
 
     [[nodiscard]] Vec3 random(const Point3 &origin) const override {
-        auto r = random_double();
-        auto s = random_double();
-        auto t = random_double();
-        Point3 inside = (r * v[0] + s * v[1] + t * v[2]) / (r + s + t);
+        const auto r = random_double();
+        const auto s = random_double();
+        const auto t = random_double();
+        const Point3 inside = (r * v[0] + s * v[1] + t * v[2]) / (r + s + t);
         return inside - origin;
     }
 
     bool hit(const Ray &r, Interval ray_t, HitRecord &rec) const override {
-        Vec3 rayCrossJ = cross(r.direction(), j);
-        double det = dot(i, rayCrossJ);
+        const Vec3 rayCrossJ = cross(r.direction(), j);
+        const double det = dot(i, rayCrossJ);
 
         // r is parallel to the triangle plane
         if (det > -EPSILON && det < EPSILON) return false;
 
-        double invDet = 1. / det;
-        Vec3 s = r.origin() - v[0];
-        double u = invDet * dot(s, rayCrossJ);
+        const double invDet = 1. / det;
+        const Vec3 s = r.origin() - v[0];
+        const double u = invDet * dot(s, rayCrossJ);
 
         if (u < 0 || u > 1) return false;
 
-        Vec3 sCrossI = cross(s, i);
-        double v = invDet * dot(r.direction(), sCrossI);
+        const Vec3 sCrossI = cross(s, i);
+        const double w = invDet * dot(r.direction(), sCrossI);
 
-        if (v < 0 || u + v > 1) return false;
+        if (w < 0 || u + w > 1) return false;
 
         // the ray and the triangle intersect
 
