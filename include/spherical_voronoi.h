@@ -26,6 +26,9 @@
 #define YAPT_SPHERICAL_VORONOI_H
 
 #include "aggregators.h"
+#include <CGAL/Delaunay_triangulation_on_sphere_2.h>
+#include <CGAL/Projection_on_sphere_traits_3.h>
+
 // typedefs for Voronoi diagrams on the surface of a sphere
 typedef CGAL::Projection_on_sphere_traits_3<K> Traits;
 typedef CGAL::Delaunay_triangulation_on_sphere_2<Traits> SDT;
