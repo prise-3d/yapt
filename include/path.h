@@ -67,7 +67,8 @@ class PathGuidingStrategy {
 public:
     virtual ~PathGuidingStrategy() = default;
 
-    PathGuidingStrategy(shared_ptr<Hittable> scene, shared_ptr<Hittable> lights, size_t max_depth): scene(scene), lights(lights), max_depth(max_depth) {};
+    PathGuidingStrategy(const std::shared_ptr<Hittable> &scene, const shared_ptr<Hittable> &lights, const size_t max_depth):
+        scene(scene), lights(lights), max_depth(max_depth) {}
 
     virtual bool grow(Path& path) = 0;
     [[nodiscard]] bool visible(const Vec3& p, const Vec3& q) const;
@@ -81,7 +82,8 @@ public:
 class SimpleGuidingStrategy: public PathGuidingStrategy {
     public:
 
-    SimpleGuidingStrategy(shared_ptr<Hittable> scene, shared_ptr<Hittable> lights, size_t max_depth): PathGuidingStrategy(scene, lights, max_depth) {};
+    SimpleGuidingStrategy(const std::shared_ptr<Hittable> &scene, const std::shared_ptr<Hittable> &lights, const size_t max_depth):
+        PathGuidingStrategy(scene, lights, max_depth) {}
 
     bool grow(Path& path) override;
 };

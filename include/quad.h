@@ -33,7 +33,7 @@ public:
     Quad(const Point3& Q, const Vec3& u, const Vec3& v, const shared_ptr<Material> &mat)
             : Q(Q), u(u), v(v), mat(mat)
     {
-        auto n = cross(u, v);
+        const auto n = cross(u, v);
         normal = unit_vector(n);
         D = dot(normal, Q);
         w = n / dot(n,n);

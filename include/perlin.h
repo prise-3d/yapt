@@ -103,17 +103,17 @@ private:
 
     static void permute(int *p, int n) {
         for (int i = n - 1; i > 0; i--) {
-            int target = random_int(0, i);
-            int tmp = p[i];
+            const int target = random_int(0, i);
+            const int tmp = p[i];
             p[i] = p[target];
             p[target] = tmp;
         }
     }
 
-    static double perlin_interp(const Vec3 c[2][2][2], double u, double v, double w) {
-        auto uu = u * u * (3 - 2 * u);
-        auto vv = v * v * (3 - 2 * v);
-        auto ww = w * w * (3 - 2 * w);
+    static double perlin_interp(const Vec3 c[2][2][2], const double u, const double v, const double w) {
+        const auto uu = u * u * (3 - 2 * u);
+        const auto vv = v * v * (3 - 2 * v);
+        const auto ww = w * w * (3 - 2 * w);
         auto accum = 0.0;
 
         for (int i = 0; i < 2; i++)
