@@ -200,21 +200,4 @@ private:
     double margin;
 };
 
-/*
- * Pour échantillonner l'hémisphère des directions, on a toujours le même problème : le bord
- * pour imiter l'approche à l'échelle du pixel, on peut envisager de mettre au point une
- * correspondance carré <-> hémisphère par une transformation qui aurait ces propriétés :
- *  - la transformation est conforme, de façon à préserver les relations de proximité
- *  - la transformation envoie le plan muni d'un point à l'infini sur la sphère unité
- *  - l'intérieur du carré est envoyé dans l'hémiphère
- *  - le bord du carré est envoyé au bord de l'hémisphère, ie le cercle des points (x,y,0) tels que x²+y² = 1
- *
- * Le plus simple serait quand même d'échantillonner dans un disque (r, \theta) et de rabattre
- * la distribution par projection stéréographique. La contrainte d'intégrité sur une marge assurant
- * un Voronoi avec de bonnes propriétés serait maintenue
- *
- * L'aggrégateur c'est pas le bon endroit pour faire ce genre de choses, il faudrait une caméra Voronoi
- *
- */
-
 #endif //YAPT_AGGREGATORS_H
