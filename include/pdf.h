@@ -29,10 +29,6 @@
 #include "hittable_list.h"
 #include "onb.h"
 
-
-#include "hittable_list.h"
-#include "onb.h"
-
 class PDF {
 public:
     virtual ~PDF() = default;
@@ -96,7 +92,7 @@ private:
 
 class MixturePDF : public PDF {
 public:
-    MixturePDF(shared_ptr<PDF> p0, shared_ptr<PDF> p1) {
+    MixturePDF(const shared_ptr<PDF> &p0, const shared_ptr<PDF> &p1) {
         p[0] = p0;
         p[1] = p1;
     }

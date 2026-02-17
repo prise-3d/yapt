@@ -30,7 +30,7 @@
 
 class Quad : public Hittable {
 public:
-    Quad(const Point3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> mat)
+    Quad(const Point3& Q, const Vec3& u, const Vec3& v, const shared_ptr<Material> &mat)
             : Q(Q), u(u), v(v), mat(mat)
     {
         auto n = cross(u, v);
@@ -45,15 +45,15 @@ public:
 
     virtual void setBoundingBox() {
         // Compute the bounding box of all four vertices.
-        auto bbox_diagonal1 = AABB(Q, Q + u + v);
-        auto bbox_diagonal2 = AABB(Q + u, Q + v);
+        const auto bbox_diagonal1 = AABB(Q, Q + u + v);
+        const auto bbox_diagonal2 = AABB(Q + u, Q + v);
         bbox = AABB(bbox_diagonal1, bbox_diagonal2);
     }
 
     [[nodiscard]] AABB bounding_box() const override { return bbox; }
 
     bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
-        auto denom = dot(normal, r.direction());
+        const auto denom = dot(normal, r.direction());
 
         // No hit if the ray is parallel to the plane.
         if (fabs(denom) < 1e-8)
@@ -124,7 +124,7 @@ private:
 };
 
 
-inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, shared_ptr<Material> mat)
+inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, const shared_ptr<Material> &mat)
 {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
 

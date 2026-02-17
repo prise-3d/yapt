@@ -25,8 +25,6 @@
 #ifndef YAPT_SPHERE_H
 #define YAPT_SPHERE_H
 
-#include <utility>
-
 #include "hittable.h"
 #include "yapt.h"
 #include "aabb.h"
@@ -35,16 +33,16 @@
 
 class Sphere : public Hittable {
 public:
-    Sphere(const Point3 &center, double radius)
+    Sphere(const Point3 &center, const double radius)
             : center(center), radius(fmax(0, radius)) {
-        auto rvec = Vec3(radius, radius, radius);
-        bbox = AABB(center - rvec, center + rvec);
+        const auto radius_vector = Vec3(radius, radius, radius);
+        bbox = AABB(center - radius_vector, center + radius_vector);
     }
 
-    Sphere(const Point3 &center, double radius, shared_ptr<Material> mat)
+    Sphere(const Point3 &center, const double radius, const std::shared_ptr<Material> &mat)
             : center(center), radius(fmax(0, radius)), mat(mat) {
-        auto rvec = Vec3(radius, radius, radius);
-        bbox = AABB(center - rvec, center + rvec);
+        const auto radius_vector = Vec3(radius, radius, radius);
+        bbox = AABB(center - radius_vector, center + radius_vector);
     }
 
     bool hit(const Ray &r, const Interval ray_t, HitRecord &rec) const override {
@@ -57,12 +55,12 @@ public:
         if (discriminant < 0)
             return false;
 
-        auto sqrtd = sqrt(discriminant);
+        const auto square_root = sqrt(discriminant);
 
         // Find the nearest root that lies in the acceptable range.
-        auto root = (h - sqrtd) / a;
+        auto root = (h - square_root) / a;
         if (!ray_t.surrounds(root)) {
-            root = (h + sqrtd) / a;
+            root = (h + square_root) / a;
             if (!ray_t.surrounds(root))
                 return false;
         }
