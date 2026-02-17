@@ -12,8 +12,6 @@
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Delaunay_triangulation_adaptation_traits_2.h>
 #include <CGAL/Delaunay_triangulation_adaptation_policies_2.h>
-#include <CGAL/Delaunay_triangulation_on_sphere_2.h>
-#include <CGAL/Projection_on_sphere_traits_3.h>
 
 // typedefs for defining the adaptor
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;

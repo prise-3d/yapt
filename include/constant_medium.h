@@ -9,17 +9,17 @@
 
 class ConstantMedium : public Hittable {
 public:
-    ConstantMedium(shared_ptr<Hittable> boundary, double density, shared_ptr<Texture> tex)
+    ConstantMedium(const std::shared_ptr<Hittable> &boundary, const double density, const std::shared_ptr<Texture> &tex)
             : boundary(boundary), neg_inv_density(-1/density),
               phase_function(make_shared<Isotropic>(tex))
     {}
 
-    ConstantMedium(shared_ptr<Hittable> boundary, double density, const Color& albedo)
+    ConstantMedium(const std::shared_ptr<Hittable> &boundary, const double density, const Color& albedo)
             : boundary(boundary), neg_inv_density(-1/density),
               phase_function(make_shared<Isotropic>(albedo))
     {}
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
+    bool hit(const Ray& r, const Interval ray_t, HitRecord& rec) const override {
 
         HitRecord rec1, rec2;
 
@@ -38,9 +38,9 @@ public:
         if (rec1.t < 0)
             rec1.t = 0;
 
-        auto ray_length = r.direction().length();
-        auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-        auto hit_distance = neg_inv_density * log(random_double());
+        const auto ray_length = r.direction().length();
+        const auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
+        const auto hit_distance = neg_inv_density * log(random_double());
 
         if (hit_distance > distance_inside_boundary)
             return false;
