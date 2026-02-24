@@ -45,7 +45,6 @@ public:
         const auto i = static_cast<std::size_t>(std::floor(resolution * n.x()));
         const auto j = static_cast<std::size_t>(std::floor(resolution * n.y()));
         const auto k = static_cast<std::size_t>(std::floor(resolution * n.z()));
-        std::cout << n << std::endl;
 
         return i + resolution * (j + resolution * k);
     }
