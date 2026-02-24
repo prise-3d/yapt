@@ -130,11 +130,12 @@ class RLCamera : public ForwardParallelCamera {
 
     void render(const Scene &scene) override;
     Color rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights);
-    Color evaluate(const Ray& r, const int depth, const Scene&);
+    Color evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions);
 
     int linesPerBatch = 1;
     int spp = 100;
     int warmupPasses = 1;
+    VoxelGrid voxelGrid;
 };
 
 #endif //YAPT_CAMERA_H
