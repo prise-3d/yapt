@@ -36,15 +36,16 @@ public:
         bbox_min(bbox_min), bbox_max(bbox_max), extent(bbox_max - bbox_min), resolution(resolution), radiance(resolution * resolution * resolution), visits(resolution * resolution * resolution)
     {}
 
-    std::size_t position_to_index(const Point3 &position) const {
-        auto n = (position - bbox_min) * resolution;
-        n.e[0] = std::clamp(position.e[0] - extent.e[0], 0.0, 0.9999);
-        n.e[1] = std::clamp(position.e[1] - extent.e[1], 0.0, 0.9999);
-        n.e[2] = std::clamp(position.e[2] - extent.e[2], 0.0, 0.9999);
+    [[nodiscard]] std::size_t position_to_index(const Point3 &position) const {
+        auto n = (position - bbox_min);
+        n.e[0] = std::clamp(n.x() / extent.x(), 0.0, 0.9999);
+        n.e[1] = std::clamp(n.y() / extent.y(), 0.0, 0.9999);
+        n.e[2] = std::clamp(n.z() / extent.z(), 0.0, 0.9999);
 
-        const auto i = static_cast<std::size_t>(std::floor(n.e[0]));
-        const auto j = static_cast<std::size_t>(std::floor(n.e[1]));
-        const auto k = static_cast<std::size_t>(std::floor(n.e[2]));
+        const auto i = static_cast<std::size_t>(std::floor(resolution * n.x()));
+        const auto j = static_cast<std::size_t>(std::floor(resolution * n.y()));
+        const auto k = static_cast<std::size_t>(std::floor(resolution * n.z()));
+        std::cout << n << std::endl;
 
         return i + resolution * (j + resolution * k);
     }
@@ -55,10 +56,10 @@ public:
         visits[index] += 1;
     }
 
-    double lookup(const Point3 &position) const {
+    [[nodiscard]] double lookup(const Point3 &position) const {
         const auto index = position_to_index(position);
         const auto total_visits = visits[index];
-        return total_visits > 0 ? radiance[index] / total_visits : 0.0;
+        return total_visits > 0 ? radiance[index] / static_cast<double>(total_visits) : 0.0;
     }
 
     void merge(const VoxelGrid& other) {
