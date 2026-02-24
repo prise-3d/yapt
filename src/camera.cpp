@@ -31,7 +31,8 @@
 #include <queue>
 #include <condition_variable>
 #include <memory>
-
+#include <scene.h>
+#include <functional>
 
 void Camera::initialize() {
     imageHeight = static_cast<size_t>(static_cast<double>(imageWidth) / aspect_ratio);
@@ -318,3 +319,104 @@ Ray TestCamera::get_ray(const double x, const double y) const {
 
     return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
 }
+
+
+[[nodiscard]] RLCamera::RLCamera() = default;
+
+void RLCamera::render(const Scene& scene) {
+    initialize();
+
+    std::cout << "This is RL Camera speaking" << std::endl;
+
+    for (int row = 0 ; row < imageHeight ; ++row) {
+        for (int column = 0 ; column < imageWidth ; ++column) {
+            random_seed(combine(seed, row, column));
+            const auto aggregator = aggregator_factory->create();
+            aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
+            for (const Sample& sample : *aggregator) {
+                Ray r = get_ray(sample.x, sample.y);
+                const Color contribution = evaluate(r, static_cast<int>(maxDepth), scene);
+                aggregator->insert_contribution(contribution);
+                const Color pixel_color = aggregator->aggregate();
+                persist_color_to_data(row, column, pixel_color);
+            }
+        }
+    }
+}
+
+Color RLCamera::evaluate(const Ray& ray, const int depth, const Scene& scene)
+{
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return {0, 0, 0};
+
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!scene.geometry.hit(ray, Interval(0.001, infinity), rec))
+        return {0, 0, 0}; // background
+
+    ScatterRecord scatterRecord;
+    const Color color_from_emission = rec.mat->emitted(ray, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(ray, rec, scatterRecord))
+        return color_from_emission;
+
+    if (scatterRecord.skip_pdf) {
+        return scatterRecord.attenuation * evaluate(scatterRecord.skip_pdf_ray, depth - 1, scene);
+    }
+
+    const ScatteringStrategy::ScatteringContext context{ray, rec, scatterRecord, scene, depth - 1};
+
+    const auto light_ptr = make_shared<HittablePDF>(context.scene.lights, context.hit_record.p);
+    const MixturePDF p(light_ptr, context.scatter_record.pdf_ptr);
+
+    auto scattered = Ray(context.hit_record.p, p.generate());
+    const auto pdfValue = p.value(scattered.direction());
+
+    const double scatteringPdf = context.hit_record.mat->scattering_pdf(
+        context.incoming_ray, context.hit_record, scattered);
+
+    const Color sampleColor = evaluate(scattered, context.remaining_depth, scene);
+
+    const auto colorFromScatter=
+        context.scatter_record.attenuation * scatteringPdf * sampleColor / pdfValue;
+
+    return color_from_emission + colorFromScatter;
+}
+
+Color RLCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) {
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return {0, 0, 0};
+
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, Interval(0.001, infinity), rec))
+        return background;
+
+    ScatterRecord scatterRecord;
+    const Color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(r, rec, scatterRecord))
+        return color_from_emission;
+
+    if (scatterRecord.skip_pdf) {
+        return scatterRecord.attenuation * rayColor(scatterRecord.skip_pdf_ray, depth - 1, world, lights);
+    }
+
+    const auto light_ptr = make_shared<HittablePDF>(lights, rec.p);
+    const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
+
+    const auto scattered = Ray(rec.p, p.generate());
+    const auto pdfValue = p.value(scattered.direction());
+
+    const double scatteringPdf = rec.mat->scattering_pdf(r, rec, scattered);
+
+
+    const Color sampleColor = rayColor(scattered, depth - 1, world, lights);
+    const Color colorFromScatter = (scatterRecord.attenuation * scatteringPdf * sampleColor) / pdfValue;
+
+    return color_from_emission + colorFromScatter;
+}
+
+

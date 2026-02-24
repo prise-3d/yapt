@@ -78,6 +78,12 @@ void RenderFactory::init() {
         camera->ray_evaluator = createEvaluator(cfg, camera->scattering_strategy);
         return camera;
     };
+    cameraRegistry[CameraType::RL] = [](const RenderConfig& cfg)
+    {
+        auto camera = std::make_shared<RLCamera>();
+        finalize_camera(cfg, camera);
+        return camera;
+    };
     cameraRegistry[CameraType::Nested] = [](const RenderConfig& cfg) {
         auto camera = std::make_shared<ForwardParallelCamera>();
         finalize_camera(cfg, camera);
@@ -327,9 +333,11 @@ void CommandLineParser::registerHandlers() {
 
     handlers["cam="] = [](const std::string& v, RenderConfig& c) {
         if (v == "std") c.camera = CameraType::Parallel;
+        else if (v == "rl")
+        {
+            c.camera = CameraType::RL;
+        }
         else if (v == "nest") {
-            // c.camera = CameraType::Nested;
-            // we preserve backward compatibility
             c.evaluatorType = EvaluatorType::Nested;
             c.camera = CameraType::Parallel;
         }
@@ -337,8 +345,6 @@ void CommandLineParser::registerHandlers() {
             c.camera = CameraType::Nested4;
         }
         else if (v == "cvnest") {
-            // c.camera = CameraType::ClippedVoronoiNested;
-            // we preserve backward compatibility
             c.evaluatorType = EvaluatorType::ClippedVoronoiNested;
             c.camera = CameraType::Parallel;
         } else {
@@ -401,6 +407,7 @@ void OutputManager::initialize(const RenderConfig& config) {
     aggregator_descriptions[AggregatorType::ClippedVoronoi] = "cvor";
 
     camera_descriptions[CameraType::Parallel] = "";
+    camera_descriptions[CameraType::RL] = "rl";
     camera_descriptions[CameraType::Single] = "single";
     camera_descriptions[CameraType::Nested] = "nest";
     camera_descriptions[CameraType::Nested4] = "nest4";
@@ -438,6 +445,8 @@ bool OutputManager::export_image(RenderConfig& config, const std::shared_ptr<Cam
             cam_tag += "-" + camera_descriptions[config.camera] + "-" + std::to_string(config.nested_sample_size);
         } else if (config.camera == CameraType::Single) {
             cam_tag += "-" + camera_descriptions[config.camera] + "(" + std::to_string(config.pixelCoords.first) + "," + std::to_string(config.pixelCoords.second) + ")";
+        } else if (config.camera == CameraType::RL) {
+            cam_tag += "-" + camera_descriptions[config.camera];
         }
 
         std::string eval_tag;

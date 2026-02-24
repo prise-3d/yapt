@@ -9,6 +9,7 @@
 #include "scattering_strategy.h"
 #include "ray_evaluator.h"
 #include "scene.h"
+#include "voxel_grid.h"
 
 #ifdef FUNCTION_PARSING
     #include "functions.h"
@@ -121,6 +122,19 @@ public:
 
     size_t pixel_x;
     size_t pixel_y;
+};
+
+class RLCamera : public ForwardParallelCamera {
+    public:
+    RLCamera();
+
+    void render(const Scene &scene) override;
+    Color rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights);
+    Color evaluate(const Ray& r, const int depth, const Scene&);
+
+    int linesPerBatch = 1;
+    int spp = 100;
+    int warmupPasses = 1;
 };
 
 #endif //YAPT_CAMERA_H

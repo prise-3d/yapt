@@ -120,6 +120,7 @@ add_executable(yapt ${SOURCES}
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
         src/parser.cpp
+        include/voxel_grid.h
 )
 
 find_package(Threads REQUIRED)
@@ -206,6 +207,7 @@ add_executable(qtvor ${SOURCES}
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
         src/parser.cpp
+        include/voxel_grid.h
 )
 
 target_link_libraries(qtvor
@@ -230,6 +232,7 @@ add_executable(test_torch
         include/spherical_voronoi.h
         src/spherical_voronoi.cpp
         src/parser.cpp
+        include/voxel_grid.h
 )
 
 target_link_libraries(test_torch

@@ -57,7 +57,8 @@ enum class CameraType {
     Nested4,
     ClippedVoronoiNested,
     Single,
-    Pixel
+    Pixel,
+    RL
 };
 enum class EvaluatorType {
     Standard,
