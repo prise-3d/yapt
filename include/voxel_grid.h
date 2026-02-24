@@ -51,7 +51,7 @@ public:
 
     void record(const Point3 &position, const double &radiance_value) {
         const auto index = position_to_index(position);
-        radiance[index] = radiance_value;
+        radiance[index] += radiance_value;
         visits[index] += 1;
     }
 
