@@ -64,7 +64,7 @@ public:
 
     void render(const Scene &scene) override;
     virtual void render_line(const Scene &scene, size_t j);
-    void persist_color_to_data(size_t row, size_t column, Color pixel_color);
+    virtual void persist_color_to_data(size_t row, size_t column, Color pixel_color);
 
     std::shared_ptr<SampleAggregator> render_pixel(const Scene &scene, size_t row,
                                                           size_t column) override;
@@ -131,11 +131,14 @@ class RLCamera : public ForwardParallelCamera {
     void render(const Scene &scene) override;
     Color rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights);
     Color evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions);
+    Color guide_and_evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions);
+    void persist_color_to_data(size_t row, size_t column, Color pixel_color) override;
 
     int linesPerBatch = 1;
     int spp = 100;
     int warmupPasses = 1;
     VoxelGrid voxelGrid;
+    std::vector<std::size_t> visits;
 };
 
 #endif //YAPT_CAMERA_H

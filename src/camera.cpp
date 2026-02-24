@@ -324,24 +324,94 @@ RLCamera::RLCamera() : voxelGrid(Vec3(-.01,-.01,-.01),Vec3(555.01,555.01,555.01)
 
 void RLCamera::render(const Scene& scene) {
     initialize();
+    maxDepth = 10;
+    visits = std::vector<std::size_t>(3 * imageHeight * imageWidth, 0);
 
-    std::cout << "This is RL Camera speaking" << std::endl;
-
-    for (int row = 0 ; row < imageHeight ; ++row) {
-        for (int column = 0 ; column < imageWidth ; ++column) {
-            random_seed(combine(seed, row, column));
-            const auto aggregator = aggregator_factory->create();
-            aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
-            for (const Sample& sample : *aggregator) {
-                Ray r = get_ray(sample.x, sample.y);
-                std::vector<Point3> path_positions;
-                const Color contribution = evaluate(r, static_cast<int>(maxDepth), scene, path_positions);
-                aggregator->insert_contribution(contribution);
+    // warmup
+    std::cout << "WARMUP" << std::endl;
+    for (auto x = 0 ; x < 4 ; ++x) {
+        for (int row = 0 ; row < imageHeight ; ++row) {
+            for (int column = 0 ; column < imageWidth ; ++column) {
+                random_seed(combine(seed, row, column));
+                const auto aggregator = aggregator_factory->create();
+                aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
+                for (const Sample& sample : *aggregator) {
+                    Ray r = get_ray(sample.x, sample.y);
+                    std::vector<Point3> path_positions;
+                    const Color contribution = evaluate(r, static_cast<int>(maxDepth), scene, path_positions);
+                    aggregator->insert_contribution(contribution);
+                    for (const auto& position : path_positions) {
+                        double radiance_value = std::max(contribution.x(), std::max(contribution.y(), contribution.z()));
+                        voxelGrid.record(position, radiance_value);
+                    }
+                }
+                const Color pixel_color = aggregator->aggregate();
+                persist_color_to_data(row, column, pixel_color);
             }
-            const Color pixel_color = aggregator->aggregate();
-            persist_color_to_data(row, column, pixel_color);
         }
     }
+
+    double best = -1;
+    int best_index = -1;
+    int count = 0;
+
+    for (int i = 0 ; i  < 64 * 64 * 64 ; ++i)
+    {
+        const auto contrib = voxelGrid.radiance[i];
+        if (contrib > best)
+        {
+            best = contrib;
+            best_index = i;
+        }
+        if (contrib != 0)
+        {
+            count++;
+        }
+    }
+    std::cout << "Best: " << best << std::endl;
+    std::cout << "Best Index: " << best_index << std::endl;
+    std::cout << "Non zero voxels: " << count << std::endl;
+
+    // exploit
+    std::cout << std::endl << std::endl << "EXPLOITATION           " << std::endl;
+    for (int i = 0 ; i < 4 ; ++i) {
+        std::cout << "PASS " << i << "          " << std::endl;
+        for (int row = 0 ; row < imageHeight ; ++row) {
+            for (int column = 0 ; column < imageWidth ; ++column) {
+                // std::cout << row << "  --  " << column << "        \r" << std::flush;
+                random_seed(combine(seed, row + (i + 1) * imageHeight, column));
+                const auto aggregator = aggregator_factory->create();
+                aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
+                for (const Sample& sample : *aggregator) {
+                    Ray r = get_ray(sample.x, sample.y);
+                    std::vector<Point3> path_positions;
+                    const Color contribution = guide_and_evaluate(r, static_cast<int>(maxDepth), scene, path_positions);
+                    aggregator->insert_contribution(contribution);
+                    for (const auto& position : path_positions) {
+                        double radiance_value = std::max(contribution.x(), std::max(contribution.y(), contribution.z()));
+                        voxelGrid.record(position, radiance_value);
+                    }
+                }
+                const Color pixel_color = aggregator->aggregate();
+                persist_color_to_data(row, column, pixel_color);
+            }
+        }
+    }
+
+    std::size_t k = 0;
+
+    for (int row = 0 ; row < imageHeight ; ++row)
+    {
+        for (int column = 0 ; column < imageWidth ; ++column)
+        {
+            const auto v = visits[k];
+
+            imageData.data[k++] /= v;  // R
+            imageData.data[k++] /= v;  // G
+            imageData.data[k++] /= v;  // B
+        }
+    }
+
 }
 
 Color RLCamera::evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions) {
@@ -366,23 +436,89 @@ Color RLCamera::evaluate(const Ray& ray, const int depth, const Scene& scene, st
         return scatterRecord.attenuation * evaluate(scatterRecord.skip_pdf_ray, depth - 1, scene, path_positions);
     }
 
-    const ScatteringStrategy::ScatteringContext context{ray, rec, scatterRecord, scene, depth - 1};
+    // const ScatteringStrategy::ScatteringContext context{ray, rec, scatterRecord, scene, depth - 1};
 
-    const auto light_ptr = make_shared<HittablePDF>(context.scene.lights, context.hit_record.p);
-    const MixturePDF p(light_ptr, context.scatter_record.pdf_ptr);
+    const auto light_ptr = make_shared<HittablePDF>(scene.lights, rec.p);
+    const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
 
-    auto scattered = Ray(context.hit_record.p, p.generate());
+    auto scattered = Ray(rec.p, p.generate());
     const auto pdfValue = p.value(scattered.direction());
 
-    const double scatteringPdf = context.hit_record.mat->scattering_pdf(
-        context.incoming_ray, context.hit_record, scattered);
+    const double scatteringPdf = rec.mat->scattering_pdf(
+        ray, rec, scattered);
 
-    const Color sampleColor = evaluate(scattered, context.remaining_depth, scene, path_positions);
+    const Color sampleColor = evaluate(scattered, depth - 1, scene, path_positions);
 
     const auto colorFromScatter=
-        context.scatter_record.attenuation * scatteringPdf * sampleColor / pdfValue;
+        scatterRecord.attenuation * scatteringPdf * sampleColor / pdfValue;
 
     return color_from_emission + colorFromScatter;
+}
+
+Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions) {
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return {0, 0, 0};
+
+    HitRecord rec;
+    // If the ray hits nothing, return the background color.
+    if (!scene.geometry.hit(ray, Interval(0.001, infinity), rec))
+        return {0, 0, 0}; // background
+
+    path_positions.push_back(rec.p);
+
+    ScatterRecord scatterRecord;
+    const Color color_from_emission = rec.mat->emitted(ray, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(ray, rec, scatterRecord))
+        return color_from_emission;
+
+    if (scatterRecord.skip_pdf) {
+        return scatterRecord.attenuation * guide_and_evaluate(scatterRecord.skip_pdf_ray, depth - 1, scene, path_positions);
+    }
+
+    const auto light_ptr = make_shared<HittablePDF>(scene.lights, rec.p);
+    const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
+
+    Ray scattered;
+    double pdfValue = 1;
+    double best_contribution = -1;
+
+    for (std::size_t x = 0 ; x < 4 ; ++x) {
+        auto temp_ray = Ray(rec.p, p.generate());
+        const auto temp_value = p.value(temp_ray.direction());
+        HitRecord temp_record;
+
+        if (scene.geometry.hit(ray, Interval(0.001, infinity), temp_record)) {
+            const auto temp_point = temp_record.p;
+            const auto contribution = voxelGrid.lookup(temp_point);
+            if (contribution > best_contribution) {
+                best_contribution = contribution;
+                scattered = temp_ray;
+                pdfValue = temp_value;
+            }
+        }
+    }
+
+    const double scatteringPdf = rec.mat->scattering_pdf(
+        ray, rec, scattered);
+
+    const Color sampleColor = evaluate(scattered, depth - 1, scene, path_positions);
+
+    const auto colorFromScatter=
+        scatterRecord.attenuation * scatteringPdf * sampleColor / pdfValue;
+
+    return color_from_emission + colorFromScatter;
+}
+
+void RLCamera::persist_color_to_data(const std::size_t row, const std::size_t column, const Color pixel_color) {
+    const size_t idx = 3 * (column + row * imageWidth);
+
+    imageData.data[idx]     += pixel_color.x();  // R
+    imageData.data[idx + 1] += pixel_color.y();  // G
+    imageData.data[idx + 2] += pixel_color.z();  // B
+
+    visits[idx]++;
 }
 
 Color RLCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) {
