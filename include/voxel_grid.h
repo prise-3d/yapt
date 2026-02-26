@@ -28,13 +28,17 @@
 #include <algorithm>
 #include "Vec3.h"
 
-class VoxelGrid
+class  VoxelGrid
 {
 public:
 
     VoxelGrid(const Vec3 &bbox_min, const Vec3 &bbox_max, const std::size_t resolution) :
         bbox_min(bbox_min), bbox_max(bbox_max), extent(bbox_max - bbox_min), resolution(resolution), radiance(resolution * resolution * resolution), visits(resolution * resolution * resolution)
     {}
+
+    [[nodiscard]] std::size_t voxel_count() const {
+        return resolution * resolution * resolution;
+    }
 
     [[nodiscard]] std::size_t position_to_index(const Point3 &position) const {
         auto n = (position - bbox_min);

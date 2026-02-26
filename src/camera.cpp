@@ -320,7 +320,13 @@ Ray TestCamera::get_ray(const double x, const double y) const {
     return {Point3(dx, dy, 0), Vec3(0, 0, 0)};
 }
 
-RLCamera::RLCamera() : voxelGrid(Vec3(-.01,-.01,-.01),Vec3(555.01,555.01,555.01),64) {}
+RLCamera::RLCamera(
+    const std::size_t warmup_phases,
+    const std::size_t exploitation_phases,
+    const std::size_t voxel_grid_resolution) :
+        warmup_phases(warmup_phases),
+        exploitation_phases(exploitation_phases),
+        voxelGrid(Vec3(-.01,-.01,-.01),Vec3(555.01,555.01,555.01), voxel_grid_resolution) {}
 
 void RLCamera::render(const Scene& scene) {
     initialize();
@@ -328,10 +334,14 @@ void RLCamera::render(const Scene& scene) {
     visits = std::vector<std::size_t>(3 * imageHeight * imageWidth, 0);
 
     // warmup
-    std::cout << "WARMUP" << std::endl;
-    for (auto x = 0 ; x < 4 ; ++x) {
-        for (int row = 0 ; row < imageHeight ; ++row) {
-            for (int column = 0 ; column < imageWidth ; ++column) {
+    std::cout << "WARMUP (x" << warmup_phases << ")" << std::endl;
+    if (!record_warmup) {
+        std::cout << "(warmup contributions NOT recorded)" << std::endl;
+    }
+    for (std::size_t i = 0 ; i < warmup_phases ; ++i) {
+        std::cout << "  PASS " << i << "          " << std::endl;
+        for (std::size_t row = 0 ; row < imageHeight ; ++row) {
+            for (std::size_t column = 0 ; column < imageWidth ; ++column) {
                 random_seed(combine(seed, row, column));
                 const auto aggregator = aggregator_factory->create();
                 aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
@@ -345,8 +355,10 @@ void RLCamera::render(const Scene& scene) {
                         voxelGrid.record(position, radiance_value);
                     }
                 }
-                const Color pixel_color = aggregator->aggregate();
-                persist_color_to_data(row, column, pixel_color);
+                if (record_warmup) {
+                    const Color pixel_color = aggregator->aggregate();
+                    persist_color_to_data(row, column, pixel_color);
+                }
             }
         }
     }
@@ -354,17 +366,15 @@ void RLCamera::render(const Scene& scene) {
     double best = -1;
     int best_index = -1;
     int count = 0;
+    const std::size_t voxel_count = voxelGrid.voxel_count();
 
-    for (int i = 0 ; i  < 64 * 64 * 64 ; ++i)
-    {
+    for (int i = 0 ; i  < voxel_count ; ++i) {
         const auto contrib = voxelGrid.radiance[i];
-        if (contrib > best)
-        {
+        if (contrib > best) {
             best = contrib;
             best_index = i;
         }
-        if (contrib != 0)
-        {
+        if (contrib != 0) {
             count++;
         }
     }
@@ -373,12 +383,11 @@ void RLCamera::render(const Scene& scene) {
     std::cout << "Non zero voxels: " << count << std::endl;
 
     // exploit
-    std::cout << std::endl << std::endl << "EXPLOITATION           " << std::endl;
-    for (int i = 0 ; i < 4 ; ++i) {
-        std::cout << "PASS " << i << "          " << std::endl;
-        for (int row = 0 ; row < imageHeight ; ++row) {
-            for (int column = 0 ; column < imageWidth ; ++column) {
-                // std::cout << row << "  --  " << column << "        \r" << std::flush;
+    std::cout << std::endl << std::endl << "EXPLOITATION (x" << exploitation_phases << ")          " << std::endl;
+    for (std::size_t i = 0 ; i < exploitation_phases ; ++i) {
+        std::cout << "  PASS " << i << "          " << std::endl;
+        for (std::size_t row = 0 ; row < imageHeight ; ++row) {
+            for (std::size_t column = 0 ; column < imageWidth ; ++column) {
                 random_seed(combine(seed, row + (i + 1) * imageHeight, column));
                 const auto aggregator = aggregator_factory->create();
                 aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));

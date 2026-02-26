@@ -80,7 +80,8 @@ void RenderFactory::init() {
     };
     cameraRegistry[CameraType::RL] = [](const RenderConfig& cfg)
     {
-        auto camera = std::make_shared<RLCamera>();
+        auto camera = std::make_shared<RLCamera>(cfg.warmup_phases, cfg.exploitation_phases, cfg.voxel_grid_resolution);
+        camera->record_warmup = cfg.record_warmup;
         finalize_camera(cfg, camera);
         return camera;
     };
@@ -257,18 +258,23 @@ void display_help(const RenderConfig& config) {
               << " - threads    => number of threads used (DEFAULT=hardware_concurrency)" << std::endl
               << " - width      => force image width (DEFAULT=scene dependent)" << std::endl
               << " - cam        => camera type" << std::endl
-              << "                 - std       => standard camera type (DEFAULT) " << std::endl
-              << "                 - nest      => MC Nesting (DEPRECATED)" << std::endl
-              << "                 - nest4     => MC Nesting (depth 4, DEPRECATED)" << std::endl
-              << "                 - cvnest    => Clipped Voronoi Nesting (DEPRECATED)" << std::endl
-              << "                 - normals   => renders normals to surfaces " << std::endl
-              << "                 - one-x,y   => renders only one pixel @coords (x,y)" << std::endl
+              << "                 - std          => standard camera type (DEFAULT) " << std::endl
+              << "                 - nest         => MC Nesting (DEPRECATED)" << std::endl
+              << "                 - nest4        => MC Nesting (depth 4, DEPRECATED)" << std::endl
+              << "                 - cvnest       => Clipped Voronoi Nesting (DEPRECATED)" << std::endl
+              << "                 - normals      => renders normals to surfaces " << std::endl
+              << "                 - one-x,y      => renders only one pixel @coords (x,y)" << std::endl
               << " - eval       => ray evaluation method" << std::endl
-              << "                 - nest      => MC Nesting" << std::endl
-              << "                 - cvnest    => Clipped Voronoi Nesting" << std::endl
+              << "                 - nest         => MC Nesting" << std::endl
+              << "                 - cvnest       => Clipped Voronoi Nesting" << std::endl
               << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl
               << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl
-              << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl;
+              << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl
+              << " cam=rl parameters:" << std::endl
+              << "                 - vox          => voxel slices (DEFAULT = 64)" << std::endl
+              << "                 - warmup       => warmup phases count (DEFAULT = 4)" << std::endl
+              << "                 - exploit      => exploitation phases count (DEFAULT = 4)" << std::endl
+              << "                 - recordwarmup => record warmup contribution (DEFAULT = true)" << std::endl;
 }
 
 CommandLineParser::CommandLineParser() {
@@ -303,8 +309,12 @@ void CommandLineParser::registerHandlers() {
     handlers["seed="] = [](const std::string& v, RenderConfig& c) { c.seed = std::stoi(v); };
     handlers["nestsamples="] = [](const std::string& v, RenderConfig& c) { c.nested_sample_size = std::stoi(v); };
     handlers["threads="] = [](const std::string& v, RenderConfig& c) { c.numThreads = std::stoi(v); };
-    handlers["nee="] = [](const std::string& v, RenderConfig& c) { c.sampling_strategy_type = ((v=="true") ? SamplingStrategyType::NextEventEstimation : SamplingStrategyType::MixturePDF); };
+    handlers["nee="] = [](const std::string& v, RenderConfig& c) { c.sampling_strategy_type = (v=="true") ? SamplingStrategyType::NextEventEstimation : SamplingStrategyType::MixturePDF; };
     handlers["help"] = [](const std::string&, RenderConfig& c) { c.help = true; };
+    handlers["vox="] = [](const std::string& v, RenderConfig& c) { c.voxel_grid_resolution = std::stoi(v); };
+    handlers["exploit="] = [](const std::string& v, RenderConfig& c) { c.exploitation_phases = std::stoi(v); };
+    handlers["warmup="] = [](const std::string& v, RenderConfig& c) { c.warmup_phases = std::stoi(v); };
+    handlers["recordwarmup="] = [](const std::string& v, RenderConfig& c) { c.record_warmup = v=="true"; };
 
     handlers["sampler="] = [](const std::string& v, RenderConfig& c) {
         if (v == "rnd") c.sampler = SamplerType::Uniform;

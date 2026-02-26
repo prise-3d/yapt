@@ -105,6 +105,12 @@ struct RenderConfig {
 
     // Camera-specific parameters
     std::pair<int, int> pixelCoords = {0, 0};
+
+    // RL
+    std::size_t voxel_grid_resolution = 64;
+    std::size_t warmup_phases = 4;
+    std::size_t exploitation_phases = 4;
+    bool record_warmup = true;
 };
 
 void display_help(const RenderConfig& config);

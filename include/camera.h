@@ -126,7 +126,7 @@ public:
 
 class RLCamera : public ForwardParallelCamera {
     public:
-    RLCamera();
+    RLCamera(std::size_t warmup_phases, std::size_t exploitation_phases, std::size_t voxel_grid_resolution);
 
     void render(const Scene &scene) override;
     Color rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights);
@@ -136,7 +136,9 @@ class RLCamera : public ForwardParallelCamera {
 
     int linesPerBatch = 1;
     int spp = 100;
-    int warmupPasses = 1;
+    bool record_warmup = true;
+    std::size_t warmup_phases = 4;
+    std::size_t exploitation_phases = 4;
     VoxelGrid voxelGrid;
     std::vector<std::size_t> visits;
 };

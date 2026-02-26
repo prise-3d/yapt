@@ -59,28 +59,28 @@ void YaptSceneLoader::load(std::string path, shared_ptr <HittableList> scene, sh
         std::smatch matches;
 
         if (std::regex_match(line, matches, material)) {
-            std::clog << "found: Material " << matches[1] << std::endl;
+            // std::clog << "found: Material " << matches[1] << std::endl;
             materials[matches[1]] = load_material(file);
         } else
         if (std::regex_match(line, matches, object)) {
-            std::clog << "found: Object " << matches[1] << std::endl;
+            // std::clog << "found: Object " << matches[1] << std::endl;
             hittables[matches[1]] = load_hittable(file);
         } else
         if (std::regex_match(line, matches, sceneexp)) {
-            std::clog << "found: Scene " << matches[1] << std::endl;
-            std::clog << "hittables found so far..." << std::endl;
-            for (const auto& pair : hittables) {
-                std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
-            }
-               std::clog << "materials found so far..." << std::endl;
-            for (const auto& pair : materials) {
-                std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
-            }
+            // std::clog << "found: Scene " << matches[1] << std::endl;
+            // std::clog << "hittables found so far..." << std::endl;
+            // for (const auto& pair : hittables) {
+            //     std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
+            // }
+               // std::clog << "materials found so far..." << std::endl;
+            // for (const auto& pair : materials) {
+            //     std::clog << " - key: " << pair.first << ", value: " << pair.second << std::endl;
+            // }
 
             scene->add(load_scene(file));
         } else
         if (std::regex_match(line, matches, lightsexp)) {
-            std::clog << "found: Lights " << matches[1] << std::endl;
+            // std::clog << "found: Lights " << matches[1] << std::endl;
             scene->add(load_lights(file, lights));
         }
     }
@@ -99,11 +99,11 @@ shared_ptr<Material> YaptSceneLoader::load_material(std::ifstream &file) {
 
     if (std::regex_match(line, matches, lambertian)) {
         Color color = vectorMatch(matches, 1);
-        std::clog << "found: Lambertian " << color << std::endl;
+        // std::clog << "found: Lambertian " << color << std::endl;
         return make_shared<Lambertian>(color);
         //return make_shared<Lambertian>(make_shared<CheckerTexture>(15, Color(0, 0, 0), color));
     } else if (std::regex_match(line, matches, lambertian_checker)) {
-        std::cout << "MATCHING" << line << std::endl;
+        // std::cout << "MATCHING" << line << std::endl;
         double scale = std::stod(matches[1]);
         Color color1 = vectorMatch(matches, 2);
         Color color2 = vectorMatch(matches, 5);
@@ -111,7 +111,7 @@ shared_ptr<Material> YaptSceneLoader::load_material(std::ifstream &file) {
     } else
     if (std::regex_match(line, matches, difflight)) {
         Color color = vectorMatch(matches, 1);
-        std::clog << "found: DiffuseLight " << color << std::endl;
+        // std::clog << "found: DiffuseLight " << color << std::endl;
         return make_shared<DiffuseLight>(color);
     } else
     if (std::regex_match(line, matches, metal)) {
@@ -120,17 +120,17 @@ shared_ptr<Material> YaptSceneLoader::load_material(std::ifstream &file) {
         if (matches[4].matched) {
             f = std::stod(matches[4]);
         }
-        std::clog << "found: Metal " << color << " fuzz " << f << std::endl;
+        // std::clog << "found: Metal " << color << " fuzz " << f << std::endl;
         return make_shared<Metal>(color, f);
     } else
     if (std::regex_match(line, matches, dielectric)) {
         double r = std::stod(matches[1]);
-        std::clog << "found: Dielectric " << r << std::endl;
+        // std::clog << "found: Dielectric " << r << std::endl;
         return make_shared<Dielectric>(r);
     } else
     if (std::regex_match(line, matches, isotropic)) {
         Color color = vectorMatch(matches, 1);
-        std::clog << "found: Isotropic " << color << std::endl;
+        // std::clog << "found: Isotropic " << color << std::endl;
         return make_shared<Isotropic>(color);
     }
 
@@ -151,29 +151,29 @@ shared_ptr<Hittable> YaptSceneLoader::load_hittable(std::ifstream &file) {
         Vec3 u = vectorMatch(matches, 4);
         Vec3 v = vectorMatch(matches, 7);
         std::string mat = matches[10];
-        std::clog << "found: Quad " << origin << " ; " << u << " ; " << v << " - mat = " << mat << std::endl;
+        // std::clog << "found: Quad " << origin << " ; " << u << " ; " << v << " - mat = " << mat << std::endl;
         return make_shared<Quad>(origin, u, v, materials[mat]);
     } else
     if (std::regex_match(line, matches, sphere)) {
         Vec3 center = vectorMatch(matches, 1);
         double radius = std::stod(matches[4]);
         std::string mat = matches[5];
-        std::clog << "found: Sphere" << center << " ; " << radius << " - mat = " << mat << std::endl;
+        // std::clog << "found: Sphere" << center << " ; " << radius << " - mat = " << mat << std::endl;
         return make_shared<Sphere>(center, radius, materials[mat]);
     } else
     if (std::regex_match(line, matches, boxexp)) {
         Vec3 a = vectorMatch(matches, 1);
         Vec3 b = vectorMatch(matches, 4);
         std::string mat = matches[7];
-        std::clog << "found: Box " << a << " ; " << b << " - mat = " << mat << std::endl;
+        // std::clog << "found: Box " << a << " ; " << b << " - mat = " << mat << std::endl;
         return box(a, b, materials[mat]);
     } else
     if (std::regex_match(line, matches, rotate)) {
         std::string axis = matches[1];
         double angle = std::stod(matches[2]);
         std::string obj = matches[3];
-        std::clog << "found: Rotate " << axis << " ; " << angle << " - obj = " << obj << std::endl;
-        if (axis != "y") std::clog << "WARNING: " << axis << "-axis not supported yet" << std::endl;
+        // std::clog << "found: Rotate " << axis << " ; " << angle << " - obj = " << obj << std::endl;
+        // if (axis != "y") std::clog << "WARNING: " << axis << "-axis not supported yet" << std::endl;
         return make_shared<RotateY>(hittables[obj], angle);
     } else
     if (std::regex_match(line, matches, translateexp)) {
@@ -194,12 +194,12 @@ shared_ptr<Hittable> YaptSceneLoader::load_scene(std::ifstream &file) {
     std::sregex_iterator end;
     while (iter != end) {
         std::string match = iter->str();
-        std::clog << "added to scene: " << match << std::endl;
+        // std::clog << "added to scene: " << match << std::endl;
         scene.add(hittables[match]);
         ++iter;
     }
 
-    std::clog << "done parsing list" << std::endl;
+    // std::clog << "done parsing list" << std::endl;
     return make_shared<BVHNode>(scene);
 }
 
@@ -213,12 +213,12 @@ shared_ptr<Hittable> YaptSceneLoader::load_lights(std::ifstream &file, shared_pt
     std::sregex_iterator end;
     while (iter != end) {
         std::string match = iter->str();
-        std::clog << "added to lights: " << match << std::endl;
+        // std::clog << "added to lights: " << match << std::endl;
         lights->add(hittables[match]);
         ++iter;
     }
 
-    std::clog << "done parsing list" << std::endl;
+    // std::clog << "done parsing list" << std::endl;
 
     return lights;
 }
