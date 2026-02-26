@@ -239,37 +239,38 @@ std::shared_ptr<RayEvaluator> RenderFactory::createEvaluator(const RenderConfig 
 
 void display_help(const RenderConfig& config) {
     std::cout << "usage: yapt path=out/pic.png spp=1000 sampler=sppp aggregator=vor" << std::endl
-              << " - path       => path to render output (optional)" << std::endl
-              << " - spp        => samples per pixel (DEFAULT=500)" << std::endl
-              << " - sampler    => pixel sampling method:" << std::endl
+              << " - path        => path to render output (optional)" << std::endl
+              << " - spp         => samples per pixel (DEFAULT=500)" << std::endl
+              << " - sampler     => pixel sampling method:" << std::endl
               << "                 - rnd    => pure random sampling" << std::endl
               << "                 - strat  => stratified sampling" << std::endl
               << "                 - sppp   => Skewed Poisson Point Process sampling with margin (DEFAULT)" << std::endl
-              << " - aggregator => path aggregation method:" << std::endl
+              << " - aggregator  => path aggregation method:" << std::endl
               << "                 - mc      => Monte Carlo integration" << std::endl
               << "                 - vor     => Voronoi aggregation (DEFAULT)" << std::endl
               << "                 - cvor    => Clipped Voronoi aggregation" << std::endl
               << "                 - fvor    => Filtering Voronoi aggregation" << std::endl
               << "                 - nvor    => Nico Voronoi aggregation" << std::endl
-              << " - confidence => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl
-              << " - source     => Scene model to import" << std::endl
-              << " - maxdepth   => maximum path depth (DEFAULT=25)" << std::endl
-              << " - dir        => output directory (optional, ignored if path is specified)" << std::endl
-              << " - threads    => number of threads used (DEFAULT=hardware_concurrency)" << std::endl
-              << " - width      => force image width (DEFAULT=scene dependent)" << std::endl
-              << " - cam        => camera type" << std::endl
+              << " - confidence  => Voronoi aggregation confidence (DEFAULT=.999)" << std::endl
+              << " - source      => Scene model to import" << std::endl
+              << " - maxdepth    => maximum path depth (DEFAULT=25)" << std::endl
+              << " - dir         => output directory (optional, ignored if path is specified)" << std::endl
+              << " - threads     => number of threads used (DEFAULT=hardware_concurrency)" << std::endl
+              << " - width       => force image width (DEFAULT=scene dependent)" << std::endl
+              << " - cam         => camera type" << std::endl
               << "                 - std          => standard camera type (DEFAULT) " << std::endl
               << "                 - nest         => MC Nesting (DEPRECATED)" << std::endl
               << "                 - nest4        => MC Nesting (depth 4, DEPRECATED)" << std::endl
               << "                 - cvnest       => Clipped Voronoi Nesting (DEPRECATED)" << std::endl
               << "                 - normals      => renders normals to surfaces " << std::endl
               << "                 - one-x,y      => renders only one pixel @coords (x,y)" << std::endl
-              << " - eval       => ray evaluation method" << std::endl
+              << " - eval        => ray evaluation method" << std::endl
               << "                 - nest         => MC Nesting" << std::endl
               << "                 - cvnest       => Clipped Voronoi Nesting" << std::endl
-              << " - seed       => RNG seed (DEFAULT = random seed)" << std::endl
-              << " - nee        => Next Event Estimation (DEFAULT = false)" << std::endl
+              << " - seed        => RNG seed (DEFAULT = random seed)" << std::endl
+              << " - nee         => Next Event Estimation (DEFAULT = false)" << std::endl
               << " - nestsamples => sample count for first bounce voronoi cameras (DEFAULT = 100)" << std::endl
+              << std::endl
               << " cam=rl parameters:" << std::endl
               << "                 - vox          => voxel slices (DEFAULT = 64)" << std::endl
               << "                 - warmup       => warmup phases count (DEFAULT = 4)" << std::endl
