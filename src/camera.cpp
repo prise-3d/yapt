@@ -494,7 +494,6 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
     double best_contribution = -1;
 
     auto scattered = Ray(rec.p, p.generate());
-    // if (test) std::cout << temp_ray.origin() << " -> " << temp_ray.direction();
 
     const auto temp_value = p.value(scattered.direction());
     HitRecord temp_record;
