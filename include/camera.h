@@ -129,7 +129,6 @@ class RLCamera : public ForwardParallelCamera {
     RLCamera(std::size_t warmup_phases, std::size_t exploitation_phases, std::size_t voxel_grid_resolution);
 
     void render(const Scene &scene) override;
-    Color rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights);
     Color evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions);
     Color guide_and_evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions);
     void persist_color_to_data(size_t row, size_t column, Color pixel_color) override;
@@ -140,7 +139,6 @@ class RLCamera : public ForwardParallelCamera {
     std::size_t warmup_phases = 4;
     std::size_t exploitation_phases = 4;
     VoxelGrid voxelGrid;
-    std::vector<std::size_t> visits;
 };
 
 #endif //YAPT_CAMERA_H

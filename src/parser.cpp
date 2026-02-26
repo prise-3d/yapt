@@ -457,7 +457,13 @@ bool OutputManager::export_image(RenderConfig& config, const std::shared_ptr<Cam
         } else if (config.camera == CameraType::Single) {
             cam_tag += "-" + camera_descriptions[config.camera] + "(" + std::to_string(config.pixelCoords.first) + "," + std::to_string(config.pixelCoords.second) + ")";
         } else if (config.camera == CameraType::RL) {
-            cam_tag += "-" + camera_descriptions[config.camera];
+            cam_tag += "-" + camera_descriptions[config.camera] +
+                "-vox-" + std::to_string(config.voxel_grid_resolution) +
+                "-warm-" + std::to_string(config.warmup_phases) +
+                "-exp-" + std::to_string(config.exploitation_phases);
+            if (!config.record_warmup) {
+                cam_tag += "-norecwarm";
+            }
         }
 
         std::string eval_tag;

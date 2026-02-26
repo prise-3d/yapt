@@ -109,6 +109,7 @@ void ForwardCamera::render_line(const Scene &scene, size_t j) {
 inline uint64_t combine(const uint32_t seed, const uint32_t x, const uint32_t y) {
     auto combined = static_cast<uint64_t>(seed);
     combined = (combined << 32) | ((static_cast<uint64_t>(x & 0xFFFF) << 16) | (y & 0xFFFF));
+    std::cout << combined << std::endl;
     return combined;
 }
 
@@ -331,7 +332,6 @@ RLCamera::RLCamera(
 void RLCamera::render(const Scene& scene) {
     initialize();
     maxDepth = 10;
-    visits = std::vector<std::size_t>(3 * imageHeight * imageWidth, 0);
 
     // warmup
     std::cout << "WARMUP (x" << warmup_phases << ")" << std::endl;
@@ -342,7 +342,7 @@ void RLCamera::render(const Scene& scene) {
         std::cout << "  PASS " << i << "          " << std::endl;
         for (std::size_t row = 0 ; row < imageHeight ; ++row) {
             for (std::size_t column = 0 ; column < imageWidth ; ++column) {
-                random_seed(combine(seed, row, column));
+                random_seed(combine(seed, row + i * imageHeight, column ));
                 const auto aggregator = aggregator_factory->create();
                 aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
                 for (const Sample& sample : *aggregator) {
@@ -388,7 +388,7 @@ void RLCamera::render(const Scene& scene) {
         std::cout << "  PASS " << i << "          " << std::endl;
         for (std::size_t row = 0 ; row < imageHeight ; ++row) {
             for (std::size_t column = 0 ; column < imageWidth ; ++column) {
-                random_seed(combine(seed, row + (i + 1) * imageHeight, column));
+                random_seed(combine(seed, row + (i + warmup_phases) * imageHeight, column));
                 const auto aggregator = aggregator_factory->create();
                 aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
                 for (const Sample& sample : *aggregator) {
@@ -409,15 +409,14 @@ void RLCamera::render(const Scene& scene) {
 
     std::size_t k = 0;
 
+    const auto passes_count = static_cast<double>(record_warmup ? warmup_phases + exploitation_phases : exploitation_phases);
     for (int row = 0 ; row < imageHeight ; ++row)
     {
         for (int column = 0 ; column < imageWidth ; ++column)
         {
-            const auto v = visits[k];
-
-            imageData.data[k++] /= v;  // R
-            imageData.data[k++] /= v;  // G
-            imageData.data[k++] /= v;  // B
+            imageData.data[k++] /= passes_count;  // R
+            imageData.data[k++] /= passes_count;  // G
+            imageData.data[k++] /= passes_count;  // B
         }
     }
 
@@ -526,12 +525,6 @@ void RLCamera::persist_color_to_data(const std::size_t row, const std::size_t co
     imageData.data[idx]     += pixel_color.x();  // R
     imageData.data[idx + 1] += pixel_color.y();  // G
     imageData.data[idx + 2] += pixel_color.z();  // B
-
-    visits[idx]++;
-}
-
-Color RLCamera::rayColor(const Ray& r, const int depth, const Hittable& world, const Hittable& lights) {
-    return {0, 0, 0};
 }
 
 
