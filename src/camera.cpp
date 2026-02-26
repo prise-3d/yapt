@@ -109,7 +109,6 @@ void ForwardCamera::render_line(const Scene &scene, size_t j) {
 inline uint64_t combine(const uint32_t seed, const uint32_t x, const uint32_t y) {
     auto combined = static_cast<uint64_t>(seed);
     combined = (combined << 32) | ((static_cast<uint64_t>(x & 0xFFFF) << 16) | (y & 0xFFFF));
-    std::cout << combined << std::endl;
     return combined;
 }
 
@@ -333,6 +332,7 @@ void RLCamera::render(const Scene& scene) {
     initialize();
     maxDepth = 10;
 
+
     // warmup
     std::cout << "WARMUP (x" << warmup_phases << ")" << std::endl;
     if (!record_warmup) {
@@ -342,7 +342,7 @@ void RLCamera::render(const Scene& scene) {
         std::cout << "  PASS " << i << "          " << std::endl;
         for (std::size_t row = 0 ; row < imageHeight ; ++row) {
             for (std::size_t column = 0 ; column < imageWidth ; ++column) {
-                random_seed(combine(seed, row + i * imageHeight, column ));
+                random_seed(combine(seed + i * imageHeight * imageWidth, row, column ));
                 const auto aggregator = aggregator_factory->create();
                 aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
                 for (const Sample& sample : *aggregator) {
@@ -388,7 +388,7 @@ void RLCamera::render(const Scene& scene) {
         std::cout << "  PASS " << i << "          " << std::endl;
         for (std::size_t row = 0 ; row < imageHeight ; ++row) {
             for (std::size_t column = 0 ; column < imageWidth ; ++column) {
-                random_seed(combine(seed, row + (i + warmup_phases) * imageHeight, column));
+                random_seed(combine(seed + (i + warmup_phases) * imageHeight * imageWidth, row, column));
                 const auto aggregator = aggregator_factory->create();
                 aggregator->sample_from(sampler_factory, static_cast<double>(column), static_cast<double>(row));
                 for (const Sample& sample : *aggregator) {
@@ -464,6 +464,7 @@ Color RLCamera::evaluate(const Ray& ray, const int depth, const Scene& scene, st
 }
 
 Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions) {
+
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
         return {0, 0, 0};
@@ -488,16 +489,30 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
     const auto light_ptr = make_shared<HittablePDF>(scene.lights, rec.p);
     const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
 
-    Ray scattered;
+    // Ray scattered;
     double pdfValue = 1;
     double best_contribution = -1;
 
-    for (std::size_t x = 0 ; x < 4 ; ++x) {
+    auto scattered = Ray(rec.p, p.generate());
+    // if (test) std::cout << temp_ray.origin() << " -> " << temp_ray.direction();
+
+    const auto temp_value = p.value(scattered.direction());
+    HitRecord temp_record;
+
+    if (scene.geometry.hit(scattered, Interval(0.001, infinity), temp_record)) {
+        const auto temp_point = temp_record.p;
+        const auto contribution = voxelGrid.lookup(temp_point);
+        best_contribution = contribution;
+        pdfValue = temp_value;
+    }
+
+    for (std::size_t x = 0 ; x < 3 ; ++x) {
         auto temp_ray = Ray(rec.p, p.generate());
+
         const auto temp_value = p.value(temp_ray.direction());
         HitRecord temp_record;
 
-        if (scene.geometry.hit(ray, Interval(0.001, infinity), temp_record)) {
+        if (scene.geometry.hit(temp_ray, Interval(0.001, infinity), temp_record)) {
             const auto temp_point = temp_record.p;
             const auto contribution = voxelGrid.lookup(temp_point);
             if (contribution > best_contribution) {
