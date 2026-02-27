@@ -332,7 +332,6 @@ void RLCamera::render(const Scene& scene) {
     initialize();
     maxDepth = 10;
 
-
     // warmup
     std::cout << "WARMUP (x" << warmup_phases << ")" << std::endl;
     if (!record_warmup) {
@@ -507,8 +506,6 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
 
     for (std::size_t x = 0 ; x < 3 ; ++x) {
         auto temp_ray = Ray(rec.p, p.generate());
-
-        const auto temp_value = p.value(temp_ray.direction());
         HitRecord temp_record;
 
         if (scene.geometry.hit(temp_ray, Interval(0.001, infinity), temp_record)) {
@@ -517,6 +514,7 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
             if (contribution > best_contribution) {
                 best_contribution = contribution;
                 scattered = temp_ray;
+                const auto temp_value = p.value(temp_ray.direction());
                 pdfValue = temp_value;
             }
         }
@@ -525,7 +523,7 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
     const double scatteringPdf = rec.mat->scattering_pdf(
         ray, rec, scattered);
 
-    const Color sampleColor = evaluate(scattered, depth - 1, scene, path_positions);
+    const Color sampleColor = guide_and_evaluate(scattered, depth - 1, scene, path_positions);
 
     const auto colorFromScatter=
         scatterRecord.attenuation * scatteringPdf * sampleColor / pdfValue;
