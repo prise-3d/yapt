@@ -409,16 +409,13 @@ void RLCamera::render(const Scene& scene) {
     std::size_t k = 0;
 
     const auto passes_count = static_cast<double>(record_warmup ? warmup_phases + exploitation_phases : exploitation_phases);
-    for (int row = 0 ; row < imageHeight ; ++row)
-    {
-        for (int column = 0 ; column < imageWidth ; ++column)
-        {
+    for (int row = 0 ; row < imageHeight ; ++row) {
+        for (int column = 0 ; column < imageWidth ; ++column) {
             imageData.data[k++] /= passes_count;  // R
             imageData.data[k++] /= passes_count;  // G
             imageData.data[k++] /= passes_count;  // B
         }
     }
-
 }
 
 Color RLCamera::evaluate(const Ray& ray, const int depth, const Scene& scene, std::vector<Point3> &path_positions) {
@@ -488,9 +485,13 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
     const auto light_ptr = make_shared<HittablePDF>(scene.lights, rec.p);
     const MixturePDF p(light_ptr, scatterRecord.pdf_ptr);
 
-    // Ray scattered;
+    // // Ray scattered;
+    std::vector<double> pdfValues;
+    std::vector<double> contributions;
+    std::vector<Ray> directions;
+    double total_contribution = 0.;
+
     double pdfValue = 1;
-    double best_contribution = -1;
 
     auto scattered = Ray(rec.p, p.generate());
 
@@ -500,8 +501,11 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
     if (scene.geometry.hit(scattered, Interval(0.001, infinity), temp_record)) {
         const auto temp_point = temp_record.p;
         const auto contribution = voxelGrid.lookup(temp_point);
-        best_contribution = contribution;
         pdfValue = temp_value;
+        pdfValues.push_back(pdfValue);
+        contributions.push_back(contribution);
+        directions.push_back(scattered);
+        total_contribution += contribution;
     }
 
     for (std::size_t x = 0 ; x < 3 ; ++x) {
@@ -511,12 +515,24 @@ Color RLCamera::guide_and_evaluate(const Ray& ray, const int depth, const Scene&
         if (scene.geometry.hit(temp_ray, Interval(0.001, infinity), temp_record)) {
             const auto temp_point = temp_record.p;
             const auto contribution = voxelGrid.lookup(temp_point);
-            if (contribution > best_contribution) {
-                best_contribution = contribution;
-                scattered = temp_ray;
-                const auto temp_value = p.value(temp_ray.direction());
-                pdfValue = temp_value;
-            }
+            pdfValues.push_back(p.value(temp_ray.direction()));
+            contributions.push_back(contribution);
+            directions.push_back(temp_ray);
+        }
+    }
+
+    double rnd = random_double() * total_contribution;
+    double cumulated_contribution = 0.;
+
+
+    for (auto z = 0 ; z < directions.size() ; ++z)
+    {
+        cumulated_contribution += contributions[z];
+        if (rnd < cumulated_contribution)
+        {
+            scattered = directions[z];
+            pdfValue = pdfValues[z];
+            break;
         }
     }
 
